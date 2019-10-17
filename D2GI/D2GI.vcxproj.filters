@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Исходные файлы\ddraw">
+      <UniqueIdentifier>{5111b702-4ed8-45b3-a688-718300a07769}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\ddraw">
+      <UniqueIdentifier>{a416cc5f-0267-4d35-94e9-e2f567752d5d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
@@ -21,8 +27,16 @@
     <None Include="defs.props" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\ddraw\ddraw.cpp">
+      <Filter>Исходные файлы\ddraw</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ddraw\ddraw.h">
+      <Filter>Файлы заголовков\ddraw</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

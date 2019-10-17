@@ -2,6 +2,8 @@
 #include <ddraw.h>
 #include <tchar.h>
 
+#include "ddraw/ddraw.h"
+
 #define EXPORT extern "C"
 
 
@@ -32,13 +34,26 @@ EXPORT HRESULT WINAPI DirectDrawCreateEx(GUID* pGUID, LPVOID* lpDD, REFIID iid, 
 {
 	LoadDDrawLib();
 
-	return g_pDirectDrawCreateEx(pGUID, lpDD, iid, pUnknown);
+	HRESULT hRes = g_pDirectDrawCreateEx(pGUID, lpDD, iid, pUnknown);
+	DDrawProxy* pProxy = new DDrawProxy((IDirectDraw7*)(*lpDD));
+
+	*lpDD = (IDirectDraw7*)pProxy;
+
+	return hRes;
+}
+
+
+BOOL __stdcall Callback(GUID* pGUID, CHAR* arg1, CHAR* arg2, LPVOID ctx)
+{
+	return DDENUMRET_OK;
 }
 
 
 EXPORT _Check_return_ HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA pCallback, LPVOID pContext)
 {
 	LoadDDrawLib();
+
+	g_pDirectDrawEnumerateA(Callback, NULL);
 
 	return g_pDirectDrawEnumerateA(pCallback, pContext);
 }
