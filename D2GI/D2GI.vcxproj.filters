@@ -19,6 +19,18 @@
     <Filter Include="Файлы заголовков\ddraw">
       <UniqueIdentifier>{a416cc5f-0267-4d35-94e9-e2f567752d5d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\d3d">
+      <UniqueIdentifier>{22f3ddd1-7596-470a-a858-a4597a8cb42d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\d3d">
+      <UniqueIdentifier>{d9eef7fa-b360-4fb3-8a56-b112a46f1fc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\d2gi">
+      <UniqueIdentifier>{0f4a5234-e205-4cec-ba8e-b258a3f7cbf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\d2gi">
+      <UniqueIdentifier>{1f5536a1-1470-43f7-9cb7-50819d4a39fc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
@@ -33,10 +45,28 @@
     <ClCompile Include="src\ddraw\ddraw.cpp">
       <Filter>Исходные файлы\ddraw</Filter>
     </ClCompile>
+    <ClCompile Include="src\d3d\d3d.cpp">
+      <Filter>Исходные файлы\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_ddraw.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ddraw\ddraw.h">
       <Filter>Файлы заголовков\ddraw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d3d\d3d.h">
+      <Filter>Файлы заголовков\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_ddraw.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

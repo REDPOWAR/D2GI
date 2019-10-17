@@ -2,7 +2,7 @@
 #include <ddraw.h>
 #include <tchar.h>
 
-#include "ddraw/ddraw.h"
+#include "d2gi/d2gi_ddraw.h"
 
 #define EXPORT extern "C"
 
@@ -35,7 +35,7 @@ EXPORT HRESULT WINAPI DirectDrawCreateEx(GUID* pGUID, LPVOID* lpDD, REFIID iid, 
 	LoadDDrawLib();
 
 	HRESULT hRes = g_pDirectDrawCreateEx(pGUID, lpDD, iid, pUnknown);
-	DDrawProxy* pProxy = new DDrawProxy((IDirectDraw7*)(*lpDD));
+	D2GIDirectDraw* pProxy = new D2GIDirectDraw((IDirectDraw7*)(*lpDD));
 
 	*lpDD = (IDirectDraw7*)pProxy;
 
