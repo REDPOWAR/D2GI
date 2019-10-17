@@ -148,15 +148,19 @@
   <ItemGroup>
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp" />
-    <ClCompile Include="src\d3d\d3d.cpp" />
-    <ClCompile Include="src\ddraw\ddraw.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
+    <ClCompile Include="src\d3d\d3d_device.cpp" />
+    <ClCompile Include="src\d3d\d3d_direct3d.cpp" />
+    <ClCompile Include="src\ddraw\dd_ddraw.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\d2gi\d2gi_ddraw.h" />
-    <ClInclude Include="src\d3d\d3d.h" />
-    <ClInclude Include="src\ddraw\ddraw.h" />
+    <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
+    <ClInclude Include="src\d3d\d3d_direct3d.h" />
+    <ClInclude Include="src\d3d\d3d_device.h" />
+    <ClInclude Include="src\ddraw\dd_ddraw.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

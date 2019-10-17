@@ -1,5 +1,5 @@
 
-#include "ddraw.h"
+#include "dd_ddraw.h"
 
 
 DDrawProxy::DDrawProxy(IDirectDraw7* pOriginal) : m_pOriginal(pOriginal)

@@ -3,8 +3,7 @@
 #include <d3d.h>
 
 #include "d2gi_ddraw.h"
-
-#include "../d3d/d3d.h"
+#include "d2gi_direct3d.h"
 
 
 D2GIDirectDraw::D2GIDirectDraw(IDirectDraw7* pOriginal) : DDrawProxy(pOriginal)
@@ -26,7 +25,7 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 		HRESULT hRes = DDrawProxy::QueryInterface(riid, ppvObj);
 
 		if (SUCCEEDED(hRes))
-			*ppvObj = (IDirect3D7*)new D3DProxy((IDirect3D7*)*ppvObj);
+			*ppvObj = (IDirect3D7*)new D2GIDirect3D((IDirect3D7*)*ppvObj);
 
 		return hRes;
 	}

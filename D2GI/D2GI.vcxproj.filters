@@ -42,31 +42,43 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\ddraw\ddraw.cpp">
-      <Filter>Исходные файлы\ddraw</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d3d\d3d.cpp">
-      <Filter>Исходные файлы\d3d</Filter>
-    </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
     <ClCompile Include="src\common.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="src\d3d\d3d_direct3d.cpp">
+      <Filter>Исходные файлы\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ddraw\dd_ddraw.cpp">
+      <Filter>Исходные файлы\ddraw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d3d\d3d_device.cpp">
+      <Filter>Исходные файлы\d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_direct3d.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\ddraw\ddraw.h">
-      <Filter>Файлы заголовков\ddraw</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d3d\d3d.h">
-      <Filter>Файлы заголовков\d3d</Filter>
-    </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\common.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d3d\d3d_device.h">
+      <Filter>Файлы заголовков\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d3d\d3d_direct3d.h">
+      <Filter>Файлы заголовков\d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ddraw\dd_ddraw.h">
+      <Filter>Файлы заголовков\ddraw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_direct3d.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

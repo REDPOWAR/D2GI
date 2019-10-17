@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../ddraw/ddraw.h"
+#include "../ddraw/dd_ddraw.h"
 
 
 class D2GIDirectDraw : public DDrawProxy
