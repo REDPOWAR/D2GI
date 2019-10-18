@@ -5,12 +5,13 @@
 #include "../common.h"
 #include "../utils.h"
 
+#include "d2gi.h"
 #include "d2gi_ddraw.h"
 #include "d2gi_direct3d.h"
 #include "d2gi_surface.h"
 
 
-D2GIDirectDraw::D2GIDirectDraw(IDirectDraw7* pOriginal) : DDrawProxy(pOriginal)
+D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
 {
 
 }
@@ -18,13 +19,13 @@ D2GIDirectDraw::D2GIDirectDraw(IDirectDraw7* pOriginal) : DDrawProxy(pOriginal)
 
 D2GIDirectDraw::~D2GIDirectDraw()
 {
-
+	m_pD2GI->OnDirectDrawReleased();
 }
 
 
 HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 {
-	if (IsEqualIID(riid, IID_IDirect3D7))
+	/*if (IsEqualIID(riid, IID_IDirect3D7))
 	{
 		HRESULT hRes = DDrawProxy::QueryInterface(riid, ppvObj);
 
@@ -32,15 +33,15 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 			*ppvObj = (IDirect3D7*)new D2GIDirect3D((IDirect3D7*)*ppvObj);
 
 		return hRes;
-	}
+	}*/
 
-	return DD_FALSE;
+	return DDERR_GENERIC;
 }
 
 
 HRESULT D2GIDirectDraw::CreateSurface(LPDDSURFACEDESC2 lpDesc, LPDIRECTDRAWSURFACE7 FAR* lpSurf , IUnknown FAR* pUnknown)
 {
-	HRESULT hRes = DDrawProxy::CreateSurface(lpDesc, lpSurf, pUnknown);
+	/*HRESULT hRes = DDrawProxy::CreateSurface(lpDesc, lpSurf, pUnknown);
 
 	if (SUCCEEDED(hRes))
 	{
@@ -71,5 +72,27 @@ HRESULT D2GIDirectDraw::CreateSurface(LPDDSURFACEDESC2 lpDesc, LPDIRECTDRAWSURFA
 		*lpSurf = (IDirectDrawSurface7*)new D2GISurface((IDirectDrawSurface7*)*lpSurf);
 	}
 
-	return hRes;
+	return hRes;*/
+
+	return DDERR_GENERIC;
+}
+
+
+HRESULT D2GIDirectDraw::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
+{
+	Debug(TEXT("Setting coop level for window 0x%08x (%i)"), hWnd, dwFlags);
+
+	m_pD2GI->OnCooperativeLevelSet(hWnd, dwFlags);
+
+	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+{
+	Debug(TEXT("Setting display mode %ix%ix%i (%i %i)"), dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+
+	m_pD2GI->OnDisplayModeSet(dwWidth, dwHeight, dwBPP, dwFlags);
+
+	return DD_OK;
 }

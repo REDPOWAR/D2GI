@@ -1,61 +1,27 @@
 
 #include <ddraw.h>
-#include <tchar.h>
 
-#include "d2gi/d2gi_ddraw.h"
+#include "d2gi/d2gi.h"
+
 
 #define EXPORT extern "C"
 
 
-HMODULE g_hDDLib = NULL;
-
-HRESULT (WINAPI *g_pDirectDrawCreateEx)(GUID*, LPVOID*, REFIID, IUnknown*);
-_Check_return_ HRESULT (WINAPI *g_pDirectDrawEnumerateA)(LPDDENUMCALLBACKA, LPVOID);
-
-
-VOID LoadDDrawLib()
-{
-	if (g_hDDLib != NULL)
-		return;
-
-	TCHAR szPath[MAX_PATH];
-
-	GetSystemDirectory(szPath, MAX_PATH);
-	_tcscat(szPath, TEXT("\\ddraw.dll"));
-
-	g_hDDLib = LoadLibrary(szPath);
-
-	g_pDirectDrawCreateEx = (HRESULT(WINAPI*)(GUID*, LPVOID*, REFIID, IUnknown*))GetProcAddress(g_hDDLib, "DirectDrawCreateEx");
-	g_pDirectDrawEnumerateA = (_Check_return_ HRESULT(WINAPI*)(LPDDENUMCALLBACKA, LPVOID))GetProcAddress(g_hDDLib, "DirectDrawEnumerateA");
-}
-
-
 EXPORT HRESULT WINAPI DirectDrawCreateEx(GUID* pGUID, LPVOID* lpDD, REFIID iid, IUnknown* pUnknown)
 {
-	LoadDDrawLib();
+	D2GI* pD2GI = new D2GI();
 
-	HRESULT hRes = g_pDirectDrawCreateEx(pGUID, lpDD, iid, pUnknown);
-	D2GIDirectDraw* pProxy = new D2GIDirectDraw((IDirectDraw7*)(*lpDD));
+	*lpDD = (IDirectDraw7*)pD2GI->GetDirectDrawProxy();
 
-	*lpDD = (IDirectDraw7*)pProxy;
-
-	return hRes;
-}
-
-
-BOOL __stdcall Callback(GUID* pGUID, CHAR* arg1, CHAR* arg2, LPVOID ctx)
-{
-	return DDENUMRET_OK;
+	return DD_OK;
 }
 
 
 EXPORT _Check_return_ HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA pCallback, LPVOID pContext)
 {
-	LoadDDrawLib();
+	pCallback(NULL, "Primary Video Driver", "display", pContext);
 
-	g_pDirectDrawEnumerateA(Callback, NULL);
-
-	return g_pDirectDrawEnumerateA(pCallback, pContext);
+	return DD_OK;
 }
 
 
@@ -115,49 +81,49 @@ EXPORT VOID WINAPI DSoundHelp()
 
 EXPORT _Check_return_ HRESULT WINAPI DirectDrawCreate(GUID FAR* lpGUID, LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter)
 {
-	return DD_FALSE;
+	return DDERR_GENERIC;
 }
 
 
 
 EXPORT _Check_return_ HRESULT WINAPI DirectDrawCreateClipper(DWORD dwFlags, LPDIRECTDRAWCLIPPER FAR* lplpDDClipper, IUnknown FAR* pUnkOuter)
 {
-	return DD_FALSE;
+	return DDERR_GENERIC;
 }
 
 
 
 EXPORT HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags)
 {
-	return DD_FALSE;
+	return DDERR_GENERIC;
 }
 
 
 
 EXPORT HRESULT WINAPI DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback, LPVOID lpContext, DWORD dwFlags)
 {
-	return DD_FALSE;
+	return DDERR_GENERIC;
 }
 
 
 
 EXPORT _Check_return_ HRESULT WINAPI DirectDrawEnumerateW(LPDDENUMCALLBACKW lpCallback, LPVOID lpContext)
 {
-	return DD_FALSE;
+	return DDERR_GENERIC;
 }
 
 
 
 STDAPI DllCanUnloadNow()
 {
-	return DD_FALSE;
+	return S_FALSE;
 }
 
 
 
 STDAPI DllGetClassObject(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ LPVOID FAR* ppv)
 {
-	return DD_FALSE;
+	return S_FALSE;
 }
 
 

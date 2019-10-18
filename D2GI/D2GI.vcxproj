@@ -90,7 +90,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -116,7 +116,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\common.cpp" />
+    <ClCompile Include="src\d2gi\d2gi.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp" />
     <ClCompile Include="src\d2gi\d2gi_device.cpp" />
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
@@ -160,6 +161,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\d2gi\d2gi.h" />
+    <ClInclude Include="src\d2gi\d2gi_common.h" />
     <ClInclude Include="src\d2gi\d2gi_ddraw.h" />
     <ClInclude Include="src\d2gi\d2gi_device.h" />
     <ClInclude Include="src\d2gi\d2gi_direct3d.h" />

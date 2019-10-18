@@ -4,9 +4,8 @@
 #include "dd_ddraw.h"
 
 
-DDrawProxy::DDrawProxy(IDirectDraw7* pOriginal) : m_pOriginal(pOriginal)
+DDrawProxy::DDrawProxy() 
 {
-
 }
 
 
@@ -15,188 +14,163 @@ DDrawProxy::~DDrawProxy()
 }
 
 
-HRESULT DDrawProxy::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
-{
-	return m_pOriginal->QueryInterface(riid, ppvObj);
-}
-
-
-ULONG DDrawProxy::AddRef()
-{
-	return m_pOriginal->AddRef();
-}
-
-
-ULONG DDrawProxy::Release()
-{
-	ULONG uRes = m_pOriginal->Release();
-
-	if (uRes == 0)
-		delete this;
-
-	return uRes;
-}
-
-
 HRESULT DDrawProxy::Compact()
 {
-	return m_pOriginal->Compact();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::CreateClipper(DWORD arg1, LPDIRECTDRAWCLIPPER FAR* lpClipper, IUnknown FAR* pUnknown)
 {
-	return m_pOriginal->CreateClipper(arg1, lpClipper, pUnknown);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::CreatePalette(DWORD dwFlags, LPPALETTEENTRY lpPalEntry, LPDIRECTDRAWPALETTE FAR* lpPal, IUnknown FAR* pUnknown)
 {
-	return m_pOriginal->CreatePalette(dwFlags, lpPalEntry, lpPal, pUnknown);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::CreateSurface(LPDDSURFACEDESC2 lpSurfDesc, LPDIRECTDRAWSURFACE7 FAR* lpDDS, IUnknown FAR* pUnknown)
 {
-	return m_pOriginal->CreateSurface(lpSurfDesc, lpDDS, pUnknown);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::DuplicateSurface(LPDIRECTDRAWSURFACE7 pSurf, LPDIRECTDRAWSURFACE7 FAR* lpSurf)
 {
-	return m_pOriginal->DuplicateSurface(pSurf, lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::EnumDisplayModes(DWORD dwFlags, LPDDSURFACEDESC2 lpSurfDesc, LPVOID lpArg, LPDDENUMMODESCALLBACK2 lpCallback)
 {
-	return m_pOriginal->EnumDisplayModes(dwFlags, lpSurfDesc, lpArg, lpCallback);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::EnumSurfaces(DWORD dwFlags, LPDDSURFACEDESC2 lpSurfDesc, LPVOID lpArg, LPDDENUMSURFACESCALLBACK7 lpCallback)
 {
-	return m_pOriginal->EnumSurfaces(dwFlags, lpSurfDesc, lpArg, lpCallback);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::FlipToGDISurface()
 {
-	return m_pOriginal->FlipToGDISurface();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetCaps(LPDDCAPS lpCaps1, LPDDCAPS lpCaps2)
 {
-	return m_pOriginal->GetCaps(lpCaps1, lpCaps2);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetDisplayMode(LPDDSURFACEDESC2 lpSurfDesc)
 {
-	return m_pOriginal->GetDisplayMode(lpSurfDesc);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetFourCCCodes(LPDWORD lpNums, LPDWORD lpVars)
 {
-	return m_pOriginal->GetFourCCCodes(lpNums, lpVars);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetGDISurface(LPDIRECTDRAWSURFACE7 FAR* lpSurf)
 {
-	return m_pOriginal->GetGDISurface(lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetMonitorFrequency(LPDWORD lpFreq)
 {
-	return m_pOriginal->GetMonitorFrequency(lpFreq);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetScanLine(LPDWORD lpOut)
 {
-	return m_pOriginal->GetScanLine(lpOut);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetVerticalBlankStatus(LPBOOL lpOut)
 {
-	return m_pOriginal->GetVerticalBlankStatus(lpOut);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::Initialize(GUID FAR* pGUID)
 {
-	return m_pOriginal->Initialize(pGUID);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::RestoreDisplayMode()
 {
-	return m_pOriginal->RestoreDisplayMode();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 {
-	Debug(TEXT("Setting coop level for window 0x%08x (%i)"), hWnd, dwFlags);
-	return m_pOriginal->SetCooperativeLevel(hWnd, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
-	Debug(TEXT("Setting display mode %ix%ix%i (%i %i)"), dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
-	return m_pOriginal->SetDisplayMode(dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::WaitForVerticalBlank(DWORD dwFlags, HANDLE handle)
 {
-	return m_pOriginal->WaitForVerticalBlank(dwFlags, handle);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetAvailableVidMem(LPDDSCAPS2 lpCaps, LPDWORD lpTotal, LPDWORD lpFree)
 {
-	return m_pOriginal->GetAvailableVidMem(lpCaps, lpTotal, lpFree);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetSurfaceFromDC(HDC hDC, LPDIRECTDRAWSURFACE7* lpSurf)
 {
-	return m_pOriginal->GetSurfaceFromDC(hDC, lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::RestoreAllSurfaces()
 {
-	return m_pOriginal->RestoreAllSurfaces();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::TestCooperativeLevel()
 {
-	return m_pOriginal->TestCooperativeLevel();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::GetDeviceIdentifier(LPDDDEVICEIDENTIFIER2 lpDevID, DWORD dwFlags)
 {
-	return m_pOriginal->GetDeviceIdentifier(lpDevID, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::StartModeTest(LPSIZE lpSizes, DWORD dwCount, DWORD dwFlags)
 {
-	return m_pOriginal->StartModeTest(lpSizes, dwCount, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT DDrawProxy::EvaluateMode(DWORD dwFlags, DWORD* lpOut)
 {
-	return m_pOriginal->EvaluateMode(dwFlags, lpOut);
+	return DDERR_GENERIC;
 }

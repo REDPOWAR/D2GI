@@ -2,18 +2,19 @@
 
 #include <ddraw.h>
 
+#include "../common.h"
 
-class DDrawProxy : public IDirectDraw7
+
+class DDrawProxy : public IDirectDraw7, public Unknown
 {
-protected:
-	IDirectDraw7* m_pOriginal;
 public:
-	DDrawProxy(IDirectDraw7*);
+	DDrawProxy();
 	virtual ~DDrawProxy();
 
-	STDMETHOD(QueryInterface) (REFIID riid, LPVOID FAR* ppvObj);
-	STDMETHOD_(ULONG, AddRef) () ;
-	STDMETHOD_(ULONG, Release) ();
+	STDMETHOD(QueryInterface) (REFIID riid, LPVOID FAR* ppvObj) { return Unknown::QueryInterface(riid, ppvObj); };
+	STDMETHOD_(ULONG, AddRef) () { return Unknown::AddRef(); };
+	STDMETHOD_(ULONG, Release) () { return Unknown::Release(); };
+
 	STDMETHOD(Compact)();
 	STDMETHOD(CreateClipper)(DWORD, LPDIRECTDRAWCLIPPER FAR*, IUnknown FAR*) ;
 	STDMETHOD(CreatePalette)( DWORD, LPPALETTEENTRY, LPDIRECTDRAWPALETTE FAR*, IUnknown FAR*) ;
