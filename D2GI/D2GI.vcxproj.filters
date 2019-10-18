@@ -60,6 +60,18 @@
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
+    <ClCompile Include="src\ddraw\dd_surface.cpp">
+      <Filter>Исходные файлы\ddraw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_surface.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_device.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -78,6 +90,18 @@
       <Filter>Файлы заголовков\ddraw</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_direct3d.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ddraw\dd_surface.h">
+      <Filter>Файлы заголовков\ddraw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_surface.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_device.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>

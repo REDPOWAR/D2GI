@@ -1,4 +1,6 @@
 
+#include "../common.h"
+
 #include "dd_ddraw.h"
 
 
@@ -140,12 +142,14 @@ HRESULT DDrawProxy::RestoreDisplayMode()
 
 HRESULT DDrawProxy::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 {
+	Debug(TEXT("Setting coop level for window 0x%08x (%i)"), hWnd, dwFlags);
 	return m_pOriginal->SetCooperativeLevel(hWnd, dwFlags);
 }
 
 
 HRESULT DDrawProxy::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
+	Debug(TEXT("Setting display mode %ix%ix%i (%i %i)"), dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
 	return m_pOriginal->SetDisplayMode(dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
 }
 

@@ -49,7 +49,6 @@ HRESULT D3DProxy::EnumDevices(LPD3DENUMDEVICESCALLBACK7 lpCallback, LPVOID lpArg
 
 HRESULT D3DProxy::CreateDevice(REFCLSID iid, LPDIRECTDRAWSURFACE7 lpSurf, LPDIRECT3DDEVICE7* lpDev)
 {
-	Debug(TEXT("Creating device for 0x%08x surface"), lpSurf);
 	return m_pOriginal->CreateDevice(iid, lpSurf, lpDev);
 }
 

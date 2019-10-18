@@ -10,4 +10,5 @@ public:
 	virtual ~D2GIDirectDraw();
 
 	STDMETHOD(QueryInterface) (REFIID riid, LPVOID FAR* ppvObj);
+	STDMETHOD(CreateSurface)(LPDDSURFACEDESC2, LPDIRECTDRAWSURFACE7 FAR*, IUnknown FAR*);
 };
