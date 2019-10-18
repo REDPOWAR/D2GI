@@ -210,6 +210,7 @@ HRESULT SurfaceProxy::SetOverlayPosition(LONG lX, LONG lY)
 
 HRESULT SurfaceProxy::SetPalette(LPDIRECTDRAWPALETTE lpPal)
 {
+	Debug(TEXT("Setting palette for 0x%08x"), GetOriginal());
 	return m_pOriginal->SetPalette(lpPal);
 }
 
