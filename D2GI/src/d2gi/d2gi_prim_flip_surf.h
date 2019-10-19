@@ -12,4 +12,7 @@ public:
 	virtual SURFACETYPE GetType() { return ST_PRIMARY_FLIPPABLE; }
 	virtual VOID ReleaseResource() {};
 	virtual VOID LoadResource() {};
+
+	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
+	STDMETHOD(GetSurfaceDesc)(D3D7::LPDDSURFACEDESC2);
 };

@@ -28,6 +28,9 @@ public:
 
 	D2GIDirectDraw* GetDirectDrawProxy() { return m_pDirectDrawProxy; }
 	D3D9::IDirect3D9* GetD3D9() { return m_pD3D9; }
+	DWORD GetOriginalWidth() { return m_dwOriginalWidth; }
+	DWORD GetOriginalHeight() { return m_dwOriginalHeight; }
+	DWORD GetOriginalBPP() { return m_dwOriginalBPP; }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);
