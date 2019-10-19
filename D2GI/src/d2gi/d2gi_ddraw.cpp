@@ -1,8 +1,8 @@
 
+#define INITGUID
 #include "../common.h"
 #include "../utils.h"
 
-#define INITGUID
 #include "../d3d7.h"
 #include "../d3d9.h"
 
@@ -27,15 +27,12 @@ D2GIDirectDraw::~D2GIDirectDraw()
 
 HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 {
-	/*if (IsEqualIID(riid, IID_IDirect3D7))
+	if (IsEqualIID(riid, D3D7::IID_IDirect3D7))
 	{
-		HRESULT hRes = DDrawProxy::QueryInterface(riid, ppvObj);
+		*ppvObj = (D3D7::IDirect3D7*)new D2GIDirect3D(m_pD2GI);
 
-		if (SUCCEEDED(hRes))
-			*ppvObj = (IDirect3D7*)new D2GIDirect3D((IDirect3D7*)*ppvObj);
-
-		return hRes;
-	}*/
+		return DD_OK;
+	}
 
 	return DDERR_GENERIC;
 }
