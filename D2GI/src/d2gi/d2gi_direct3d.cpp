@@ -4,7 +4,7 @@
 #include "d2gi_direct3d.h"
 #include "d2gi_surface.h"
 #include "d2gi_device.h"
-
+#include "d2gi_enums.h"
 
 using namespace D3D7;
 
@@ -32,4 +32,12 @@ HRESULT D2GIDirect3D::CreateDevice(REFCLSID iid, LPDIRECTDRAWSURFACE7 lpSurf, LP
 	return hRes;*/
 
 	return DDERR_GENERIC;
+}
+
+
+HRESULT D2GIDirect3D::EnumDevices(LPD3DENUMDEVICESCALLBACK7 pCallback, LPVOID pArg)
+{
+	pCallback(g_szDeviceDesc, g_szDeviceName, &g_sDeviceDesc, pArg);
+
+	return D3D_OK;
 }

@@ -1,4 +1,5 @@
 
+#define INITGUID
 #include "../d3d7.h"
 
 using namespace D3D7;
@@ -86,3 +87,24 @@ DDCAPS g_sHELCaps =
 	4330320, 512, 0, 0,
 };
 
+
+D3DDEVICEDESC7 g_sDeviceDesc =
+{
+	235515473, 
+	{
+		56, 2, 3301809, 255, 8191, 2047, 255,
+		807562, 6237, 117638975, 207, 63, 0, 0
+	},
+	{
+		56, 114, 3301809, 255, 8191, 2047, 255,
+		807562, 6237, 117638975, 207, 63, 0, 0
+	},
+	1280, 1536, 1, 1, 8192, 8192, 8192, 8192, 16,
+	-16384.0, -16384.0, 16384.0, 16384.0, 0.0,
+	255, 524296, 16777215, 4, 4, 8, 1.0e+10,
+	IID_IDirect3DTnLHalDevice, 6, 4, 379, 0, 0, 0, 0, 
+};
+
+
+CHAR* g_szDeviceDesc = "Microsoft Direct3D Hardware Transform and Lighting acceleration capable device";
+CHAR* g_szDeviceName = "Direct3D T&L HAL";
