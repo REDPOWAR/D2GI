@@ -135,8 +135,10 @@ HRESULT D2GIDirectDraw::GetDeviceIdentifier(D3D7::LPDDDEVICEIDENTIFIER2 lpDID, D
 }
 
 
-HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpC1, D3D7::LPDDCAPS lpC2)
+HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpHALCaps, D3D7::LPDDCAPS lpHELCaps)
 {
-	D3D9::D3DCAPS9 s;
-	return DDERR_GENERIC;
+	*lpHALCaps = g_sHALCaps;
+	*lpHELCaps = g_sHELCaps;
+
+	return DD_OK;
 }
