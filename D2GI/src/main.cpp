@@ -1,23 +1,21 @@
 
-#include <ddraw.h>
-
 #include "d2gi/d2gi.h"
 
 
 #define EXPORT extern "C"
 
 
-EXPORT HRESULT WINAPI DirectDrawCreateEx(GUID* pGUID, LPVOID* lpDD, REFIID iid, IUnknown* pUnknown)
+EXPORT HRESULT WINAPI D3D7::DirectDrawCreateEx(GUID* pGUID, LPVOID* lpDD, REFIID iid, IUnknown* pUnknown)
 {
 	D2GI* pD2GI = new D2GI();
 
-	*lpDD = (IDirectDraw7*)pD2GI->GetDirectDrawProxy();
+	*lpDD = (D3D7::IDirectDraw7*)pD2GI->GetDirectDrawProxy();
 
 	return DD_OK;
 }
 
 
-EXPORT _Check_return_ HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA pCallback, LPVOID pContext)
+EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateA(D3D7::LPDDENUMCALLBACKA pCallback, LPVOID pContext)
 {
 	pCallback(NULL, "Primary Video Driver", "display", pContext);
 
@@ -79,35 +77,35 @@ EXPORT VOID WINAPI DSoundHelp()
 
 
 
-EXPORT _Check_return_ HRESULT WINAPI DirectDrawCreate(GUID FAR* lpGUID, LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter)
+EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreate(GUID FAR* lpGUID, D3D7::LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter)
 {
 	return DDERR_GENERIC;
 }
 
 
 
-EXPORT _Check_return_ HRESULT WINAPI DirectDrawCreateClipper(DWORD dwFlags, LPDIRECTDRAWCLIPPER FAR* lplpDDClipper, IUnknown FAR* pUnkOuter)
+EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreateClipper(DWORD dwFlags, D3D7::LPDIRECTDRAWCLIPPER FAR* lplpDDClipper, IUnknown FAR* pUnkOuter)
 {
 	return DDERR_GENERIC;
 }
 
 
 
-EXPORT HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags)
+EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateExA(D3D7::LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags)
 {
 	return DDERR_GENERIC;
 }
 
 
 
-EXPORT HRESULT WINAPI DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback, LPVOID lpContext, DWORD dwFlags)
+EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateExW(D3D7::LPDDENUMCALLBACKEXW lpCallback, LPVOID lpContext, DWORD dwFlags)
 {
 	return DDERR_GENERIC;
 }
 
 
 
-EXPORT _Check_return_ HRESULT WINAPI DirectDrawEnumerateW(LPDDENUMCALLBACKW lpCallback, LPVOID lpContext)
+EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateW(D3D7::LPDDENUMCALLBACKW lpCallback, LPVOID lpContext)
 {
 	return DDERR_GENERIC;
 }

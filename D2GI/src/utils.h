@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ddraw.h>
+#include "d3d7.h"
 
 
-VOID DebugSurfaceDesc(DDSURFACEDESC2* pDesc);
+VOID DebugSurfaceDesc(D3D7::DDSURFACEDESC2* pDesc);

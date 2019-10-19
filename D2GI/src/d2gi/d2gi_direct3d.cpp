@@ -6,6 +6,9 @@
 #include "d2gi_device.h"
 
 
+using namespace D3D7;
+
+
 D2GIDirect3D::D2GIDirect3D(IDirect3D7* pOriginal) : D3DProxy(pOriginal)
 {
 

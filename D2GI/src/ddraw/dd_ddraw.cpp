@@ -4,6 +4,9 @@
 #include "dd_ddraw.h"
 
 
+using namespace D3D7;
+
+
 DDrawProxy::DDrawProxy() 
 {
 }

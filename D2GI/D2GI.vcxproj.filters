@@ -75,6 +75,12 @@
     <ClCompile Include="src\d2gi\d2gi.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_enums.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_common.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -112,6 +118,15 @@
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_common.h">
       <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_enums.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d3d9.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d3d7.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

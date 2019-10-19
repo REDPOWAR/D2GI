@@ -4,6 +4,9 @@
 #include "d3d_direct3d.h"
 
 
+using namespace D3D7;
+
+
 D3DProxy::D3DProxy(IDirect3D7* pOriginal) : m_pOriginal(pOriginal)
 {
 

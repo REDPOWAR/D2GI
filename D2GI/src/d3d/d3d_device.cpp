@@ -4,6 +4,9 @@
 #include "d3d_device.h"
 
 
+using namespace D3D7;
+
+
 DeviceProxy::DeviceProxy(IDirect3DDevice7* pOriginal) : m_pOriginal(pOriginal)
 {
 

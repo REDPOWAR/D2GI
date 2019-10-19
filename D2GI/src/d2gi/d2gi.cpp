@@ -1,6 +1,4 @@
 
-#include <d3d9.h>
-
 #include "../common.h"
 
 #include "d2gi.h"
@@ -32,7 +30,7 @@ VOID D2GI::OnDirectDrawReleased()
 
 VOID D2GI::LoadD3D9Library()
 {
-	typedef IDirect3D9* (WINAPI* DIRECT3DCREATE9)(UINT);
+	typedef D3D9::IDirect3D9* (WINAPI* DIRECT3DCREATE9)(UINT);
 
 	TCHAR           szPath[MAX_PATH];
 	DIRECT3DCREATE9 pfnDirect3DCreate9;
@@ -65,7 +63,7 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 
 VOID D2GI::ResetD3D9Device()
 {
-	D3DPRESENT_PARAMETERS sParams;
+	D3D9::D3DPRESENT_PARAMETERS sParams;
 
 	RELEASE(m_pDev);
 
@@ -73,14 +71,14 @@ VOID D2GI::ResetD3D9Device()
 	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwOriginalWidth, m_dwOriginalHeight, 0);
 
 	ZeroMemory(&sParams, sizeof(sParams));
-	sParams.AutoDepthStencilFormat = D3DFMT_D24X8;
+	sParams.AutoDepthStencilFormat = D3D9::D3DFMT_D24X8;
 	sParams.EnableAutoDepthStencil = TRUE;
 	sParams.BackBufferCount = 1;
 	sParams.BackBufferWidth = m_dwOriginalWidth;
 	sParams.BackBufferHeight = m_dwOriginalHeight;
 	sParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-	sParams.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_DISCARD;
 	sParams.Windowed = TRUE;
 
-	m_pD3D9->CreateDevice(0, D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &sParams, &m_pDev);
+	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &sParams, &m_pDev);
 }

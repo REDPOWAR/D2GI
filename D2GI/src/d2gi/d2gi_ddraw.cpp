@@ -1,14 +1,16 @@
 
-#define INITGUID
-#include <d3d.h>
-
 #include "../common.h"
 #include "../utils.h"
+
+#define INITGUID
+#include "../d3d7.h"
+#include "../d3d9.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
 #include "d2gi_direct3d.h"
 #include "d2gi_surface.h"
+#include "d2gi_enums.h"
 
 
 D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
@@ -39,7 +41,7 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 }
 
 
-HRESULT D2GIDirectDraw::CreateSurface(LPDDSURFACEDESC2 lpDesc, LPDIRECTDRAWSURFACE7 FAR* lpSurf , IUnknown FAR* pUnknown)
+HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf , IUnknown FAR* pUnknown)
 {
 	/*HRESULT hRes = DDrawProxy::CreateSurface(lpDesc, lpSurf, pUnknown);
 
@@ -95,4 +97,46 @@ HRESULT D2GIDirectDraw::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBP
 	m_pD2GI->OnDisplayModeSet(dwWidth, dwHeight, dwBPP, dwFlags);
 
 	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::EnumDisplayModes(DWORD dwFlags, D3D7::LPDDSURFACEDESC2 lpSurfDesc, LPVOID lpArg, D3D7::LPDDENUMMODESCALLBACK2 lpCallback)
+{
+	INT i;
+
+	for (i = 0; i < (INT)g_uAvailableDisplayModesCount; i++)
+	{
+		if (!lpCallback(g_asAvailableDisplayModes + i, lpArg))
+			break;
+	}
+
+	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::GetDeviceIdentifier(D3D7::LPDDDEVICEIDENTIFIER2 lpDID, DWORD)
+{
+	D3D9::_D3DADAPTER_IDENTIFIER9 sAdapterID;
+	D3D9::IDirect3D9* pD3D9 = GetD3D9();
+
+	pD3D9->GetAdapterIdentifier(0, 0, &sAdapterID);
+	
+	strcpy(lpDID->szDescription, sAdapterID.Description);
+	strcpy(lpDID->szDriver, sAdapterID.Driver);
+	lpDID->dwDeviceId = sAdapterID.DeviceId;
+	lpDID->dwRevision = sAdapterID.Revision;
+	lpDID->dwSubSysId = sAdapterID.SubSysId;
+	lpDID->dwVendorId = sAdapterID.VendorId;
+	lpDID->dwWHQLLevel = sAdapterID.WHQLLevel;
+	lpDID->guidDeviceIdentifier = sAdapterID.DeviceIdentifier;
+	lpDID->liDriverVersion = sAdapterID.DriverVersion;
+
+	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpC1, D3D7::LPDDCAPS lpC2)
+{
+	D3D9::D3DCAPS9 s;
+	return DDERR_GENERIC;
 }

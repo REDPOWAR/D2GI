@@ -5,6 +5,9 @@
 #include "d2gi_surface.h"
 
 
+using namespace D3D7;
+
+
 D2GIDevice::D2GIDevice(IDirect3DDevice7* pOriginal) : DeviceProxy(pOriginal)
 {
 

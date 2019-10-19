@@ -5,6 +5,9 @@
 #include "d2gi_surface.h"
 
 
+using namespace D3D7;
+
+
 D2GISurface::D2GISurface(IDirectDrawSurface7* pOriginal) 
 	: SurfaceProxy(pOriginal), m_pBackBuffer(NULL), m_pZBuffer(NULL), m_pMipMap(NULL)
 {

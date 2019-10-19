@@ -4,6 +4,9 @@
 #include "dd_surface.h"
 
 
+using namespace D3D7;
+
+
 SurfaceProxy::SurfaceProxy(IDirectDrawSurface7* pOriginal) : m_pOriginal(pOriginal)
 {
 

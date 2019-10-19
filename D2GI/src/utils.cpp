@@ -2,6 +2,8 @@
 #include "common.h"
 #include "utils.h"
 
+using namespace D3D7;
+
 
 VOID DebugSurfaceDesc(DDSURFACEDESC2* pDesc)
 {

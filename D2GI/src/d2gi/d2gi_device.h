@@ -6,8 +6,8 @@
 class D2GIDevice : public DeviceProxy
 {
 public:
-	D2GIDevice(IDirect3DDevice7*);
+	D2GIDevice(D3D7::IDirect3DDevice7*);
 	virtual ~D2GIDevice();
 
-	STDMETHOD(SetTexture)(DWORD, LPDIRECTDRAWSURFACE7);
+	STDMETHOD(SetTexture)(DWORD, D3D7::LPDIRECTDRAWSURFACE7);
 };

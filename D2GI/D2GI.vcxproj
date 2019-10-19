@@ -148,9 +148,11 @@
   <ItemGroup>
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\d2gi\d2gi.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_common.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp" />
     <ClCompile Include="src\d2gi\d2gi_device.cpp" />
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
     <ClCompile Include="src\d2gi\d2gi_surface.cpp" />
     <ClCompile Include="src\d3d\d3d_device.cpp" />
     <ClCompile Include="src\d3d\d3d_direct3d.cpp" />
@@ -166,7 +168,10 @@
     <ClInclude Include="src\d2gi\d2gi_ddraw.h" />
     <ClInclude Include="src\d2gi\d2gi_device.h" />
     <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
+    <ClInclude Include="src\d2gi\d2gi_enums.h" />
     <ClInclude Include="src\d2gi\d2gi_surface.h" />
+    <ClInclude Include="src\d3d7.h" />
+    <ClInclude Include="src\d3d9.h" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />
     <ClInclude Include="src\d3d\d3d_device.h" />
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
