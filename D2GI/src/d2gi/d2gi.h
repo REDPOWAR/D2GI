@@ -20,6 +20,8 @@ class D2GI
 
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
+	VOID ReleaseResources();
+	VOID LoadResources();
 public:
 	D2GI();
 	~D2GI();

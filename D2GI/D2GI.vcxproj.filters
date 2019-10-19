@@ -81,6 +81,15 @@
     <ClCompile Include="src\d2gi\d2gi_common.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_resource.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_container.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -127,6 +136,15 @@
     </ClInclude>
     <ClInclude Include="src\d3d7.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_prim_flip_surf.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_container.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_resource.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

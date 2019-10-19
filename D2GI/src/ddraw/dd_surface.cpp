@@ -7,7 +7,7 @@
 using namespace D3D7;
 
 
-SurfaceProxy::SurfaceProxy(IDirectDrawSurface7* pOriginal) : m_pOriginal(pOriginal)
+SurfaceProxy::SurfaceProxy() : Unknown()
 {
 
 }
@@ -19,302 +19,277 @@ SurfaceProxy::~SurfaceProxy()
 }
 
 
-HRESULT SurfaceProxy::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
-{
-	return m_pOriginal->QueryInterface(riid, ppvObj);
-}
-
-
-ULONG SurfaceProxy::AddRef()
-{
-	return m_pOriginal->AddRef();
-}
-
-
-ULONG SurfaceProxy::Release()
-{
-	ULONG uRes = m_pOriginal->Release();
-
-	if (uRes == 0)
-		delete this;
-
-	return uRes;
-}
-
-
 HRESULT SurfaceProxy::AddAttachedSurface(LPDIRECTDRAWSURFACE7 lpSurf)
 {
-	return m_pOriginal->AddAttachedSurface(lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::AddOverlayDirtyRect(LPRECT lpRect)
 {
-	return m_pOriginal->AddOverlayDirtyRect(lpRect);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::Blt(LPRECT lpDestRect, LPDIRECTDRAWSURFACE7 lpSrc, LPRECT lpSrcRect, DWORD dwFlags, LPDDBLTFX lpFX)
 {
-	return m_pOriginal->Blt(lpDestRect, lpSrc, lpSrcRect, dwFlags, lpFX);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::BltBatch(LPDDBLTBATCH lpBatch, DWORD dwCount, DWORD dw)
 {
-	return m_pOriginal->BltBatch(lpBatch, dwCount, dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::BltFast(DWORD dwX, DWORD dwY, LPDIRECTDRAWSURFACE7 lpSrc, LPRECT lpSrcRect, DWORD dwFlags)
 {
-	return m_pOriginal->BltFast(dwX, dwY, lpSrc, lpSrcRect, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::DeleteAttachedSurface(DWORD dw, LPDIRECTDRAWSURFACE7 lpSurf)
 {
-	return m_pOriginal->DeleteAttachedSurface(dw, lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::EnumAttachedSurfaces(LPVOID lpArg, LPDDENUMSURFACESCALLBACK7 lpCallback)
 {
-	return m_pOriginal->EnumAttachedSurfaces(lpArg, lpCallback);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::EnumOverlayZOrders(DWORD dwFlags, LPVOID lpArg, LPDDENUMSURFACESCALLBACK7 lpCallback)
 {
-	return m_pOriginal->EnumOverlayZOrders(dwFlags, lpArg, lpCallback);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::Flip(LPDIRECTDRAWSURFACE7 lpSurf, DWORD dwFlags)
 {
-	return m_pOriginal->Flip(lpSurf, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetAttachedSurface(LPDDSCAPS2 lpCaps, LPDIRECTDRAWSURFACE7 FAR* lpSurf)
 {
-	return m_pOriginal->GetAttachedSurface(lpCaps, lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetBltStatus(DWORD dw)
 {
-	return m_pOriginal->GetBltStatus(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetCaps(LPDDSCAPS2 lpCaps)
 {
-	return m_pOriginal->GetCaps(lpCaps);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetClipper(LPDIRECTDRAWCLIPPER FAR* lpClipper)
 {
-	return m_pOriginal->GetClipper(lpClipper);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetColorKey(DWORD dwFlags, LPDDCOLORKEY lpCK)
 {
-	return m_pOriginal->GetColorKey(dwFlags, lpCK);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetDC(HDC FAR* lpDC)
 {
-	return m_pOriginal->GetDC(lpDC);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetFlipStatus(DWORD dw)
 {
-	return m_pOriginal->GetFlipStatus(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetOverlayPosition(LPLONG lpX, LPLONG lpY)
 {
-	return m_pOriginal->GetOverlayPosition(lpX, lpY);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetPalette(LPDIRECTDRAWPALETTE FAR* lpPal)
 {
-	return m_pOriginal->GetPalette(lpPal);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetPixelFormat(LPDDPIXELFORMAT lpPF)
 {
-	return m_pOriginal->GetPixelFormat(lpPF);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetSurfaceDesc(LPDDSURFACEDESC2 lpDesc)
 {
-	return m_pOriginal->GetSurfaceDesc(lpDesc);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::Initialize(LPDIRECTDRAW lpDD, LPDDSURFACEDESC2 lpSurf)
 {
-	return m_pOriginal->Initialize(lpDD, lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::IsLost()
 {
-	return m_pOriginal->IsLost();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::Lock(LPRECT lpRect, LPDDSURFACEDESC2 lpDesc, DWORD dwFlags, HANDLE h)
 {
-	Debug(TEXT("Locking 0x%08x surface"), GetOriginal());
-	return m_pOriginal->Lock(lpRect, lpDesc, dwFlags, h);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::ReleaseDC(HDC hDC)
 {
-	return m_pOriginal->ReleaseDC(hDC);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::Restore()
 {
-	return m_pOriginal->Restore();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetClipper(LPDIRECTDRAWCLIPPER lpClipper)
 {
-	return m_pOriginal->SetClipper(lpClipper);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetColorKey(DWORD dwFlags, LPDDCOLORKEY lpCK)
 {
-	return m_pOriginal->SetColorKey(dwFlags, lpCK);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetOverlayPosition(LONG lX, LONG lY)
 {
-	return m_pOriginal->SetOverlayPosition(lX, lY);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetPalette(LPDIRECTDRAWPALETTE lpPal)
 {
-	Debug(TEXT("Setting palette for 0x%08x"), GetOriginal());
-	return m_pOriginal->SetPalette(lpPal);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::Unlock(LPRECT lpRect)
 {
-	return m_pOriginal->Unlock(lpRect);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::UpdateOverlay(LPRECT lpSrcRect, LPDIRECTDRAWSURFACE7 lpSurf, LPRECT lpDestRect, DWORD dwFlags, LPDDOVERLAYFX lpFX)
 {
-	return m_pOriginal->UpdateOverlay(lpSrcRect, lpSurf, lpDestRect, dwFlags, lpFX);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::UpdateOverlayDisplay(DWORD dw)
 {
-	return m_pOriginal->UpdateOverlayDisplay(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::UpdateOverlayZOrder(DWORD dwFlags, LPDIRECTDRAWSURFACE7 lpSurf)
 {
-	return m_pOriginal->UpdateOverlayZOrder(dwFlags, lpSurf);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetDDInterface(LPVOID FAR* lpOut)
 {
-	return m_pOriginal->GetDDInterface(lpOut);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::PageLock(DWORD dw)
 {
-	return m_pOriginal->PageLock(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::PageUnlock(DWORD dw)
 {
-	return m_pOriginal->PageUnlock(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetSurfaceDesc(LPDDSURFACEDESC2 lpDesc, DWORD dw)
 {
-	return m_pOriginal->SetSurfaceDesc(lpDesc, dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetPrivateData(REFGUID iid, LPVOID lpData, DWORD dwSize, DWORD dwFlags)
 {
-	return m_pOriginal->SetPrivateData(iid, lpData, dwSize, dwFlags);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetPrivateData(REFGUID iid, LPVOID lpData, LPDWORD lpSize)
 {
-	return m_pOriginal->GetPrivateData(iid, lpData, lpSize);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::FreePrivateData(REFGUID iid)
 {
-	return m_pOriginal->FreePrivateData(iid);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetUniquenessValue(LPDWORD lpdw)
 {
-	return m_pOriginal->GetUniquenessValue(lpdw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::ChangeUniquenessValue()
 {
-	return m_pOriginal->ChangeUniquenessValue();
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetPriority(DWORD dw)
 {
-	return m_pOriginal->SetPriority(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetPriority(LPDWORD lpdw)
 {
-	return m_pOriginal->GetPriority(lpdw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::SetLOD(DWORD dw)
 {
-	return m_pOriginal->SetLOD(dw);
+	return DDERR_GENERIC;
 }
 
 
 HRESULT SurfaceProxy::GetLOD(LPDWORD lpdw)
 {
-	return m_pOriginal->GetLOD(lpdw);
+	return DDERR_GENERIC;
 }

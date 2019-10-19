@@ -9,18 +9,19 @@
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
 #include "d2gi_direct3d.h"
-#include "d2gi_surface.h"
 #include "d2gi_enums.h"
+#include "d2gi_prim_flip_surf.h"
 
 
 D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
 {
-
+	m_pSurfaceContainer = new D2GIResourceContainer(m_pD2GI);
 }
 
 
 D2GIDirectDraw::~D2GIDirectDraw()
 {
+	DEL(m_pSurfaceContainer);
 	m_pD2GI->OnDirectDrawReleased();
 }
 
@@ -40,38 +41,15 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 
 HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf , IUnknown FAR* pUnknown)
 {
-	/*HRESULT hRes = DDrawProxy::CreateSurface(lpDesc, lpSurf, pUnknown);
-
-	if (SUCCEEDED(hRes))
+	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_FLIP))
 	{
-		Debug(TEXT("Surface creation (0x%08x):"), *lpSurf);
-		DebugSurfaceDesc(lpDesc);
-		if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_FLIP))
-		{
-			DDSURFACEDESC2 sD;
-			IDirectDrawSurface7* pAS;
+		D2GIPrimaryFlippableSurface* pSurf = new D2GIPrimaryFlippableSurface(m_pD2GI);
 
-			ZeroMemory(&sD, sizeof(sD));
-			sD.dwSize = sizeof(sD);
-			sD.dwFlags = DDSD_CAPS;
-			Debug(TEXT("This surface is flippable:"));
-			(*lpSurf)->GetSurfaceDesc(&sD);
-			Debug(TEXT("Root flags: %i"), sD.ddsCaps.dwCaps);
-			ZeroMemory(&sD, sizeof(sD));
-			sD.ddsCaps.dwCaps = DDSCAPS_BACKBUFFER;
-			(*lpSurf)->GetAttachedSurface(&sD.ddsCaps, &pAS);
-			ZeroMemory(&sD, sizeof(sD));
-			sD.dwSize = sizeof(sD);
-			sD.dwFlags = DDSD_CAPS;
-			pAS->GetSurfaceDesc(&sD);
-			pAS->Release();
-			Debug(TEXT("Back buffer flags: %i"), sD.ddsCaps.dwCaps);
-
-		}
-		*lpSurf = (IDirectDrawSurface7*)new D2GISurface((IDirectDrawSurface7*)*lpSurf);
+		m_pSurfaceContainer->Add((D2GIResource*)pSurf);
+		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
+		
+		return DD_OK;
 	}
-
-	return hRes;*/
 
 	return DDERR_GENERIC;
 }
@@ -138,4 +116,16 @@ HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpHALCaps, D3D7::LPDDCAPS lpHELCa
 	*lpHELCaps = g_sHELCaps;
 
 	return DD_OK;
+}
+
+
+VOID D2GIDirectDraw::ReleaseResources()
+{
+	m_pSurfaceContainer->ReleaseResources();
+}
+
+
+VOID D2GIDirectDraw::LoadResources()
+{
+	m_pSurfaceContainer->LoadResources();
 }

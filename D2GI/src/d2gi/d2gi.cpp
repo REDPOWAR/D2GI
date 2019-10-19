@@ -61,10 +61,24 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 	ResetD3D9Device();
 }
 
+
+VOID D2GI::ReleaseResources()
+{
+	m_pDirectDrawProxy->ReleaseResources();
+}
+
+
+VOID D2GI::LoadResources()
+{
+	m_pDirectDrawProxy->LoadResources();
+}
+
+
 VOID D2GI::ResetD3D9Device()
 {
 	D3D9::D3DPRESENT_PARAMETERS sParams;
 
+	ReleaseResources();
 	RELEASE(m_pDev);
 
 	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
@@ -81,4 +95,5 @@ VOID D2GI::ResetD3D9Device()
 	sParams.Windowed = TRUE;
 
 	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &sParams, &m_pDev);
+	LoadResources();
 }

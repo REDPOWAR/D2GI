@@ -2,18 +2,25 @@
 
 #include "../ddraw/dd_surface.h"
 
+#include "d2gi_common.h"
+#include "d2gi_resource.h"
 
-class D2GISurface : public SurfaceProxy
+
+enum SURFACETYPE
 {
-	D2GISurface* m_pBackBuffer;
-	D2GISurface* m_pZBuffer;
-	D2GISurface* m_pMipMap;
+	ST_PRIMARY_FLIPPABLE,
+	ST_BACKBUFFER,
+	ST_PRIMARY_SINGLE,
+	ST_ZBUFFER,
+	ST_TEXTURE,
+};
+
+
+class D2GISurface : public SurfaceProxy, public D2GIResource
+{
 public:
-	D2GISurface(D3D7::IDirectDrawSurface7*);
+	D2GISurface(D2GI*);
 	virtual ~D2GISurface();
 
-	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX);
-	STDMETHOD(Flip)(D3D7::LPDIRECTDRAWSURFACE7, DWORD);
-	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
-	STDMETHOD(AddAttachedSurface)(D3D7::LPDIRECTDRAWSURFACE7);
+	virtual SURFACETYPE GetType() = 0;
 };

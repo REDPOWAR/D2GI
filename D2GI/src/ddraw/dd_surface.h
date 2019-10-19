@@ -1,23 +1,20 @@
 #pragma once
 
-#include <windows.h>
+#include "../common.h"
 
 #include "../d3d7.h"
 
 
-class SurfaceProxy : public D3D7::IDirectDrawSurface7
+class SurfaceProxy : public D3D7::IDirectDrawSurface7, public Unknown
 {
-protected:
-	D3D7::IDirectDrawSurface7* m_pOriginal;
 public:
-	SurfaceProxy(D3D7::IDirectDrawSurface7*);
+	SurfaceProxy();
 	virtual ~SurfaceProxy();
 
-	D3D7::IDirectDrawSurface7* GetOriginal() { return m_pOriginal; }
+	STDMETHOD(QueryInterface) (REFIID riid, LPVOID FAR* ppvObj) { return Unknown::QueryInterface(riid, ppvObj); };
+	STDMETHOD_(ULONG, AddRef) () { return Unknown::AddRef(); };
+	STDMETHOD_(ULONG, Release) () { return Unknown::Release(); };
 
-	STDMETHOD(QueryInterface) ( REFIID riid, LPVOID FAR* ppvObj) ;
-	STDMETHOD_(ULONG, AddRef) ()  ;
-	STDMETHOD_(ULONG, Release) () ;
 	STDMETHOD(AddAttachedSurface)(D3D7::LPDIRECTDRAWSURFACE7) ;
 	STDMETHOD(AddOverlayDirtyRect)( LPRECT) ;
 	STDMETHOD(Blt)( LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX) ;
