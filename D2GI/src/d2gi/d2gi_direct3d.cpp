@@ -37,7 +37,13 @@ HRESULT D2GIDirect3D::CreateDevice(REFCLSID iid, LPDIRECTDRAWSURFACE7 lpSurf, LP
 
 HRESULT D2GIDirect3D::EnumDevices(LPD3DENUMDEVICESCALLBACK7 pCallback, LPVOID pArg)
 {
-	pCallback(g_szDeviceDesc, g_szDeviceName, &g_sDeviceDesc, pArg);
+	INT i;
+
+	for (i = 0; i < (INT)g_uDeviceCount; i++)
+	{
+		if (!pCallback(g_lpszDeviceDescs[i], g_lpszDeviceNames[i], g_asDeviceDescs + i, pArg))
+			break;
+	}
 
 	return D3D_OK;
 }
