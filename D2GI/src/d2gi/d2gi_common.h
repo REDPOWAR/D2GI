@@ -13,4 +13,5 @@ public:
 
 	D2GI* GetD2GI() { return m_pD2GI; }
 	D3D9::IDirect3D9* GetD3D9();
+	D3D9::IDirect3DDevice9* GetD3D9Device();
 };

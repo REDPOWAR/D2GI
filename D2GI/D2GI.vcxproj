@@ -161,6 +161,7 @@
     <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_resource.cpp" />
     <ClCompile Include="src\d2gi\d2gi_surface.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_sysmem_surf.cpp" />
     <ClCompile Include="src\d3d\d3d_device.cpp" />
     <ClCompile Include="src\d3d\d3d_direct3d.cpp" />
     <ClCompile Include="src\ddraw\dd_ddraw.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="src\d2gi\d2gi_prim_flip_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_resource.h" />
     <ClInclude Include="src\d2gi\d2gi_surface.h" />
+    <ClInclude Include="src\d2gi\d2gi_sysmem_surf.h" />
     <ClInclude Include="src\d3d7.h" />
     <ClInclude Include="src\d3d9.h" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />

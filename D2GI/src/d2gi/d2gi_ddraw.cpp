@@ -11,6 +11,7 @@
 #include "d2gi_direct3d.h"
 #include "d2gi_enums.h"
 #include "d2gi_prim_flip_surf.h"
+#include "d2gi_sysmem_surf.h"
 
 
 D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
@@ -48,6 +49,17 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		m_pSurfaceContainer->Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
 		
+		return DD_OK;
+	}
+
+	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->dwFlags & DDSD_WIDTH)
+		&& (lpDesc->dwFlags & DDSD_HEIGHT) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY))
+	{
+		D2GISystemMemorySurface* pSurf = new D2GISystemMemorySurface(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight);
+
+		m_pSurfaceContainer->Add((D2GIResource*)pSurf);
+		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
+
 		return DD_OK;
 	}
 
@@ -128,4 +140,18 @@ VOID D2GIDirectDraw::ReleaseResources()
 VOID D2GIDirectDraw::LoadResources()
 {
 	m_pSurfaceContainer->LoadResources();
+}
+
+
+HRESULT D2GIDirectDraw::GetAvailableVidMem(D3D7::LPDDSCAPS2 pCaps, LPDWORD lpdwTotal, LPDWORD lpdwFree)
+{
+	*lpdwTotal = *lpdwFree = 0;
+
+	/*if (pCaps->dwCaps & DDSCAPS_TEXTURE)
+	{
+		*lpdwFree = *lpdwTotal = 1778384896;
+		return DD_OK;
+	}*/
+
+	return DDERR_GENERIC;
 }

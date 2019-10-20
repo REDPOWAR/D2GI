@@ -28,6 +28,7 @@ public:
 
 	D2GIDirectDraw* GetDirectDrawProxy() { return m_pDirectDrawProxy; }
 	D3D9::IDirect3D9* GetD3D9() { return m_pD3D9; }
+	D3D9::IDirect3DDevice9* GetD3D9Device() { return m_pDev; }
 	DWORD GetOriginalWidth() { return m_dwOriginalWidth; }
 	DWORD GetOriginalHeight() { return m_dwOriginalHeight; }
 	DWORD GetOriginalBPP() { return m_dwOriginalBPP; }
