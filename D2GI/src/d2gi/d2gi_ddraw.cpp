@@ -44,10 +44,10 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 {
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_FLIP))
 	{
-		D2GIPrimaryFlippableSurface* pSurf = new D2GIPrimaryFlippableSurface(m_pD2GI);
+		m_pPrimaryFlippableSurf = new D2GIPrimaryFlippableSurface(m_pD2GI);
 
-		m_pSurfaceContainer->Add((D2GIResource*)pSurf);
-		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
+		m_pSurfaceContainer->Add((D2GIResource*)m_pPrimaryFlippableSurf);
+		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimaryFlippableSurf;
 		
 		return DD_OK;
 	}

@@ -7,6 +7,13 @@
 #include "d2gi_ddraw.h"
 
 
+enum RENDERSTATE
+{
+	RS_UNKNOWN,
+	RS_BACKBUFFER_STREAMING,
+};
+
+
 class D2GI
 {
 	D2GIDirectDraw* m_pDirectDrawProxy;
@@ -17,6 +24,8 @@ class D2GI
 
 	HWND m_hWnd;
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
+
+	RENDERSTATE m_eRenderState;
 
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
@@ -37,4 +46,6 @@ public:
 	VOID OnCooperativeLevelSet(HWND, DWORD);
 	VOID OnDisplayModeSet(DWORD, DWORD, DWORD, DWORD dwFlags);
 	VOID OnViewportSet(D3D7::LPD3DVIEWPORT7);
+	VOID OnFlip();
+	VOID OnBackBufferLock();
 };

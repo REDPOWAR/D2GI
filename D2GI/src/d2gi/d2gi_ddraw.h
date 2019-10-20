@@ -4,11 +4,13 @@
 
 #include "d2gi_common.h"
 #include "d2gi_container.h"
+#include "d2gi_prim_flip_surf.h"
 
 
 class D2GIDirectDraw : public DDrawProxy, public D2GIBase
 {
 	D2GIResourceContainer* m_pSurfaceContainer;
+	D2GIPrimaryFlippableSurface* m_pPrimaryFlippableSurf;
 public:
 	D2GIDirectDraw(D2GI*);
 	virtual ~D2GIDirectDraw();
@@ -24,4 +26,5 @@ public:
 
 	VOID ReleaseResources();
 	VOID LoadResources();
+	D2GIPrimaryFlippableSurface* GetPrimaryFlippableSurface() { return m_pPrimaryFlippableSurf; }
 };

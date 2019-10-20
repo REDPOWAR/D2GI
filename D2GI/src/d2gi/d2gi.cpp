@@ -3,10 +3,12 @@
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
+#include "d2gi_prim_flip_surf.h"
+#include "d2gi_backbuf_surf.h"
 
 
 D2GI::D2GI()
-	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL)
+	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL), m_eRenderState(RS_UNKNOWN)
 {
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 
@@ -111,4 +113,27 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 	sD3D9Viewport.MaxZ = pVP->dvMaxZ;
 
 	m_pDev->SetViewport(&sD3D9Viewport);
+}
+
+
+VOID D2GI::OnBackBufferLock()
+{
+	m_eRenderState = RS_BACKBUFFER_STREAMING;
+}
+
+
+VOID D2GI::OnFlip()
+{
+	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
+	{
+		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
+		D3D9::IDirect3DSurface9* pSurf = pPrimSurf->GetBackBufferSurface()->GetD3D9Surface();
+		D3D9::IDirect3DSurface9* pRT;
+
+		m_pDev->GetRenderTarget(0, &pRT);
+		HRESULT hRes = m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_POINT);
+		m_pDev->Present(NULL, NULL, NULL, NULL);
+
+		pRT->Release();
+	}
 }

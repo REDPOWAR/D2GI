@@ -20,4 +20,8 @@ public:
 	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
 	STDMETHOD(GetSurfaceDesc)(D3D7::LPDDSURFACEDESC2);
 	STDMETHOD(IsLost)();
+	STDMETHOD(Flip)(D3D7::LPDIRECTDRAWSURFACE7, DWORD);
+	STDMETHOD(GetFlipStatus)(DWORD);
+
+	D2GIBackBufferSurface* GetBackBufferSurface() { return m_pBackBuffer; }
 };

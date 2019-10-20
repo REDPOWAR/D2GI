@@ -6,9 +6,10 @@
 class D2GIBackBufferSurface : public D2GISurface
 {
 	DWORD m_dwWidth, m_dwHeight, m_dwBPP;
-	VOID* m_pData;
-	UINT  m_uDataSize, m_uPitch;
 	D3D7::DDPIXELFORMAT m_sPixelFormat;
+
+	D3D9::IDirect3DTexture9* m_pTexture;
+	D3D9::IDirect3DSurface9* m_pSurface;
 
 public:
 	D2GIBackBufferSurface(D2GI*);
@@ -21,4 +22,6 @@ public:
 	STDMETHOD(Lock)(LPRECT, D3D7::LPDDSURFACEDESC2, DWORD, HANDLE);
 	STDMETHOD(Unlock)(LPRECT);
 	STDMETHOD(IsLost)();
+
+	D3D9::IDirect3DSurface9* GetD3D9Surface() { return m_pSurface; }
 };

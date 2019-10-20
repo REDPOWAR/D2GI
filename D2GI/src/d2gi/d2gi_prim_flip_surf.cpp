@@ -63,3 +63,16 @@ HRESULT D2GIPrimaryFlippableSurface::IsLost()
 {
 	return DD_OK;
 }
+
+
+HRESULT D2GIPrimaryFlippableSurface::Flip(D3D7::LPDIRECTDRAWSURFACE7 pSurf, DWORD dwFlags)
+{
+	m_pD2GI->OnFlip();
+	return DD_OK;
+}
+
+
+HRESULT D2GIPrimaryFlippableSurface::GetFlipStatus(DWORD)
+{
+	return DD_OK;
+}

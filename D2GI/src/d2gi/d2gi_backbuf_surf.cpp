@@ -5,7 +5,7 @@
 
 
 D2GIBackBufferSurface::D2GIBackBufferSurface(D2GI* pD2GI) 
-	: D2GISurface(pD2GI), m_pData(NULL)
+	: D2GISurface(pD2GI), m_pTexture(NULL), m_pSurface(NULL)
 {
 	LoadResource();
 }
@@ -19,20 +19,27 @@ D2GIBackBufferSurface::~D2GIBackBufferSurface()
 
 VOID D2GIBackBufferSurface::ReleaseResource()
 {
-	DEL(m_pData);
+	RELEASE(m_pSurface);
+	RELEASE(m_pTexture);
 }
 
 
 VOID D2GIBackBufferSurface::LoadResource()
 {
+	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
+
 	m_dwWidth = m_pD2GI->GetOriginalWidth();
 	m_dwHeight = m_pD2GI->GetOriginalHeight();
 	m_dwBPP = m_pD2GI->GetOriginalBPP();
-	m_uDataSize = m_dwWidth * m_dwHeight * m_dwBPP / 8;
-	m_uPitch = m_dwWidth * m_dwBPP / 8;
-	m_pData = new BYTE[m_uDataSize];
+
 	if (m_dwBPP == 16)
+	{
+		pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
+			D3D9::D3DFMT_A1R5G5B5, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
+
+		m_pTexture->GetSurfaceLevel(0, &m_pSurface);
 		m_sPixelFormat = g_pf16_565;
+	}
 }
 
 
@@ -40,6 +47,10 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 {
 	if (pRect == NULL)
 	{
+		D3D9::D3DLOCKED_RECT sLockedRect;
+
+		m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+		
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
 		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_LPSURFACE;
@@ -47,8 +58,8 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 		pDesc->dwWidth = m_dwWidth;
 		pDesc->dwHeight = m_dwHeight;
 		pDesc->ddpfPixelFormat = m_sPixelFormat;
-		pDesc->lPitch = m_uPitch;
-		pDesc->lpSurface = m_pData;
+		pDesc->lPitch = sLockedRect.Pitch;
+		pDesc->lpSurface = sLockedRect.pBits;
 
 		return DD_OK;
 	}
@@ -59,6 +70,8 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 
 HRESULT D2GIBackBufferSurface::Unlock(LPRECT)
 {
+	m_pSurface->UnlockRect();
+	m_pD2GI->OnBackBufferLock();
 	return DD_OK;
 }
 
