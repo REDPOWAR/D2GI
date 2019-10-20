@@ -78,12 +78,14 @@
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(DXSDK_DIR)\Include\;$(IncludePath)</IncludePath>
     <OutDir>$(D2DIR)</OutDir>
+    <LibraryPath>$(DXSDK_DIR)\Lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>ddraw</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(DXSDK_DIR)\Include\;$(IncludePath)</IncludePath>
     <OutDir>$(D2DIR)</OutDir>
+    <LibraryPath>$(DXSDK_DIR)\Lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -95,6 +97,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <ModuleDefinitionFile>d2gi.def</ModuleDefinitionFile>
+      <AdditionalDependencies>d3dx9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -123,6 +126,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>d2gi.def</ModuleDefinitionFile>
+      <AdditionalDependencies>d3dx9.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -158,6 +162,8 @@
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
     <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_palette.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_palette_blitter.cpp" />
     <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_prim_single_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_resource.cpp" />
@@ -166,6 +172,7 @@
     <ClCompile Include="src\d3d\d3d_device.cpp" />
     <ClCompile Include="src\d3d\d3d_direct3d.cpp" />
     <ClCompile Include="src\ddraw\dd_ddraw.cpp" />
+    <ClCompile Include="src\ddraw\dd_palette.cpp" />
     <ClCompile Include="src\ddraw\dd_surface.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils.cpp" />
@@ -180,6 +187,8 @@
     <ClInclude Include="src\d2gi\d2gi_device.h" />
     <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
     <ClInclude Include="src\d2gi\d2gi_enums.h" />
+    <ClInclude Include="src\d2gi\d2gi_palette.h" />
+    <ClInclude Include="src\d2gi\d2gi_palette_blitter.h" />
     <ClInclude Include="src\d2gi\d2gi_prim_flip_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_prim_single_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_resource.h" />
@@ -190,6 +199,7 @@
     <ClInclude Include="src\d3d\d3d_direct3d.h" />
     <ClInclude Include="src\d3d\d3d_device.h" />
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
+    <ClInclude Include="src\ddraw\dd_palette.h" />
     <ClInclude Include="src\ddraw\dd_surface.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>

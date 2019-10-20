@@ -99,6 +99,15 @@
     <ClCompile Include="src\d2gi\d2gi_prim_single_surf.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
+    <ClCompile Include="src\ddraw\dd_palette.cpp">
+      <Filter>Исходные файлы\ddraw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_palette.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_palette_blitter.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -162,6 +171,15 @@
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_prim_single_surf.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ddraw\dd_palette.h">
+      <Filter>Файлы заголовков\ddraw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_palette.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_palette_blitter.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>

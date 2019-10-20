@@ -12,17 +12,19 @@
 #include "d2gi_enums.h"
 #include "d2gi_prim_flip_surf.h"
 #include "d2gi_sysmem_surf.h"
+#include "d2gi_prim_single_surf.h"
+#include "d2gi_palette.h"
 
 
 D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
 {
-	m_pSurfaceContainer = new D2GIResourceContainer(m_pD2GI);
+	m_pResourceContainer = new D2GIResourceContainer(m_pD2GI);
 }
 
 
 D2GIDirectDraw::~D2GIDirectDraw()
 {
-	DEL(m_pSurfaceContainer);
+	DEL(m_pResourceContainer);
 	m_pD2GI->OnDirectDrawReleased();
 }
 
@@ -46,7 +48,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 	{
 		m_pPrimaryFlippableSurf = new D2GIPrimaryFlippableSurface(m_pD2GI);
 
-		m_pSurfaceContainer->Add((D2GIResource*)m_pPrimaryFlippableSurf);
+		m_pResourceContainer->Add((D2GIResource*)m_pPrimaryFlippableSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimaryFlippableSurf;
 		
 		return DD_OK;
@@ -57,8 +59,18 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 	{
 		D2GISystemMemorySurface* pSurf = new D2GISystemMemorySurface(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight);
 
-		m_pSurfaceContainer->Add((D2GIResource*)pSurf);
+		m_pResourceContainer->Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
+
+		return DD_OK;
+	}
+
+	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE))
+	{
+		m_pPrimarySingleSurf = new D2GIPrimarySingleSurface(m_pD2GI);
+
+		m_pResourceContainer->Add((D2GIResource*)m_pPrimarySingleSurf);
+		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimarySingleSurf;
 
 		return DD_OK;
 	}
@@ -133,13 +145,13 @@ HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpHALCaps, D3D7::LPDDCAPS lpHELCa
 
 VOID D2GIDirectDraw::ReleaseResources()
 {
-	m_pSurfaceContainer->ReleaseResources();
+	m_pResourceContainer->ReleaseResources();
 }
 
 
 VOID D2GIDirectDraw::LoadResources()
 {
-	m_pSurfaceContainer->LoadResources();
+	m_pResourceContainer->LoadResources();
 }
 
 
@@ -152,6 +164,28 @@ HRESULT D2GIDirectDraw::GetAvailableVidMem(D3D7::LPDDSCAPS2 pCaps, LPDWORD lpdwT
 		*lpdwFree = *lpdwTotal = 1778384896;
 		return DD_OK;
 	}*/
+
+	return DDERR_GENERIC;
+}
+
+
+HRESULT D2GIDirectDraw::RestoreDisplayMode()
+{
+	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::CreatePalette(DWORD dwFlags, LPPALETTEENTRY pEntries, D3D7::LPDIRECTDRAWPALETTE FAR* lpPalette, IUnknown FAR*)
+{
+	if (dwFlags == (DDPCAPS_8BIT | DDPCAPS_ALLOW256))
+	{
+		D2GIPalette* pPalette = new D2GIPalette(m_pD2GI, pEntries);
+
+		m_pResourceContainer->Add((D2GIResource*)pPalette);
+		*lpPalette = (D3D7::IDirectDrawPalette*)pPalette;
+
+		return DD_OK;
+	}
 
 	return DDERR_GENERIC;
 }

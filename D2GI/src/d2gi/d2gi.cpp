@@ -5,12 +5,16 @@
 #include "d2gi_ddraw.h"
 #include "d2gi_prim_flip_surf.h"
 #include "d2gi_backbuf_surf.h"
+#include "d2gi_palette_blitter.h"
+#include "d2gi_prim_single_surf.h"
+#include "d2gi_sysmem_surf.h"
 
 
 D2GI::D2GI()
 	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL), m_eRenderState(RS_UNKNOWN)
 {
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
+	m_pPaletteBlitter = new D2GIPaletteBlitter(this);
 
 	LoadD3D9Library();
 }
@@ -18,6 +22,7 @@ D2GI::D2GI()
 
 D2GI::~D2GI()
 {
+	DEL(m_pPaletteBlitter);
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
@@ -67,12 +72,14 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 VOID D2GI::ReleaseResources()
 {
 	m_pDirectDrawProxy->ReleaseResources();
+	m_pPaletteBlitter->ReleaseResource();
 }
 
 
 VOID D2GI::LoadResources()
 {
 	m_pDirectDrawProxy->LoadResources();
+	m_pPaletteBlitter->LoadResource();
 }
 
 
@@ -133,6 +140,26 @@ VOID D2GI::OnFlip()
 
 		m_pDev->GetRenderTarget(0, &pRT);
 		HRESULT hRes = m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_POINT);
+		m_pDev->Present(NULL, NULL, NULL, NULL);
+
+		pRT->Release();
+	}
+}
+
+
+VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIPrimarySingleSurface* pDst, RECT* pDstRT)
+{
+	D3D9::IDirect3DSurface9* pRT;
+
+	m_eRenderState = RS_PRIMARY_SURFACE_BLITTING;
+
+	if (m_dwOriginalBPP == 8)
+	{
+		m_pDev->GetRenderTarget(0, &pRT);
+		m_pDev->BeginScene();
+		m_pDev->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x80808080, 1.0f, 0);
+		m_pPaletteBlitter->Blit(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT, pDst->GetPalette());
+		m_pDev->EndScene();
 		m_pDev->Present(NULL, NULL, NULL, NULL);
 
 		pRT->Release();

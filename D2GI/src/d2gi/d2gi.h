@@ -11,7 +11,13 @@ enum RENDERSTATE
 {
 	RS_UNKNOWN,
 	RS_BACKBUFFER_STREAMING,
+	RS_PRIMARY_SURFACE_BLITTING,
 };
+
+
+class D2GISystemMemorySurface;
+class D2GIPrimarySingleSurface;
+class D2GIPaletteBlitter;
 
 
 class D2GI
@@ -26,6 +32,8 @@ class D2GI
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
 
 	RENDERSTATE m_eRenderState;
+
+	D2GIPaletteBlitter* m_pPaletteBlitter;
 
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
@@ -48,4 +56,5 @@ public:
 	VOID OnViewportSet(D3D7::LPD3DVIEWPORT7);
 	VOID OnFlip();
 	VOID OnBackBufferLock();
+	VOID OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface*, RECT*, D2GIPrimarySingleSurface*, RECT*);
 };

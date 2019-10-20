@@ -5,12 +5,14 @@
 #include "d2gi_common.h"
 #include "d2gi_container.h"
 #include "d2gi_prim_flip_surf.h"
+#include "d2gi_prim_single_surf.h"
 
 
 class D2GIDirectDraw : public DDrawProxy, public D2GIBase
 {
-	D2GIResourceContainer* m_pSurfaceContainer;
+	D2GIResourceContainer* m_pResourceContainer;
 	D2GIPrimaryFlippableSurface* m_pPrimaryFlippableSurf;
+	D2GIPrimarySingleSurface* m_pPrimarySingleSurf;
 public:
 	D2GIDirectDraw(D2GI*);
 	virtual ~D2GIDirectDraw();
@@ -23,8 +25,11 @@ public:
 	STDMETHOD(GetCaps)(D3D7::LPDDCAPS, D3D7::LPDDCAPS);
 	STDMETHOD(GetDeviceIdentifier)(D3D7::LPDDDEVICEIDENTIFIER2, DWORD);
 	STDMETHOD(GetAvailableVidMem)(D3D7::LPDDSCAPS2, LPDWORD, LPDWORD);
+	STDMETHOD(RestoreDisplayMode)();
+	STDMETHOD(CreatePalette)(DWORD, LPPALETTEENTRY, D3D7::LPDIRECTDRAWPALETTE FAR*, IUnknown FAR*);
 
 	VOID ReleaseResources();
 	VOID LoadResources();
 	D2GIPrimaryFlippableSurface* GetPrimaryFlippableSurface() { return m_pPrimaryFlippableSurf; }
+	D2GIPrimarySingleSurface* GetPrimarySingleSurface() { return m_pPrimarySingleSurf; }
 };

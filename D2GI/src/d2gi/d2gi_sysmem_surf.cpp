@@ -5,7 +5,8 @@
 
 
 D2GISystemMemorySurface::D2GISystemMemorySurface(D2GI* pD2GI, DWORD dwW, DWORD dwH) 
-	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), m_dwCKFlags(0), m_pData(NULL)
+	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), m_dwCKFlags(0),
+	m_pTexture(NULL), m_pSurface(NULL)
 {
 	LoadResource();
 }
@@ -29,18 +30,33 @@ HRESULT D2GISystemMemorySurface::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY p
 
 VOID D2GISystemMemorySurface::ReleaseResource()
 {
-	DEL(m_pData);
+	RELEASE(m_pSurface);
+	RELEASE(m_pTexture);
 }
 
 
 VOID D2GISystemMemorySurface::LoadResource()
 {
+	D3D9::D3DFORMAT eTextureFormat;
+	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
+
 	m_dwBPP = m_pD2GI->GetOriginalBPP();
-	m_uDataSize = m_dwWidth * m_dwHeight * m_dwBPP / 8;
-	m_uPitch = m_dwWidth * m_dwBPP / 8;
-	m_pData = new BYTE[m_uDataSize];
+
 	if (m_dwBPP == 16)
+	{
 		m_sPixelFormat = g_pf16_565;
+		eTextureFormat = D3D9::D3DFMT_A1R5G5B5;
+	}
+	else if (m_dwBPP == 8)
+	{
+		m_sPixelFormat = g_pf8_Pal;
+		eTextureFormat = D3D9::D3DFMT_A8;
+	}
+
+	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
+		eTextureFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
+
+	m_pTexture->GetSurfaceLevel(0, &m_pSurface);
 }
 
 
@@ -48,6 +64,10 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 {
 	if (pRect == NULL)
 	{
+		D3D9::D3DLOCKED_RECT sLockedRect;
+
+		m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
 		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_LPSURFACE;
@@ -61,9 +81,9 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 		pDesc->ddsCaps.dwCaps = DDSCAPS_SYSTEMMEMORY;
 		pDesc->dwWidth = m_dwWidth;
 		pDesc->dwHeight = m_dwHeight;
-		pDesc->lPitch = m_uPitch;
 		pDesc->ddpfPixelFormat = m_sPixelFormat;
-		pDesc->lpSurface = m_pData;
+		pDesc->lpSurface = sLockedRect.pBits;
+		pDesc->lPitch = sLockedRect.Pitch;
 
 		return DD_OK;
 	}
@@ -73,6 +93,14 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 
 
 HRESULT D2GISystemMemorySurface::Unlock(LPRECT)
+{
+	m_pSurface->UnlockRect();
+	return DD_OK;
+}
+
+
+
+HRESULT D2GISystemMemorySurface::IsLost()
 {
 	return DD_OK;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <math.h>
 
 namespace D3D9
 {
@@ -28,6 +29,7 @@ namespace D3D9
 #undef D3D_OK
 
 #include <d3d9.h>
+#include <d3dx9.h>
 
 #undef D3DFVF_POSITION_MASK
 #undef D3DFVF_RESERVED2
