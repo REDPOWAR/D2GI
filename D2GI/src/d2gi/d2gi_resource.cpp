@@ -11,7 +11,8 @@ D2GIResource::D2GIResource(D2GI* pD2GI)
 
 D2GIResource::~D2GIResource()
 {
-	m_pContainer->Remove(this);
+	if(m_pContainer != NULL)
+		m_pContainer->Remove(this);
 }
 
 
