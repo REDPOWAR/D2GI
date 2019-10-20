@@ -84,6 +84,7 @@ VOID D2GI::ResetD3D9Device()
 	RELEASE(m_pDev);
 
 	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
 	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwOriginalWidth, m_dwOriginalHeight, 0);
 
 	ZeroMemory(&sParams, sizeof(sParams));
