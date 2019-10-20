@@ -57,3 +57,9 @@ HRESULT D2GIPrimaryFlippableSurface::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc
 
 	return DD_OK;
 }
+
+
+HRESULT D2GIPrimaryFlippableSurface::IsLost()
+{
+	return DD_OK;
+}

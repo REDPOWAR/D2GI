@@ -61,3 +61,9 @@ HRESULT D2GIBackBufferSurface::Unlock(LPRECT)
 {
 	return DD_OK;
 }
+
+
+HRESULT D2GIBackBufferSurface::IsLost()
+{
+	return DD_OK;
+}
