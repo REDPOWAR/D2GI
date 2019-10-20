@@ -1,22 +1,42 @@
 
 #include "d2gi.h"
 #include "d2gi_prim_flip_surf.h"
+#include "d2gi_backbuf_surf.h"
 
 
 D2GIPrimaryFlippableSurface::D2GIPrimaryFlippableSurface(D2GI* pD2GI) : D2GISurface(pD2GI)
 {
-
+	m_pBackBuffer = new D2GIBackBufferSurface(m_pD2GI);
 }
 
 
 D2GIPrimaryFlippableSurface::~D2GIPrimaryFlippableSurface()
 {
+	DEL(m_pBackBuffer);
+}
 
+
+VOID D2GIPrimaryFlippableSurface::ReleaseResource()
+{
+	m_pBackBuffer->ReleaseResource();
+}
+
+
+VOID D2GIPrimaryFlippableSurface::LoadResource()
+{
+	m_pBackBuffer->LoadResource();
 }
 
 
 HRESULT D2GIPrimaryFlippableSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf)
 {
+	if (pCaps->dwCaps & DDSCAPS_BACKBUFFER)
+	{
+		m_pBackBuffer->AddRef();
+		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pBackBuffer;
+		return DD_OK;
+	}
+
 	return DDERR_GENERIC;
 }
 
