@@ -178,3 +178,9 @@ DDPIXELFORMAT g_asTextureFormats[] =
 	{sizeof(DDPIXELFORMAT), DDPF_FOURCC, 894720068},
 };
 UINT g_uTextureFormatsCount = ARRAYSIZE(g_asTextureFormats);
+
+
+DDPIXELFORMAT g_pf16_565 =
+{
+	sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 63488, 2016, 31, 0,
+};
