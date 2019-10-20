@@ -153,8 +153,8 @@
     <ClCompile Include="src\d2gi\d2gi_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp" />
     <ClCompile Include="src\d2gi\d2gi_device.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
     <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
