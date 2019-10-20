@@ -97,3 +97,18 @@ VOID D2GI::ResetD3D9Device()
 	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &sParams, &m_pDev);
 	LoadResources();
 }
+
+
+VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
+{
+	D3D9::D3DVIEWPORT9 sD3D9Viewport;
+
+	sD3D9Viewport.X = pVP->dwX;
+	sD3D9Viewport.Y = pVP->dwY;
+	sD3D9Viewport.Width = pVP->dwWidth;
+	sD3D9Viewport.Height = pVP->dwHeight;
+	sD3D9Viewport.MinZ = pVP->dvMinZ;
+	sD3D9Viewport.MaxZ = pVP->dvMaxZ;
+
+	m_pDev->SetViewport(&sD3D9Viewport);
+}

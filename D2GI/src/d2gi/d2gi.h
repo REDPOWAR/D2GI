@@ -36,4 +36,5 @@ public:
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);
 	VOID OnDisplayModeSet(DWORD, DWORD, DWORD, DWORD dwFlags);
+	VOID OnViewportSet(D3D7::LPD3DVIEWPORT7);
 };

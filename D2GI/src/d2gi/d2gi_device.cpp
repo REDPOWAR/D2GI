@@ -4,6 +4,7 @@
 #include "d2gi_device.h"
 #include "d2gi_surface.h"
 #include "d2gi_enums.h"
+#include "d2gi.h"
 
 
 using namespace D3D7;
@@ -42,5 +43,12 @@ HRESULT D2GIDevice::EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK pCallback, 
 			break;
 	}
 
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::SetViewport(D3D7::LPD3DVIEWPORT7 pVP)
+{
+	m_pD2GI->OnViewportSet(pVP);
 	return DD_OK;
 }
