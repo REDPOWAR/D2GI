@@ -3,6 +3,7 @@
 
 #include "d2gi_device.h"
 #include "d2gi_surface.h"
+#include "d2gi_enums.h"
 
 
 using namespace D3D7;
@@ -28,4 +29,18 @@ HRESULT D2GIDevice::SetTexture(DWORD i, LPDIRECTDRAWSURFACE7 lpTex)
 	return DeviceProxy::SetTexture(i, lpTex);*/
 
 	return DDERR_GENERIC;
+}
+
+
+HRESULT D2GIDevice::EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK pCallback, LPVOID pArg)
+{
+	INT i;
+
+	for (i = 0; i < (INT)g_uTextureFormatsCount; i++)
+	{
+		if (!pCallback(g_asTextureFormats + i, pArg))
+			break;
+	}
+
+	return DD_OK;
 }

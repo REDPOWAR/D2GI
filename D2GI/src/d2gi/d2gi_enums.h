@@ -13,3 +13,6 @@ extern D3D7::D3DDEVICEDESC7 g_asDeviceDescs[];
 extern CHAR* g_lpszDeviceDescs[];
 extern CHAR* g_lpszDeviceNames[];
 extern UINT g_uDeviceCount;
+
+extern D3D7::DDPIXELFORMAT g_asTextureFormats[];
+extern UINT g_uTextureFormatsCount;
