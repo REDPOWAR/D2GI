@@ -6,9 +6,10 @@
 
 class D2GISystemMemorySurface : public D2GISurface
 {
-	DWORD m_dwWidth, m_dwHeight;
+	DWORD m_dwWidth, m_dwHeight, m_dwBPP;
 	VOID* m_pData;
 	UINT  m_uDataSize, m_uPitch;
+	D3D7::DDPIXELFORMAT m_sPixelFormat;
 
 	D3D7::DDCOLORKEY m_sColorKey;
 	DWORD m_dwCKFlags;

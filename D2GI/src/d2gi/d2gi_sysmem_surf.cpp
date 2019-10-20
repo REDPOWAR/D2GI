@@ -35,9 +35,12 @@ VOID D2GISystemMemorySurface::ReleaseResource()
 
 VOID D2GISystemMemorySurface::LoadResource()
 {
-	m_uDataSize = m_dwWidth * m_dwHeight * m_pD2GI->GetOriginalBPP() / 8;
-	m_uPitch = m_dwWidth * m_pD2GI->GetOriginalBPP() / 8;
+	m_dwBPP = m_pD2GI->GetOriginalBPP();
+	m_uDataSize = m_dwWidth * m_dwHeight * m_dwBPP / 8;
+	m_uPitch = m_dwWidth * m_dwBPP / 8;
 	m_pData = new BYTE[m_uDataSize];
+	if (m_dwBPP == 16)
+		m_sPixelFormat = g_pf16_565;
 }
 
 
@@ -59,7 +62,7 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 		pDesc->dwWidth = m_dwWidth;
 		pDesc->dwHeight = m_dwHeight;
 		pDesc->lPitch = m_uPitch;
-		pDesc->ddpfPixelFormat = g_pf16_565;
+		pDesc->ddpfPixelFormat = m_sPixelFormat;
 		pDesc->lpSurface = m_pData;
 
 		return DD_OK;
