@@ -59,3 +59,24 @@ HRESULT D2GIDevice::Clear(DWORD dwCount, LPD3DRECT lpRects, DWORD dwFlags, D3DCO
 	m_pD2GI->OnClear(dwCount, lpRects, dwFlags, col, z, dwStencil);
 	return DD_OK;
 }
+
+
+HRESULT D2GIDevice::LightEnable(DWORD i, BOOL bEnable)
+{
+	m_pD2GI->OnLightEnable(i, bEnable);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::BeginScene()
+{
+	m_pD2GI->OnSceneBegin();
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::EndScene()
+{
+	m_pD2GI->OnSceneEnd();
+	return DD_OK;
+}

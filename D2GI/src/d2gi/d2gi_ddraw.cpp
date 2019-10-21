@@ -14,6 +14,8 @@
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_palette.h"
+#include "d2gi_zbuf_surf.h"
+#include "d2gi_texture.h"
 
 
 D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
@@ -42,7 +44,7 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 }
 
 
-HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf , IUnknown FAR* pUnknown)
+HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf, IUnknown FAR* pUnknown)
 {
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_FLIP))
 	{
@@ -50,7 +52,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 
 		m_pResourceContainer->Add((D2GIResource*)m_pPrimaryFlippableSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimaryFlippableSurf;
-		
+
 		return DD_OK;
 	}
 
@@ -71,6 +73,28 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 
 		m_pResourceContainer->Add((D2GIResource*)m_pPrimarySingleSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimarySingleSurf;
+
+		return DD_OK;
+	}
+
+	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER))
+	{
+		D2GIZBufferSurface* pSurf = new D2GIZBufferSurface(m_pD2GI);
+
+		m_pResourceContainer->Add((D2GIResource*)pSurf);
+		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
+
+		return DD_OK;
+	}
+
+	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_TEXTURE) 
+		&& (lpDesc->dwFlags & DDSD_WIDTH) && (lpDesc->dwFlags & DDSD_HEIGHT))
+	{
+		DWORD dwMipMapCount = (lpDesc->dwFlags & DDSD_MIPMAPCOUNT) ? lpDesc->dwMipMapCount : 0;
+		D2GITexture* pTex = new D2GITexture(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, dwMipMapCount);
+
+		m_pResourceContainer->Add((D2GIResource*)pTex);
+		*lpSurf = (D3D7::IDirectDrawSurface7*)pTex;
 
 		return DD_OK;
 	}
@@ -159,11 +183,11 @@ HRESULT D2GIDirectDraw::GetAvailableVidMem(D3D7::LPDDSCAPS2 pCaps, LPDWORD lpdwT
 {
 	*lpdwTotal = *lpdwFree = 0;
 
-	/*if (pCaps->dwCaps & DDSCAPS_TEXTURE)
+	if (pCaps->dwCaps & DDSCAPS_TEXTURE)
 	{
 		*lpdwFree = *lpdwTotal = 1778384896;
 		return DD_OK;
-	}*/
+	}
 
 	return DDERR_GENERIC;
 }

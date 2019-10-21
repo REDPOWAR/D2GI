@@ -12,12 +12,15 @@ enum RENDERSTATE
 	RS_UNKNOWN,
 	RS_BACKBUFFER_STREAMING,
 	RS_PRIMARY_SURFACE_BLITTING,
+	RS_BACKBUFFER_BLITTING,
 };
 
 
 class D2GISystemMemorySurface;
 class D2GIPrimarySingleSurface;
+class D2GIBackBufferSurface;
 class D2GIPaletteBlitter;
+class D2GITexture;
 
 
 class D2GI
@@ -58,4 +61,9 @@ public:
 	VOID OnBackBufferLock();
 	VOID OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface*, RECT*, D2GIPrimarySingleSurface*, RECT*);
 	VOID OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil);
+	VOID OnLightEnable(DWORD, BOOL);
+	VOID OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface*, RECT*, D2GIBackBufferSurface*, RECT*);
+	VOID OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface*, RECT*, D2GITexture*, RECT*);
+	VOID OnSceneBegin();
+	VOID OnSceneEnd();
 };

@@ -108,6 +108,12 @@
     <ClCompile Include="src\d2gi\d2gi_palette_blitter.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_texture.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -180,6 +186,12 @@
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_palette_blitter.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_texture.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>

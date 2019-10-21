@@ -31,6 +31,7 @@ public:
 	STDMETHOD(Lock)(LPRECT, D3D7::LPDDSURFACEDESC2, DWORD, HANDLE);
 	STDMETHOD(Unlock)(LPRECT);
 	STDMETHOD(IsLost)();
+	STDMETHOD(GetCaps)(D3D7::LPDDSCAPS2);
 
 	D3D9::IDirect3DSurface9* GetD3D9Surface() { return m_pSurface16; }
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture16; }

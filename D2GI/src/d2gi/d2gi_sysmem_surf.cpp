@@ -129,3 +129,12 @@ VOID D2GISystemMemorySurface::UpdateWithPalette(D2GIPalette* pPal)
 			((UINT16*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = pPalette16[((BYTE*)m_pData8)[i * m_dwWidth + j]];
 	m_pSurface16->UnlockRect();
 }
+
+
+HRESULT D2GISystemMemorySurface::GetCaps(D3D7::LPDDSCAPS2 pCaps)
+{
+	ZeroMemory(pCaps, sizeof(D3D7::DDSCAPS2));
+	pCaps->dwCaps = DDSCAPS_SYSTEMMEMORY;
+
+	return DD_OK;
+}

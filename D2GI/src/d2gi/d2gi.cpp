@@ -8,6 +8,7 @@
 #include "d2gi_palette_blitter.h"
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_sysmem_surf.h"
+#include "d2gi_texture.h"
 
 
 D2GI::D2GI()
@@ -144,6 +145,10 @@ VOID D2GI::OnFlip()
 
 		pRT->Release();
 	}
+	else if (m_eRenderState == RS_BACKBUFFER_BLITTING)
+	{
+		m_pDev->Present(NULL, NULL, NULL, NULL);
+	}
 }
 
 
@@ -168,4 +173,41 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
 {
 	m_pDev->Clear(dwCount, (D3D9::D3DRECT*)lpRects, dwFlags, col, z, dwStencil);
+}
+
+
+VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
+{
+	m_pDev->LightEnable(i, bEnable);
+}
+
+
+VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
+{
+	D3D9::IDirect3DSurface9* pRT;
+
+	m_eRenderState = RS_BACKBUFFER_BLITTING;
+
+	m_pDev->GetRenderTarget(0, &pRT);
+	m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, pDstRT, D3D9::D3DTEXF_POINT);
+
+	pRT->Release();
+}
+
+
+VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GITexture* pDst, RECT* pDstRT)
+{
+	m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pDst->GetD3D9Surface(), pDstRT, D3D9::D3DTEXF_POINT);
+}
+
+
+VOID D2GI::OnSceneBegin()
+{
+	m_pDev->BeginScene();
+}
+
+
+VOID D2GI::OnSceneEnd()
+{
+	m_pDev->EndScene();
 }

@@ -80,3 +80,25 @@ HRESULT D2GIBackBufferSurface::IsLost()
 {
 	return DD_OK;
 }
+
+
+HRESULT D2GIBackBufferSurface::AddAttachedSurface(D3D7::LPDIRECTDRAWSURFACE7 pSurf)
+{
+	if (((D2GISurface*)pSurf)->GetType() == ST_ZBUFFER)
+		return DD_OK;
+
+	return DDERR_GENERIC;
+}
+
+
+HRESULT D2GIBackBufferSurface::Blt(LPRECT pDestRT, D3D7::LPDIRECTDRAWSURFACE7 pSrc, LPRECT pSrcRT, DWORD dwFlags, D3D7::LPDDBLTFX lpFX)
+{
+	D2GISurface* pSurf = (D2GISurface*)pSrc;
+
+	if (pSrc == NULL || pSurf->GetType() != ST_SYSMEM)
+		return DDERR_GENERIC;
+
+	m_pD2GI->OnSysMemSurfaceBltOnBackBuffer((D2GISystemMemorySurface*)pSurf, pSrcRT, this, pDestRT);
+
+	return DD_OK;
+}
