@@ -52,3 +52,10 @@ HRESULT D2GIDevice::SetViewport(D3D7::LPD3DVIEWPORT7 pVP)
 	m_pD2GI->OnViewportSet(pVP);
 	return DD_OK;
 }
+
+
+HRESULT D2GIDevice::Clear(DWORD dwCount, LPD3DRECT lpRects, DWORD dwFlags, D3DCOLOR col, D3DVALUE z, DWORD dwStencil)
+{
+	m_pD2GI->OnClear(dwCount, lpRects, dwFlags, col, z, dwStencil);
+	return DD_OK;
+}
