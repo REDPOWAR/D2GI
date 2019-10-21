@@ -3,50 +3,37 @@
 
 
 D2GIPalette::D2GIPalette(D2GI* pD2GI, PALETTEENTRY* pEntries) 
-	: PaletteProxy(), D2GIResource(pD2GI), m_pTexture(NULL)
+	: PaletteProxy(), D2GIResource(pD2GI)
 {
 	CopyMemory(m_asEntries, pEntries, sizeof(m_asEntries));
-	LoadResource();
+	UpdateEntries16(0, 256);
 }
 
 
 D2GIPalette::~D2GIPalette()
 {
-	ReleaseResource();
 }
 
 
 HRESULT D2GIPalette::SetEntries(DWORD, DWORD dwIdx, DWORD dwCount, LPPALETTEENTRY pEntries)
 {
 	CopyMemory(m_asEntries + dwIdx, pEntries, sizeof(PALETTEENTRY) * dwCount);
-	ReleaseResource();
-	LoadResource();
+	UpdateEntries16(dwIdx, dwCount);
 
 	return DD_OK;
 }
 
 
-VOID D2GIPalette::ReleaseResource()
+VOID D2GIPalette::UpdateEntries16(DWORD dwIdx, DWORD dwCount)
 {
-	RELEASE(m_pTexture);
-}
+	DWORD i;
 
+	for (i = dwIdx; i < dwIdx + dwCount; i++)
+	{
+		BYTE bR = (BYTE)((INT)m_asEntries[i].peRed * (1 << 5) / 256);
+		BYTE bG = (BYTE)((INT)m_asEntries[i].peGreen * (1 << 5) / 256);
+		BYTE bB = (BYTE)((INT)m_asEntries[i].peBlue * (1 << 5) / 256);
 
-VOID D2GIPalette::LoadResource()
-{
-	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
-	D3D9::IDirect3DSurface9* pSurf;
-	D3D9::D3DLOCKED_RECT sLockedRect;
-	INT i;
-
-	pDev->CreateTexture(256, 1, 1, D3DUSAGE_DYNAMIC, D3D9::D3DFMT_A8R8G8B8, 
-		D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
-
-	m_pTexture->GetSurfaceLevel(0, &pSurf);
-	pSurf->LockRect(&sLockedRect, NULL, 0);
-	for (i = 0; i < 256; i++)
-		((UINT32*)sLockedRect.pBits)[i] = m_asEntries[i].peRed << 16 | m_asEntries[i].peGreen << 8 | m_asEntries[i].peBlue;
- 
-	pSurf->UnlockRect();
-	pSurf->Release();
+		m_auEntries16[i] = (UINT16)((bR << 10) | (bG << 5) | (bB));
+	}
 }

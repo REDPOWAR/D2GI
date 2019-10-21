@@ -139,7 +139,7 @@ VOID D2GI::OnFlip()
 		D3D9::IDirect3DSurface9* pRT;
 
 		m_pDev->GetRenderTarget(0, &pRT);
-		HRESULT hRes = m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_POINT);
+		m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_POINT);
 		m_pDev->Present(NULL, NULL, NULL, NULL);
 
 		pRT->Release();
@@ -155,11 +155,9 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 	if (m_dwOriginalBPP == 8)
 	{
+		pSrc->UpdateWithPalette(pDst->GetPalette());
 		m_pDev->GetRenderTarget(0, &pRT);
-		m_pDev->BeginScene();
-		m_pDev->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x80808080, 1.0f, 0);
-		m_pPaletteBlitter->Blit(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT, pDst->GetPalette());
-		m_pDev->EndScene();
+		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, pDstRT, D3D9::D3DTEXF_POINT);
 		m_pDev->Present(NULL, NULL, NULL, NULL);
 
 		pRT->Release();

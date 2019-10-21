@@ -125,7 +125,7 @@ VOID D2GIPaletteBlitter::LoadResource()
 VOID D2GIPaletteBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT, 
 	D3D9::IDirect3DTexture9* pSrc, RECT* pSrcRT, D2GIPalette* pPalette)
 {
-	IDirect3DDevice9* pDev = GetD3D9Device();
+	/*IDirect3DDevice9* pDev = GetD3D9Device();
 	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f }, afDstRect[] = {0.0, 0.0, 1.0f, 1.0f};
 
 	if (pSrcRT != NULL)
@@ -168,5 +168,5 @@ VOID D2GIPaletteBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 
 	pDev->SetRenderTarget(0, pDst);
 
-	pDev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
+	pDev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);*/
 }
