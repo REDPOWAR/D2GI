@@ -19,3 +19,6 @@ extern UINT g_uTextureFormatsCount;
 
 extern D3D7::DDPIXELFORMAT g_pf16_565;
 extern D3D7::DDPIXELFORMAT g_pf8_Pal;
+
+extern D3D7::DDPIXELFORMAT g_asZBufferFormats[];
+extern UINT g_uZBufferFormatsCount;

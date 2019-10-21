@@ -41,3 +41,17 @@ HRESULT D2GIDirect3D::EnumDevices(LPD3DENUMDEVICESCALLBACK7 pCallback, LPVOID pA
 
 	return D3D_OK;
 }
+
+
+HRESULT D2GIDirect3D::EnumZBufferFormats(REFCLSID, D3D7::LPD3DENUMPIXELFORMATSCALLBACK pCallback, LPVOID lpArg)
+{
+	INT i;
+
+	for (i = 0; i < (INT)g_uZBufferFormatsCount; i++)
+	{
+		if (!pCallback(g_asZBufferFormats + i, lpArg))
+			break;
+	}
+
+	return DD_OK;
+}
