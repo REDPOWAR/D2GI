@@ -3,12 +3,17 @@
 #include "d2gi_surface.h"
 
 
+class D2GITexture;
+
+
 class D2GIMipMapSurface : public D2GISurface
 {
+	D2GITexture* m_pParent;
+	UINT m_uLevelID;
 	D2GIMipMapSurface* m_pNextLevel;
 	D3D9::IDirect3DSurface9* m_pSurface;
 public:
-	D2GIMipMapSurface(D2GI*, D2GIMipMapSurface*);
+	D2GIMipMapSurface(D2GI*, D2GITexture*, UINT, D2GIMipMapSurface*);
 	virtual ~D2GIMipMapSurface();
 
 	virtual SURFACETYPE GetType() { return ST_MIPMAP; }

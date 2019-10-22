@@ -13,7 +13,7 @@ D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwW, DWORD dwH, DWORD dwMipMapCount)
 
 	m_lpMipMapLevels = new D2GIMipMapSurface* [m_dwMipMapCount];
 	for (i = (INT)m_dwMipMapCount - 1; i >= 0; i--)
-		m_lpMipMapLevels[i] = new D2GIMipMapSurface(m_pD2GI, (i < m_dwMipMapCount - 1) ? m_lpMipMapLevels[i + 1] : NULL);
+		m_lpMipMapLevels[i] = new D2GIMipMapSurface(m_pD2GI, this, i, (i < m_dwMipMapCount - 1) ? m_lpMipMapLevels[i + 1] : NULL);
 
 	LoadResource();
 }

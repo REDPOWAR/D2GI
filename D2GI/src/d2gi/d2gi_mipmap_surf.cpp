@@ -1,10 +1,11 @@
 
+#include "d2gi_texture.h"
 #include "d2gi_mipmap_surf.h"
 #include "d2gi_enums.h"
 
 
-D2GIMipMapSurface::D2GIMipMapSurface(D2GI* pD2GI, D2GIMipMapSurface* pNextSurf) 
-	: D2GISurface(pD2GI), m_pSurface(NULL), m_pNextLevel(pNextSurf)
+D2GIMipMapSurface::D2GIMipMapSurface(D2GI* pD2GI, D2GITexture* pParent, UINT uID, D2GIMipMapSurface* pNextSurf) 
+	: D2GISurface(pD2GI), m_pParent(pParent), m_uLevelID(uID), m_pSurface(NULL), m_pNextLevel(pNextSurf)
 {
 
 }
@@ -33,14 +34,14 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 		D3D9::D3DLOCKED_RECT sLockedRect;
 		D3D9::D3DSURFACE_DESC sSurfDesc;
 
-		m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+		m_pSurface->LockRect(&sLockedRect, NULL, (m_uLevelID == 0) ? D3DLOCK_DISCARD : 0);
 		m_pSurface->GetDesc(&sSurfDesc);
 
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
-		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_LPSURFACE | DDSD_MIPMAPCOUNT;
+		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT;
 
-		pDesc->dwMipMapCount = (m_pNextLevel == NULL) ? 0 : 1;
+		pDesc->dwMipMapCount = m_pParent->GetMipMapCount() - m_uLevelID;
 
 		/*if (m_dwCKFlags & DDCKEY_SRCBLT)
 		{
