@@ -181,15 +181,8 @@ VOID D2GIDirectDraw::LoadResources()
 
 HRESULT D2GIDirectDraw::GetAvailableVidMem(D3D7::LPDDSCAPS2 pCaps, LPDWORD lpdwTotal, LPDWORD lpdwFree)
 {
-	*lpdwTotal = *lpdwFree = 0;
-
-	if (pCaps->dwCaps & DDSCAPS_TEXTURE)
-	{
-		*lpdwFree = *lpdwTotal = 1778384896;
-		return DD_OK;
-	}
-
-	return DDERR_GENERIC;
+	*lpdwTotal = *lpdwFree = 1778384896;
+	return DD_OK;
 }
 
 
