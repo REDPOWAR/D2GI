@@ -211,3 +211,190 @@ VOID D2GI::OnSceneEnd()
 {
 	m_pDev->EndScene();
 }
+
+
+VOID D2GI::OnRenderStateSet(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
+{
+	switch (eState)
+	{
+		case D3D7::D3DRENDERSTATE_CULLMODE:
+			m_pDev->SetRenderState(D3D9::D3DRS_CULLMODE, dwValue);
+			break;
+		default:
+			return;
+	}
+}
+
+
+VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWORD dwValue)
+{
+	D3D9::D3DTEXTUREFILTERTYPE aeMagTexFMap[] =
+	{
+		D3D9::D3DTEXF_NONE,
+		D3D9::D3DTEXF_POINT,
+		D3D9::D3DTEXF_LINEAR,
+		D3D9::D3DTEXF_PYRAMIDALQUAD,
+		D3D9::D3DTEXF_GAUSSIANQUAD,
+		D3D9::D3DTEXF_ANISOTROPIC,
+	};
+
+	D3D9::D3DTEXTUREFILTERTYPE aeMinTexFMap[] =
+	{
+		D3D9::D3DTEXF_NONE,
+		D3D9::D3DTEXF_POINT,
+		D3D9::D3DTEXF_LINEAR,
+		D3D9::D3DTEXF_ANISOTROPIC,
+	};
+
+	D3D9::D3DTEXTUREFILTERTYPE aeMipTexFMap[] =
+	{
+		D3D9::D3DTEXF_NONE,
+		D3D9::D3DTEXF_POINT,
+		D3D9::D3DTEXF_LINEAR,
+	};
+
+	switch (eState)
+	{
+		case D3D7::D3DTSS_COLOROP:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_COLOROP, dwValue);
+			break;
+		case D3D7::D3DTSS_COLORARG1:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_COLORARG1, dwValue);
+			break;
+		case D3D7::D3DTSS_COLORARG2:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_COLORARG2, dwValue);
+			break;
+		case D3D7::D3DTSS_ALPHAOP:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_ALPHAOP, dwValue);
+			break;
+		case D3D7::D3DTSS_ALPHAARG1:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_ALPHAARG1, dwValue);
+			break;
+		case D3D7::D3DTSS_ALPHAARG2:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_ALPHAARG2, dwValue);
+			break;
+		case D3D7::D3DTSS_BUMPENVMAT00:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_BUMPENVMAT00, dwValue);
+			break;
+		case D3D7::D3DTSS_BUMPENVMAT01:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_BUMPENVMAT01, dwValue);
+			break;
+		case D3D7::D3DTSS_BUMPENVMAT10:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_BUMPENVMAT10, dwValue);
+			break;
+		case D3D7::D3DTSS_BUMPENVMAT11:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_BUMPENVMAT11, dwValue);
+			break;
+		case D3D7::D3DTSS_TEXCOORDINDEX:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_TEXCOORDINDEX, dwValue);
+			break;
+		case D3D7::D3DTSS_BUMPENVLSCALE:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_BUMPENVLSCALE, dwValue);
+			break;
+		case D3D7::D3DTSS_BUMPENVLOFFSET:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_BUMPENVLOFFSET, dwValue);
+			break;
+		case D3D7::D3DTSS_TEXTURETRANSFORMFLAGS:
+			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_TEXTURETRANSFORMFLAGS, dwValue);
+			break;
+
+		case D3D7::D3DTSS_ADDRESS:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, dwValue);
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, dwValue);
+			break;
+		case D3D7::D3DTSS_ADDRESSU:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, dwValue);
+			break;
+		case D3D7::D3DTSS_ADDRESSV:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, dwValue);
+			break;
+		case D3D7::D3DTSS_BORDERCOLOR:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_BORDERCOLOR, dwValue);
+			break;
+		case D3D7::D3DTSS_MAGFILTER:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAGFILTER, aeMagTexFMap[dwValue]);
+			break;
+		case D3D7::D3DTSS_MINFILTER:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MINFILTER, aeMinTexFMap[dwValue]);
+			break;
+		case D3D7::D3DTSS_MIPFILTER:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MIPFILTER, aeMipTexFMap[dwValue]);
+			break;
+		case D3D7::D3DTSS_MIPMAPLODBIAS:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MIPMAPLODBIAS, dwValue);
+			break;
+		case D3D7::D3DTSS_MAXMIPLEVEL:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAXMIPLEVEL, dwValue);
+			break;
+		case D3D7::D3DTSS_MAXANISOTROPY:
+			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAXANISOTROPY, dwValue);
+			break;
+		default:
+			return;
+	}
+}
+
+
+VOID D2GI::OnTextureSet(DWORD i, D2GITexture* pTex)
+{
+	m_pDev->SetTexture(i, pTex == NULL ? NULL : pTex->GetD3D9Texture());
+}
+
+
+BOOL D2GI::OnDeviceValidate(DWORD* pdw)
+{
+	return SUCCEEDED(m_pDev->ValidateDevice(pdw));
+}
+
+
+VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pMatrix)
+{
+	switch (eType)
+	{
+		case D3D7::D3DTRANSFORMSTATE_WORLD:
+			m_pDev->SetTransform(D3D9::D3DTS_WORLD, (D3D9::D3DMATRIX*)pMatrix);
+			break;
+		case D3D7::D3DTRANSFORMSTATE_WORLD1:
+			m_pDev->SetTransform(D3D9::D3DTS_WORLD1, (D3D9::D3DMATRIX*)pMatrix);
+			break;
+		case D3D7::D3DTRANSFORMSTATE_WORLD2:
+			m_pDev->SetTransform(D3D9::D3DTS_WORLD2, (D3D9::D3DMATRIX*)pMatrix);
+			break;
+		case D3D7::D3DTRANSFORMSTATE_WORLD3:
+			m_pDev->SetTransform(D3D9::D3DTS_WORLD3, (D3D9::D3DMATRIX*)pMatrix);
+			break;
+		default:
+			m_pDev->SetTransform((D3D9::D3DTRANSFORMSTATETYPE)eType, (D3D9::D3DMATRIX*)pMatrix);
+			break;
+	}
+}
+
+
+VOID D2GI::OnLightSet(DWORD i, D3D7::LPD3DLIGHT7 pLight)
+{
+	m_pDev->SetLight(i, (D3D9::D3DLIGHT9*)pLight);
+}
+
+
+VOID D2GI::OnMaterialSet(D3D7::LPD3DMATERIAL7 pMaterial)
+{
+	m_pDev->SetMaterial((D3D9::D3DMATERIAL9*)pMaterial);
+}
+
+
+VOID D2GI::OnClipStatusSet(D3D7::LPD3DCLIPSTATUS pStatus)
+{
+	D3D9::D3DCLIPSTATUS9 sStatus9;
+
+	if (pStatus->dwFlags != D3DCLIPSTATUS_STATUS)
+		return;
+
+	if (pStatus->dwStatus !=
+		(D3DSTATUS_CLIPUNIONBACK | D3DSTATUS_CLIPUNIONLEFT | D3DSTATUS_CLIPUNIONRIGHT
+			| D3DSTATUS_CLIPUNIONBOTTOM | D3DSTATUS_CLIPUNIONTOP))
+		return;
+
+	ZeroMemory(&sStatus9, sizeof(sStatus9));
+	sStatus9.ClipUnion = D3DCS_BACK | D3DCS_LEFT | D3DCS_RIGHT | D3DCS_BOTTOM | D3DCS_TOP;
+	m_pDev->SetClipStatus(&sStatus9);
+}

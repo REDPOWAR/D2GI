@@ -66,4 +66,12 @@ public:
 	VOID OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface*, RECT*, D2GITexture*, RECT*);
 	VOID OnSceneBegin();
 	VOID OnSceneEnd();
+	VOID OnRenderStateSet(D3D7::D3DRENDERSTATETYPE, DWORD);
+	VOID OnTextureStageSet(DWORD, D3D7::D3DTEXTURESTAGESTATETYPE, DWORD);
+	VOID OnTextureSet(DWORD, D2GITexture*);
+	BOOL OnDeviceValidate(DWORD*);
+	VOID OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE, D3D7::LPD3DMATRIX);
+	VOID OnLightSet(DWORD, D3D7::LPD3DLIGHT7);
+	VOID OnMaterialSet(D3D7::LPD3DMATERIAL7);
+	VOID OnClipStatusSet(D3D7::LPD3DCLIPSTATUS);
 };

@@ -22,14 +22,13 @@ D2GIDevice::~D2GIDevice()
 }
 
 
-HRESULT D2GIDevice::SetTexture(DWORD i, LPDIRECTDRAWSURFACE7 lpTex)
+HRESULT D2GIDevice::SetTexture(DWORD i, LPDIRECTDRAWSURFACE7 pTex)
 {
-	/*if (lpTex != NULL)
-		lpTex = ((D2GISurface*)lpTex)->GetOriginal();
+	if (pTex != NULL && ((D2GISurface*)pTex)->GetType() != ST_TEXTURE)
+		return DDERR_GENERIC;
 
-	return DeviceProxy::SetTexture(i, lpTex);*/
-
-	return DDERR_GENERIC;
+	m_pD2GI->OnTextureSet(i, (pTex == NULL) ? NULL : (D2GITexture*)pTex);
+	return DD_OK;
 }
 
 
@@ -78,5 +77,56 @@ HRESULT D2GIDevice::BeginScene()
 HRESULT D2GIDevice::EndScene()
 {
 	m_pD2GI->OnSceneEnd();
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::SetRenderState(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
+{
+	m_pD2GI->OnRenderStateSet(eState, dwValue);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::SetTextureStageState(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWORD dwValue)
+{
+	m_pD2GI->OnTextureStageSet(i, eState, dwValue);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::ValidateDevice(LPDWORD pdw)
+{
+	if (m_pD2GI->OnDeviceValidate(pdw))
+		return DD_OK;
+
+	return DDERR_GENERIC;
+}
+
+
+HRESULT D2GIDevice::SetTransform(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::LPD3DMATRIX pMatrix)
+{
+	m_pD2GI->OnTransformSet(eType, pMatrix);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::SetLight(DWORD i, D3D7::LPD3DLIGHT7 pLight)
+{
+	m_pD2GI->OnLightSet(i, pLight);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::SetMaterial(D3D7::LPD3DMATERIAL7 pMaterial)
+{
+	m_pD2GI->OnMaterialSet(pMaterial);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::SetClipStatus(D3D7::D3DCLIPSTATUS* pStatus)
+{
+	m_pD2GI->OnClipStatusSet(pStatus);
 	return DD_OK;
 }

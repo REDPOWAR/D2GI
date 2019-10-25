@@ -29,5 +29,6 @@ public:
 	STDMETHOD(GetSurfaceDesc)(D3D7::LPDDSURFACEDESC2);
 
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
+	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
 };
