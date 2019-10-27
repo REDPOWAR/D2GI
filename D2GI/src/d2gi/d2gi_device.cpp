@@ -130,3 +130,43 @@ HRESULT D2GIDevice::SetClipStatus(D3D7::D3DCLIPSTATUS* pStatus)
 	m_pD2GI->OnClipStatusSet(pStatus);
 	return DD_OK;
 }
+
+
+HRESULT D2GIDevice::DrawIndexedPrimitiveStrided(
+	D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData,
+	DWORD dwCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
+{
+	m_pD2GI->OnIndexedPrimitiveStridedDraw(pt, dwFVF, pData, dwCount, pIdx, dwIdxCount, dwFlags);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::DrawPrimitiveStrided(D3DPRIMITIVETYPE pt, DWORD dwFVF, LPD3DDRAWPRIMITIVESTRIDEDDATA pData, DWORD dwCount, DWORD dwFlags)
+{
+	m_pD2GI->OnPrimitiveStridedDraw(pt, dwFVF, pData, dwCount, dwFlags);
+	return DD_OK;
+}
+
+
+
+HRESULT D2GIDevice::DrawPrimitive(D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
+{
+	m_pD2GI->OnPrimitiveDraw(pt, dwFVF, pVerts, dwVertCount, dwFlags);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
+{
+	m_pD2GI->OnIndexedPrimitiveDraw(pt, dwFVF, pVerts, dwVertCount, pIdx, dwIdxCount, dwFlags);
+	return DD_OK;
+}
+
+
+HRESULT D2GIDevice::GetRenderState(D3D7::D3DRENDERSTATETYPE eState, LPDWORD pV)
+{
+	if (m_pD2GI->OnRenderStateGet(eState, pV))
+		return DD_OK;
+
+	return DDERR_GENERIC;
+}

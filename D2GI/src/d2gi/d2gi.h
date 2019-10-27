@@ -13,6 +13,7 @@ enum RENDERSTATE
 	RS_BACKBUFFER_STREAMING,
 	RS_PRIMARY_SURFACE_BLITTING,
 	RS_BACKBUFFER_BLITTING,
+	RS_3D_RENDERING,
 };
 
 
@@ -21,6 +22,7 @@ class D2GIPrimarySingleSurface;
 class D2GIBackBufferSurface;
 class D2GIPaletteBlitter;
 class D2GITexture;
+class D2GIStridedPrimitiveRenderer;
 
 
 class D2GI
@@ -37,11 +39,13 @@ class D2GI
 	RENDERSTATE m_eRenderState;
 
 	D2GIPaletteBlitter* m_pPaletteBlitter;
+	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
 	VOID ReleaseResources();
 	VOID LoadResources();
+	VOID Present();
 public:
 	D2GI();
 	~D2GI();
@@ -74,4 +78,9 @@ public:
 	VOID OnLightSet(DWORD, D3D7::LPD3DLIGHT7);
 	VOID OnMaterialSet(D3D7::LPD3DMATERIAL7);
 	VOID OnClipStatusSet(D3D7::LPD3DCLIPSTATUS);
+	VOID OnIndexedPrimitiveStridedDraw(D3D7::D3DPRIMITIVETYPE, DWORD, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA, DWORD, LPWORD, DWORD, DWORD);
+	VOID OnPrimitiveStridedDraw(D3D7::D3DPRIMITIVETYPE, DWORD, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA, DWORD, DWORD);
+	VOID OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, DWORD);
+	VOID OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, LPWORD, DWORD, DWORD);
+	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
 };

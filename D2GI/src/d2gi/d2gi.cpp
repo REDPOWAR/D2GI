@@ -1,5 +1,6 @@
 
 #include "../common.h"
+#include "../utils.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
@@ -9,6 +10,7 @@
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_texture.h"
+#include "d2gi_strided_renderer.h"
 
 
 D2GI::D2GI()
@@ -16,6 +18,7 @@ D2GI::D2GI()
 {
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pPaletteBlitter = new D2GIPaletteBlitter(this);
+	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
 
 	LoadD3D9Library();
 }
@@ -23,6 +26,7 @@ D2GI::D2GI()
 
 D2GI::~D2GI()
 {
+	DEL(m_pStridedRenderer);
 	DEL(m_pPaletteBlitter);
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
@@ -74,6 +78,7 @@ VOID D2GI::ReleaseResources()
 {
 	m_pDirectDrawProxy->ReleaseResources();
 	m_pPaletteBlitter->ReleaseResource();
+	m_pStridedRenderer->ReleaseResource();
 }
 
 
@@ -81,6 +86,7 @@ VOID D2GI::LoadResources()
 {
 	m_pDirectDrawProxy->LoadResources();
 	m_pPaletteBlitter->LoadResource();
+	m_pStridedRenderer->LoadResource();
 }
 
 
@@ -101,11 +107,12 @@ VOID D2GI::ResetD3D9Device()
 	sParams.BackBufferCount = 1;
 	sParams.BackBufferWidth = m_dwOriginalWidth;
 	sParams.BackBufferHeight = m_dwOriginalHeight;
-	sParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+	sParams.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_DISCARD;
 	sParams.Windowed = TRUE;
 
-	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &sParams, &m_pDev);
+	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, 
+		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED, &sParams, &m_pDev);
 	LoadResources();
 }
 
@@ -141,13 +148,13 @@ VOID D2GI::OnFlip()
 
 		m_pDev->GetRenderTarget(0, &pRT);
 		m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_POINT);
-		m_pDev->Present(NULL, NULL, NULL, NULL);
+		Present();
 
 		pRT->Release();
 	}
-	else if (m_eRenderState == RS_BACKBUFFER_BLITTING)
+	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
 	{
-		m_pDev->Present(NULL, NULL, NULL, NULL);
+		Present();
 	}
 }
 
@@ -163,7 +170,7 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 		pSrc->UpdateWithPalette(pDst->GetPalette());
 		m_pDev->GetRenderTarget(0, &pRT);
 		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, pDstRT, D3D9::D3DTEXF_POINT);
-		m_pDev->Present(NULL, NULL, NULL, NULL);
+		Present();
 
 		pRT->Release();
 	}
@@ -186,6 +193,8 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 {
 	D3D9::IDirect3DSurface9* pRT;
 
+	return;
+
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
 
 	m_pDev->GetRenderTarget(0, &pRT);
@@ -203,12 +212,14 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 
 VOID D2GI::OnSceneBegin()
 {
+	m_eRenderState = RS_3D_RENDERING;
 	m_pDev->BeginScene();
 }
 
 
 VOID D2GI::OnSceneEnd()
 {
+	m_eRenderState = RS_3D_RENDERING;
 	m_pDev->EndScene();
 }
 
@@ -219,10 +230,83 @@ VOID D2GI::OnRenderStateSet(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
 	{
 		case D3D7::D3DRENDERSTATE_CULLMODE:
 			m_pDev->SetRenderState(D3D9::D3DRS_CULLMODE, dwValue);
-			break;
-		default:
+			return;
+		case D3D7::D3DRENDERSTATE_TEXTUREPERSPECTIVE:
+			return;
+		case D3D7::D3DRENDERSTATE_COLORKEYENABLE:
+			return;
+		case D3D7::D3DRENDERSTATE_ZENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_ZENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_SHADEMODE:
+			m_pDev->SetRenderState(D3D9::D3DRS_SHADEMODE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_DITHERENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_DITHERENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_SRCBLEND:
+			m_pDev->SetRenderState(D3D9::D3DRS_SRCBLEND, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_DESTBLEND:
+			m_pDev->SetRenderState(D3D9::D3DRS_DESTBLEND, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_ALPHABLENDENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_ALPHABLENDENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_SPECULARENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_SPECULARENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_COLORVERTEX:
+			m_pDev->SetRenderState(D3D9::D3DRS_COLORVERTEX, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_AMBIENTMATERIALSOURCE:
+			m_pDev->SetRenderState(D3D9::D3DRS_AMBIENTMATERIALSOURCE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_SPECULARMATERIALSOURCE:
+			m_pDev->SetRenderState(D3D9::D3DRS_SPECULARMATERIALSOURCE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_EMISSIVEMATERIALSOURCE:
+			m_pDev->SetRenderState(D3D9::D3DRS_EMISSIVEMATERIALSOURCE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_DIFFUSEMATERIALSOURCE:
+			m_pDev->SetRenderState(D3D9::D3DRS_DIFFUSEMATERIALSOURCE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_ALPHATESTENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_FOGENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_FOGENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_FOGCOLOR:
+			m_pDev->SetRenderState(D3D9::D3DRS_FOGCOLOR, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_FOGVERTEXMODE:
+			m_pDev->SetRenderState(D3D9::D3DRS_FOGVERTEXMODE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_FOGSTART:
+			m_pDev->SetRenderState(D3D9::D3DRS_FOGSTART, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_FOGEND:
+			m_pDev->SetRenderState(D3D9::D3DRS_FOGEND, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_AMBIENT:
+			m_pDev->SetRenderState(D3D9::D3DRS_AMBIENT, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_ZWRITEENABLE:
+			m_pDev->SetRenderState(D3D9::D3DRS_ZWRITEENABLE, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_ZFUNC:
+			m_pDev->SetRenderState(D3D9::D3DRS_ZFUNC, dwValue);
+			return;
+		case D3D7::D3DRENDERSTATE_CLIPPING:
+			m_pDev->SetRenderState(D3D9::D3DRS_CLIPPING, dwValue);
 			return;
 	}
+
+	INT i = 0;
+	i = i;
+
+	return;
 }
 
 
@@ -249,13 +333,14 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 	D3D9::D3DTEXTUREFILTERTYPE aeMipTexFMap[] =
 	{
 		D3D9::D3DTEXF_NONE,
+		D3D9::D3DTEXF_NONE,
 		D3D9::D3DTEXF_POINT,
 		D3D9::D3DTEXF_LINEAR,
 	};
 
 	switch (eState)
 	{
-		case D3D7::D3DTSS_COLOROP:
+		/*case D3D7::D3DTSS_COLOROP:
 			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_COLOROP, dwValue);
 			break;
 		case D3D7::D3DTSS_COLORARG1:
@@ -296,7 +381,7 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			break;
 		case D3D7::D3DTSS_TEXTURETRANSFORMFLAGS:
 			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_TEXTURETRANSFORMFLAGS, dwValue);
-			break;
+			break;*/
 
 		case D3D7::D3DTSS_ADDRESS:
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, dwValue);
@@ -386,15 +471,89 @@ VOID D2GI::OnClipStatusSet(D3D7::LPD3DCLIPSTATUS pStatus)
 {
 	D3D9::D3DCLIPSTATUS9 sStatus9;
 
+	return;
+
 	if (pStatus->dwFlags != D3DCLIPSTATUS_STATUS)
 		return;
 
-	if (pStatus->dwStatus !=
-		(D3DSTATUS_CLIPUNIONBACK | D3DSTATUS_CLIPUNIONLEFT | D3DSTATUS_CLIPUNIONRIGHT
+	if (pStatus->dwStatus &
+		~(D3DSTATUS_CLIPUNIONBACK | D3DSTATUS_CLIPUNIONLEFT | D3DSTATUS_CLIPUNIONRIGHT
 			| D3DSTATUS_CLIPUNIONBOTTOM | D3DSTATUS_CLIPUNIONTOP))
 		return;
 
 	ZeroMemory(&sStatus9, sizeof(sStatus9));
-	sStatus9.ClipUnion = D3DCS_BACK | D3DCS_LEFT | D3DCS_RIGHT | D3DCS_BOTTOM | D3DCS_TOP;
+	sStatus9.ClipUnion = 0;
+	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONBACK)
+		sStatus9.ClipUnion |= D3DCS_BACK;
+	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONLEFT)
+		sStatus9.ClipUnion |= D3DCS_LEFT;
+	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONRIGHT)
+		sStatus9.ClipUnion |= D3DCS_RIGHT;
+	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONBOTTOM)
+		sStatus9.ClipUnion |= D3DCS_BOTTOM;
+	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONTOP)
+		sStatus9.ClipUnion |= D3DCS_TOP;
+
 	m_pDev->SetClipStatus(&sStatus9);
+}
+
+
+VOID D2GI::Present()
+{
+	m_pDev->Present(NULL, NULL, NULL, NULL);
+	m_pStridedRenderer->OnPresentationFinished();
+}
+
+
+VOID D2GI::OnIndexedPrimitiveStridedDraw(
+	D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData,
+	DWORD dwCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
+{
+	m_pStridedRenderer->DrawIndexedPrimitiveStrided(pt, dwFVF, pData, dwCount, pIdx, dwIdxCount, dwFlags);
+}
+
+
+VOID D2GI::OnPrimitiveStridedDraw(
+	D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData,
+	DWORD dwCount, DWORD dwFlags)
+{
+	m_pStridedRenderer->DrawPrimitiveStrided(pt, dwFVF, pData, dwCount, dwFlags);
+}
+
+
+
+VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
+{
+	UINT uVertexStride, uPrimCount;
+
+	uVertexStride = CalcFVFStride(dwFVF);
+	uPrimCount = CalcPrimitiveCount(pt, dwVertCount);
+
+	m_pDev->SetFVF(dwFVF);
+	m_pDev->DrawPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, uPrimCount, pVerts, uVertexStride);
+}
+
+
+VOID D2GI::OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
+{
+	UINT uVertexStride, uPrimCount;
+
+	uVertexStride = CalcFVFStride(dwFVF);
+	uPrimCount = CalcIndexedPrimitiveCount(pt, dwIdxCount);
+
+	m_pDev->SetFVF(dwFVF);
+	m_pDev->DrawIndexedPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, 0, dwVertCount, 
+		uPrimCount, pIdx, D3D9::D3DFMT_INDEX16, pVerts, uVertexStride);
+}
+
+
+BOOL D2GI::OnRenderStateGet(D3D7::D3DRENDERSTATETYPE eState, DWORD* pValue)
+{
+	switch (eState)
+	{
+	case D3D7::D3DRENDERSTATE_CULLMODE:
+		m_pDev->GetRenderState(D3D9::D3DRS_CULLMODE, pValue);
+		return TRUE;
+	}
+	return FALSE;
 }

@@ -88,12 +88,15 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 	}
 
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_TEXTURE) 
-		&& (lpDesc->dwFlags & DDSD_WIDTH) && (lpDesc->dwFlags & DDSD_HEIGHT))
+		&& (lpDesc->dwFlags & DDSD_WIDTH) && (lpDesc->dwFlags & DDSD_HEIGHT) 
+		&& (lpDesc->dwFlags & DDSD_PIXELFORMAT))
 	{
+		// MULTITHREADED ACCESS
 		DWORD dwMipMapCount = (lpDesc->dwFlags & DDSD_MIPMAPCOUNT) ? lpDesc->dwMipMapCount : 0;
-		D2GITexture* pTex = new D2GITexture(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, dwMipMapCount);
+		D2GITexture* pTex = new D2GITexture(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, 
+			dwMipMapCount, &lpDesc->ddpfPixelFormat);
 
-		m_pResourceContainer->Add((D2GIResource*)pTex);
+		m_pResourceContainer->Add((D2GIResource*)pTex); // MT-safe
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pTex;
 
 		return DD_OK;
@@ -106,6 +109,8 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 HRESULT D2GIDirectDraw::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 {
 	Debug(TEXT("Setting coop level for window 0x%08x (%i)"), hWnd, dwFlags);
+	if (dwFlags & DDSCL_MULTITHREADED)
+		dwFlags = dwFlags;
 
 	m_pD2GI->OnCooperativeLevelSet(hWnd, dwFlags);
 

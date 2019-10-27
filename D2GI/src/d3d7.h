@@ -61,5 +61,29 @@ CONST HRESULT D3DERR_UNSUPPORTEDTEXTUREFILTER = MAKE_DDHRESULT(2082);
 CONST HRESULT D3DERR_CONFLICTINGTEXTUREPALETTE = MAKE_DDHRESULT(2086);
 CONST HRESULT D3D_OK = DD_OK;
 
+
+__forceinline BOOL operator == (CONST DDPIXELFORMAT& v1, CONST DDPIXELFORMAT& v2)
+{
+	if (v1.dwSize != v2.dwSize)
+		return FALSE;
+
+	if (v1.dwFlags != v2.dwFlags)
+		return FALSE;
+
+	if ((v1.dwFlags & DDPF_FOURCC) && v1.dwFourCC != v2.dwFourCC)
+		return FALSE;
+
+	if ((v1.dwFlags & DDPF_RGB)
+		&& (v1.dwRGBBitCount != v2.dwRGBBitCount || v1.dwRBitMask != v2.dwRBitMask
+			|| v1.dwBBitMask != v2.dwBBitMask || v1.dwGBitMask != v2.dwGBitMask))
+		return FALSE;
+
+	if ((v1.dwFlags & DDPF_ALPHAPIXELS) && v1.dwRGBAlphaBitMask != v2.dwRGBAlphaBitMask)
+		return FALSE;
+
+	return TRUE;
+}
+
+
 #undef DIRECT3D_VERSION
 };

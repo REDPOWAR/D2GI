@@ -120,3 +120,68 @@ VOID DebugSurfaceDesc(DDSURFACEDESC2* pDesc)
 			Debug(TEXT("\tDDPF_ZPIXELS: TRUE"));
 	}
 }
+
+
+UINT CalcFVFStride(DWORD dwFVF)
+{
+	UINT uVertexStride = 0;
+
+	if (dwFVF & ~(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 | 
+		D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_SPECULAR | D3DFVF_RESERVED1))
+		return 0;
+
+	if (dwFVF & D3DFVF_XYZ)
+		uVertexStride += sizeof(FLOAT) * 3;
+
+	if (dwFVF & D3DFVF_NORMAL)
+		uVertexStride += sizeof(FLOAT) * 3;
+
+	if (dwFVF & D3DFVF_RESERVED1)
+		uVertexStride += sizeof(DWORD);
+
+	if (dwFVF & D3DFVF_DIFFUSE)
+		uVertexStride += sizeof(DWORD);
+
+	if (dwFVF & D3DFVF_SPECULAR)
+		uVertexStride += sizeof(DWORD);
+
+	uVertexStride += CalcFVFTextureCount(dwFVF) * sizeof(FLOAT) * 2;
+
+	return uVertexStride;
+}
+
+
+UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwVertexCount)
+{
+	switch (pt)
+	{
+		case D3D7::D3DPT_TRIANGLELIST:
+			return dwVertexCount / 3;
+		case D3D7::D3DPT_TRIANGLEFAN:
+		case D3D7::D3DPT_TRIANGLESTRIP:
+			return dwVertexCount - 2;
+		case D3D7::D3DPT_POINTLIST:
+			return dwVertexCount;
+		case D3D7::D3DPT_LINELIST:
+			return dwVertexCount / 2;
+		case D3D7::D3DPT_LINESTRIP:
+			return dwVertexCount - 1;
+	}
+
+	return 0;
+}
+
+
+UINT CalcFVFTextureCount(DWORD dwFVF)
+{
+	return (dwFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
+}
+
+
+UINT CalcIndexedPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwIndexCount)
+{
+	if (pt != D3D7::D3DPT_TRIANGLELIST)
+		return 0;
+
+	return dwIndexCount / 3;
+}

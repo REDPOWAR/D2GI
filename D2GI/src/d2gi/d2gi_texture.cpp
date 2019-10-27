@@ -5,9 +5,10 @@
 #include "d2gi.h"
 
 
-D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwW, DWORD dwH, DWORD dwMipMapCount) 
+D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwW, DWORD dwH, DWORD dwMipMapCount, D3D7::DDPIXELFORMAT* ppf) 
 	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), 
-	m_dwMipMapCount(dwMipMapCount == 0 ? 1 : dwMipMapCount), m_pTexture(NULL), m_lpMipMapLevels(NULL)
+	m_dwMipMapCount(dwMipMapCount == 0 ? 1 : dwMipMapCount), m_pTexture(NULL), m_lpMipMapLevels(NULL),
+	m_sPixelFormat(*ppf)
 {
 	INT i;
 
@@ -35,11 +36,24 @@ D2GITexture::~D2GITexture()
 VOID D2GITexture::LoadResource()
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
+	D3D9::D3DFORMAT eFormat;
 	DWORD i;
+
+	if (m_sPixelFormat == g_pf16_565)
+		eFormat = D3D9::D3DFMT_R5G6B5;
+	else if (m_sPixelFormat == g_pf16_1555)
+		eFormat = D3D9::D3DFMT_A1R5G5B5;
+	else if (m_sPixelFormat == g_pf16_4444)
+		eFormat = D3D9::D3DFMT_A4R4G4B4;
+	else if (m_sPixelFormat == g_pf16_v8u8)
+		eFormat = D3D9::D3DFMT_V8U8;
+	else
+		return;
+
 
 	pDev->CreateTexture(m_dwWidth, m_dwHeight,
 		m_dwMipMapCount, D3DUSAGE_DYNAMIC, 
-		D3D9::D3DFMT_A1R5G5B5, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
+		eFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
 
 	for (i = 0; i < m_dwMipMapCount; i++)
 	{

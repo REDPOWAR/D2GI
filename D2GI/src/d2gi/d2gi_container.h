@@ -10,6 +10,7 @@ class D2GIResource;
 
 class D2GIResourceContainer : public std::vector<D2GIResource*>, public D2GIBase
 {
+	CRITICAL_SECTION m_sCriticalSection;
 public:
 	D2GIResourceContainer(D2GI*);
 	~D2GIResourceContainer();
