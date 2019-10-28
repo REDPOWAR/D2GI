@@ -196,12 +196,20 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 {
 	D3D9::IDirect3DSurface9* pRT;
 
-	return;
-
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
 
 	m_pDev->GetRenderTarget(0, &pRT);
-	m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, pDstRT, D3D9::D3DTEXF_POINT);
+	if(!m_bSceneBegun)
+		m_pDev->BeginScene();
+	if (pSrc->HasColorKey())
+	{
+		m_pBlitter->BlitWithColorKey(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT, pSrc->GetColorKeyValue());
+		D3D9::D3DXSaveSurfaceToFileA("E:\\cksurf.bmp", D3D9::D3DXIFF_BMP, pSrc->GetD3D9Surface(), NULL, NULL);
+	}
+	else
+		m_pBlitter->Blit(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
+	if (!m_bSceneBegun)
+		m_pDev->EndScene();
 
 	pRT->Release();
 }
@@ -213,7 +221,7 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 
 
 //	EnterCriticalSection(&m_sCriticalSection);
-	/*m_pDev->GetRenderTarget(0, &pRT);
+	m_pDev->GetRenderTarget(0, &pRT);
 	pDst->MakeRenderTarget();
 	if(!m_bSceneBegun)
 		m_pDev->BeginScene();
@@ -221,7 +229,7 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 	if (!m_bSceneBegun)
 		m_pDev->EndScene();
 	m_pDev->SetRenderTarget(0, pRT);
-	pRT->Release();*/
+	pRT->Release();
 
 //	LeaveCriticalSection(&m_sCriticalSection);
 	//m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pDst->GetD3D9Surface(), pDstRT, D3D9::D3DTEXF_POINT);

@@ -46,8 +46,32 @@ static CHAR* g_szPS =
 	"";
 
 
+static CHAR* g_szPSCK =
+	"sampler g_txSourceTexture : register(s0);\n"
+
+	"float4 g_vTextureRect : register(c0);\n"
+	"float4 g_clColorKey: register(c1);\n"
+
+	"float4 main(float2 vScreenPos : TEXCOORD0) : COLOR0\n"
+	"{\n"
+
+	"	float2 vRealScreenPos = (vScreenPos + 1.0f) * 0.5f;\n"
+	"	vRealScreenPos.y = 1.0f - vRealScreenPos.y;\n"
+
+	"	float2 vTexPos = g_vTextureRect.xy + (vRealScreenPos * g_vTextureRect.zw);\n"
+
+	"	float4 sample = tex2D(g_txSourceTexture, vTexPos).rgba;\n"
+
+	"	clip(length(sample - g_clColorKey) - 0.000001f);"
+
+	"	return sample;\n"
+	"}\n"
+
+	"";
+
+
 D2GIBlitter::D2GIBlitter(D2GI* pD2GI)
-	: D2GIBase(pD2GI), m_pVDecl(NULL), m_pVB(NULL), m_pVS(NULL), m_pPS(NULL)
+	: D2GIBase(pD2GI), m_pVDecl(NULL), m_pVB(NULL), m_pVS(NULL), m_pPS(NULL), m_pPSCK(NULL)
 {
 
 }
@@ -65,6 +89,7 @@ VOID D2GIBlitter::ReleaseResource()
 	RELEASE(m_pVDecl);
 	RELEASE(m_pVS);
 	RELEASE(m_pPS);
+	RELEASE(m_pPSCK);
 }
 
 
@@ -107,6 +132,11 @@ VOID D2GIBlitter::LoadResource()
 		"main", "ps_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pBuf, NULL, NULL);
 	pDev->CreatePixelShader((DWORD*)pBuf->GetBufferPointer(), &m_pPS);
 	pBuf->Release();
+
+	D3DXCompileShader(g_szPSCK, strlen(g_szPSCK), NULL, NULL,
+		"main", "ps_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pBuf, NULL, NULL);
+	pDev->CreatePixelShader((DWORD*)pBuf->GetBufferPointer(), &m_pPSCK);
+	pBuf->Release();
 }
 
 
@@ -119,7 +149,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	DWORD dwZEnable, dwZWriteEnable;
 	D3DSURFACE_DESC sDstDesc;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, *pCurrentTexture2 = NULL;
-	DWORD dwMinFilter, dwMagFilter;
+	DWORD dwMinFilter, dwMagFilter, dwCullMode;
 
 	pDst->GetDesc(&sDstDesc);
 
@@ -130,6 +160,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->GetTexture(1, &pCurrentTexture2);
 	pDev->GetSamplerState(0, D3DSAMP_MINFILTER, &dwMinFilter);
 	pDev->GetSamplerState(0, D3DSAMP_MAGFILTER, &dwMagFilter);
+	pDev->GetRenderState(D3DRS_CULLMODE, &dwCullMode);
 
 	if (pSrcRT != NULL)
 	{
@@ -156,6 +187,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetTexture(1, NULL);
 	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
 	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	pDev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 
 	if (pDstRT != NULL)
 	{
@@ -174,8 +206,15 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetViewport(&sUsedVP);
 	pDev->SetRenderState(D3DRS_ZENABLE, FALSE);
 	pDev->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+	pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 
 	pDev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
+	/*D3DRECT rt;
+	rt.x1 = pDstRT->left;
+	rt.y1 = pDstRT->top;
+	rt.x2 = pDstRT->right;
+	rt.y2 = pDstRT->bottom;
+	pDev->Clear(1, &rt, D3DCLEAR_TARGET, 0xFFFFFFFF, 1.0f, 0);*/
 
 	pDev->SetPixelShader(NULL);
 	pDev->SetVertexShader(NULL);
@@ -188,4 +227,105 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, dwMagFilter);
 	pDev->SetRenderState(D3DRS_ZENABLE, dwZEnable);
 	pDev->SetRenderState(D3DRS_ZWRITEENABLE, dwZWriteEnable);
+	pDev->SetRenderState(D3DRS_CULLMODE, dwCullMode);
+}
+
+
+
+VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
+	D3D9::IDirect3DTexture9* pSrc, RECT* pSrcRT, DWORD dwColorKey)
+{
+	IDirect3DDevice9* pDev = GetD3D9Device();
+	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f };
+	D3DVIEWPORT9 sOriginalVP, sUsedVP;
+	DWORD dwZEnable, dwZWriteEnable;
+	D3DSURFACE_DESC sDstDesc;
+	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, * pCurrentTexture2 = NULL;
+	DWORD dwMinFilter, dwMagFilter, dwCullMode;
+	FLOAT afColorKey[] = 
+	{
+		(FLOAT)((dwColorKey >> 24) & 0xFF) / 255.0f,
+		(FLOAT)((dwColorKey >> 16) & 0xFF) / 255.0f,
+		(FLOAT)((dwColorKey >> 8) & 0xFF) / 255.0f,
+		(FLOAT)((dwColorKey) & 0xFF) / 255.0f,
+	};
+
+	pDst->GetDesc(&sDstDesc);
+
+	pDev->GetViewport(&sOriginalVP);
+	pDev->GetRenderState(D3DRS_ZENABLE, &dwZEnable);
+	pDev->GetRenderState(D3DRS_ZWRITEENABLE, &dwZWriteEnable);
+	pDev->GetTexture(0, &pCurrentTexture1);
+	pDev->GetTexture(1, &pCurrentTexture2);
+	pDev->GetSamplerState(0, D3DSAMP_MINFILTER, &dwMinFilter);
+	pDev->GetSamplerState(0, D3DSAMP_MAGFILTER, &dwMagFilter);
+	pDev->GetRenderState(D3DRS_CULLMODE, &dwCullMode);
+
+	if (pSrcRT != NULL)
+	{
+		D3DSURFACE_DESC sDesc;
+
+		pSrc->GetLevelDesc(0, &sDesc);
+		afSrcRect[0] = (FLOAT)pSrcRT->left / (FLOAT)sDesc.Width;
+		afSrcRect[1] = (FLOAT)pSrcRT->top / (FLOAT)sDesc.Height;
+		afSrcRect[2] = (FLOAT)(pSrcRT->right - pSrcRT->left) / (FLOAT)sDesc.Width;
+		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sDesc.Height;
+	}
+
+	pDev->SetRenderTarget(0, pDst);
+
+	pDev->SetVertexDeclaration(m_pVDecl);
+	pDev->SetStreamSource(0, m_pVB, 0, sizeof(FLOAT) * 3);
+
+	pDev->SetVertexShader(m_pVS);
+	pDev->SetPixelShader(m_pPSCK);
+
+	pDev->SetPixelShaderConstantF(0, afSrcRect, 1);
+	pDev->SetPixelShaderConstantF(1, afColorKey, 1);
+
+	pDev->SetTexture(0, pSrc);
+	pDev->SetTexture(1, NULL);
+	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	pDev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+	if (pDstRT != NULL)
+	{
+		sUsedVP.X = pDstRT->left;
+		sUsedVP.Y = pDstRT->top;
+		sUsedVP.Width = pDstRT->right - pDstRT->left;
+		sUsedVP.Height = pDstRT->bottom - pDstRT->top;
+	}
+	else
+	{
+		sUsedVP.X = sUsedVP.Y = 0;
+		sUsedVP.Width = sDstDesc.Width;
+		sUsedVP.Height = sDstDesc.Height;
+	}
+	sUsedVP.MinZ = 0.0; sUsedVP.MaxZ = 1.0f;
+	pDev->SetViewport(&sUsedVP);
+	pDev->SetRenderState(D3DRS_ZENABLE, FALSE);
+	pDev->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+	pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+
+	pDev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
+	/*D3DRECT rt;
+	rt.x1 = pDstRT->left;
+	rt.y1 = pDstRT->top;
+	rt.x2 = pDstRT->right;
+	rt.y2 = pDstRT->bottom;
+	pDev->Clear(1, &rt, D3DCLEAR_TARGET, 0xFFFFFFFF, 1.0f, 0);*/
+
+	pDev->SetPixelShader(NULL);
+	pDev->SetVertexShader(NULL);
+	pDev->SetTexture(0, pCurrentTexture1);
+	pDev->SetTexture(1, pCurrentTexture2);
+	RELEASE(pCurrentTexture1);
+	RELEASE(pCurrentTexture2);
+	pDev->SetViewport(&sOriginalVP);
+	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, dwMinFilter);
+	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, dwMagFilter);
+	pDev->SetRenderState(D3DRS_ZENABLE, dwZEnable);
+	pDev->SetRenderState(D3DRS_ZWRITEENABLE, dwZWriteEnable);
+	pDev->SetRenderState(D3DRS_CULLMODE, dwCullMode);
 }

@@ -17,6 +17,9 @@ class D2GISystemMemorySurface : public D2GISurface
 	VOID* m_pData8;
 	UINT m_uData8Size, m_uPitch8;
 
+	VOID* m_pData16;
+	UINT m_uData16Size, m_uPitch16;
+
 	D3D7::DDCOLORKEY m_sColorKey;
 	DWORD m_dwCKFlags;
 public:
@@ -36,4 +39,6 @@ public:
 	D3D9::IDirect3DSurface9* GetD3D9Surface() { return m_pSurface16; }
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture16; }
 	VOID UpdateWithPalette(D2GIPalette*);
+	BOOL HasColorKey();
+	DWORD GetColorKeyValue();
 };

@@ -7,7 +7,7 @@
 
 D2GISystemMemorySurface::D2GISystemMemorySurface(D2GI* pD2GI, DWORD dwW, DWORD dwH) 
 	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), m_dwCKFlags(0),
-	m_pTexture16(NULL), m_pSurface16(NULL), m_pData8(NULL)
+	m_pTexture16(NULL), m_pSurface16(NULL), m_pData8(NULL), m_pData16(NULL)
 {
 	LoadResource();
 }
@@ -22,16 +22,22 @@ D2GISystemMemorySurface::~D2GISystemMemorySurface()
 
 HRESULT D2GISystemMemorySurface::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 {
-	m_dwCKFlags = dwFlags;
-	m_sColorKey = *pCK;
+	if (dwFlags & DDCKEY_SRCBLT)
+	{
+		m_dwCKFlags = dwFlags;
+		m_sColorKey = *pCK;
 
-	return DD_OK;
+		return DD_OK;
+	}
+
+	return DDERR_GENERIC;
 }
 
 
 VOID D2GISystemMemorySurface::ReleaseResource()
 {
 	DEL(m_pData8);
+	DEL(m_pData16);
 	RELEASE(m_pSurface16);
 	RELEASE(m_pTexture16);
 }
@@ -62,7 +68,7 @@ VOID D2GISystemMemorySurface::LoadResource()
 }
 
 
-HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWORD, HANDLE)
+HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWORD dwFlags, HANDLE)
 {
 	if (pRect == NULL)
 	{
@@ -85,9 +91,14 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 
 		if (m_dwBPP == 16)
 		{
-			m_pSurface16->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+			/*m_pSurface16->LockRect(&sLockedRect, NULL, 0);
 			pDesc->lpSurface = sLockedRect.pBits;
-			pDesc->lPitch = sLockedRect.Pitch;
+			pDesc->lPitch = sLockedRect.Pitch;*/
+			m_uData16Size = 2 * m_dwWidth * m_dwHeight;
+			m_uPitch16 = 2 * m_dwWidth;
+			m_pData16 = new BYTE[m_uData16Size];
+			pDesc->lpSurface = m_pData16;
+			pDesc->lPitch = m_uPitch16;
 		}
 		else if (m_dwBPP == 8)
 		{
@@ -105,7 +116,18 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 HRESULT D2GISystemMemorySurface::Unlock(LPRECT)
 {
 	if (m_dwBPP == 16)
+	{
+		D3D9::D3DLOCKED_RECT sLockedRect;
+
+		m_pSurface16->LockRect(&sLockedRect, NULL, 0);
+		for (int i = 0; i < m_dwHeight; i++)
+			for (int j = 0; j < m_dwWidth; j++)
+				((WORD*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = *((WORD*)m_pData16 + i * m_dwWidth + j);
 		m_pSurface16->UnlockRect();
+		DEL(m_pData16);
+
+		D3D9::D3DXSaveSurfaceToFileA("E:\\smsurf.bmp", D3D9::D3DXIFF_BMP, m_pSurface16, NULL, NULL);
+	}
 	return DD_OK;
 }
 
@@ -137,4 +159,23 @@ HRESULT D2GISystemMemorySurface::GetCaps(D3D7::LPDDSCAPS2 pCaps)
 	pCaps->dwCaps = DDSCAPS_SYSTEMMEMORY;
 
 	return DD_OK;
+}
+
+
+BOOL D2GISystemMemorySurface::HasColorKey()
+{
+	return !!(m_dwCKFlags & DDCKEY_SRCBLT);
+}
+
+
+DWORD D2GISystemMemorySurface::GetColorKeyValue()
+{
+	BYTE r, g, b, a;
+
+	r = ((m_sColorKey.dwColorSpaceLowValue >> 10) & 0x1F) * 255 / 32;
+	g = ((m_sColorKey.dwColorSpaceLowValue >> 5) & 0x1F) * 255 / 32;
+	b = ((m_sColorKey.dwColorSpaceLowValue) & 0x1F) * 255 / 32;
+	a = ((m_sColorKey.dwColorSpaceLowValue >> 15) & 0x1) * 255;
+
+	return (r << 24) | (g << 16) | (b << 8) | a;
 }
