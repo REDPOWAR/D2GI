@@ -6,7 +6,7 @@
 #include "d2gi_ddraw.h"
 #include "d2gi_prim_flip_surf.h"
 #include "d2gi_backbuf_surf.h"
-#include "d2gi_palette_blitter.h"
+#include "d2gi_blitter.h"
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_texture.h"
@@ -14,10 +14,12 @@
 
 
 D2GI::D2GI()
-	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL), m_eRenderState(RS_UNKNOWN)
+	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL), m_eRenderState(RS_UNKNOWN), m_bSceneBegun(FALSE)
 {
+	//InitializeCriticalSection(&m_sCriticalSection);
+
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
-	m_pPaletteBlitter = new D2GIPaletteBlitter(this);
+	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
 
 	LoadD3D9Library();
@@ -27,10 +29,11 @@ D2GI::D2GI()
 D2GI::~D2GI()
 {
 	DEL(m_pStridedRenderer);
-	DEL(m_pPaletteBlitter);
+	DEL(m_pBlitter);
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
+	//DeleteCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -77,7 +80,7 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 VOID D2GI::ReleaseResources()
 {
 	m_pDirectDrawProxy->ReleaseResources();
-	m_pPaletteBlitter->ReleaseResource();
+	m_pBlitter->ReleaseResource();
 	m_pStridedRenderer->ReleaseResource();
 }
 
@@ -85,7 +88,7 @@ VOID D2GI::ReleaseResources()
 VOID D2GI::LoadResources()
 {
 	m_pDirectDrawProxy->LoadResources();
-	m_pPaletteBlitter->LoadResource();
+	m_pBlitter->LoadResource();
 	m_pStridedRenderer->LoadResource();
 }
 
@@ -206,14 +209,43 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 
 VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GITexture* pDst, RECT* pDstRT)
 {
-	m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pDst->GetD3D9Surface(), pDstRT, D3D9::D3DTEXF_POINT);
+	D3D9::IDirect3DSurface9* pRT;
+
+
+//	EnterCriticalSection(&m_sCriticalSection);
+	/*m_pDev->GetRenderTarget(0, &pRT);
+	pDst->MakeRenderTarget();
+	if(!m_bSceneBegun)
+		m_pDev->BeginScene();
+	m_pBlitter->Blit(pDst->GetD3D9Surface(), pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
+	if (!m_bSceneBegun)
+		m_pDev->EndScene();
+	m_pDev->SetRenderTarget(0, pRT);
+	pRT->Release();*/
+
+//	LeaveCriticalSection(&m_sCriticalSection);
+	//m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pDst->GetD3D9Surface(), pDstRT, D3D9::D3DTEXF_POINT);
+	//VOID* pData;
+	//D3D9::D3DLOCKED_RECT rt;
+	//D3D9::D3DSURFACE_DESC d;
+	//pDst->GetD3D9Texture()->GetLevelDesc(0, &d);
+	//pDst->GetD3D9Texture()->LockRect(0, &rt, NULL, 0);
+	//INT i, j;
+
+	//for (i = 0; i < d.Height; i++)
+	//	for (j = 0; j < d.Width; j++)
+	//		((WORD*)((BYTE*)rt.pBits + i * rt.Pitch))[j] = 0xF800;
+	////ZeroMemory(rt.pBits, rt.Pitch * d.Height);
+	//pDst->GetD3D9Texture()->UnlockRect(0);
 }
 
 
 VOID D2GI::OnSceneBegin()
 {
+	//EnterCriticalSection(&m_sCriticalSection);
 	m_eRenderState = RS_3D_RENDERING;
 	m_pDev->BeginScene();
+	m_bSceneBegun = TRUE;
 }
 
 
@@ -221,6 +253,8 @@ VOID D2GI::OnSceneEnd()
 {
 	m_eRenderState = RS_3D_RENDERING;
 	m_pDev->EndScene();
+	m_bSceneBegun = FALSE;
+	//LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -301,6 +335,9 @@ VOID D2GI::OnRenderStateSet(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
 		case D3D7::D3DRENDERSTATE_CLIPPING:
 			m_pDev->SetRenderState(D3D9::D3DRS_CLIPPING, dwValue);
 			return;
+		case D3D7::D3DRENDERSTATE_TEXTUREFACTOR:
+			m_pDev->SetRenderState(D3D9::D3DRS_TEXTUREFACTOR, dwValue);
+			return;
 	}
 
 	INT i = 0;
@@ -340,7 +377,7 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 
 	switch (eState)
 	{
-		/*case D3D7::D3DTSS_COLOROP:
+		case D3D7::D3DTSS_COLOROP:
 			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_COLOROP, dwValue);
 			break;
 		case D3D7::D3DTSS_COLORARG1:
@@ -381,7 +418,7 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			break;
 		case D3D7::D3DTSS_TEXTURETRANSFORMFLAGS:
 			m_pDev->SetTextureStageState(i, D3D9::D3DTSS_TEXTURETRANSFORMFLAGS, dwValue);
-			break;*/
+			break;
 
 		case D3D7::D3DTSS_ADDRESS:
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, dwValue);

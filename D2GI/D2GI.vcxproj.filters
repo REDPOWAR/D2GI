@@ -105,9 +105,6 @@
     <ClCompile Include="src\d2gi\d2gi_palette.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_palette_blitter.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
@@ -127,6 +124,9 @@
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_strided_renderer.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_blitter.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
   </ItemGroup>
@@ -200,9 +200,6 @@
     <ClInclude Include="src\d2gi\d2gi_palette.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_palette_blitter.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
@@ -222,6 +219,9 @@
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_ib_container.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_blitter.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>

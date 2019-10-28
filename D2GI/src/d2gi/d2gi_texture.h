@@ -6,6 +6,7 @@
 
 class D2GITexture : public D2GISurface
 {
+	BOOL m_bRenderTarget;
 	DWORD m_dwWidth, m_dwHeight, m_dwMipMapCount;
 	D2GIMipMapSurface** m_lpMipMapLevels;
 	D3D9::IDirect3DTexture9* m_pTexture;
@@ -32,4 +33,5 @@ public:
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
+	VOID MakeRenderTarget();
 };

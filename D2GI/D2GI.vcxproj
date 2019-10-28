@@ -153,6 +153,7 @@
     <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\d2gi\d2gi.cpp" />
     <ClCompile Include="src\d2gi\d2gi_backbuf_surf.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_blitter.cpp" />
     <ClCompile Include="src\d2gi\d2gi_buffer_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_common.cpp" />
     <ClCompile Include="src\d2gi\d2gi_container.cpp" />
@@ -166,7 +167,6 @@
     <ClCompile Include="src\d2gi\d2gi_ib_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_mipmap_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_palette.cpp" />
-    <ClCompile Include="src\d2gi\d2gi_palette_blitter.cpp" />
     <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_prim_single_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_resource.cpp" />
@@ -198,7 +198,7 @@
     <ClInclude Include="src\d2gi\d2gi_ib_container.h" />
     <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_palette.h" />
-    <ClInclude Include="src\d2gi\d2gi_palette_blitter.h" />
+    <ClInclude Include="src\d2gi\d2gi_blitter.h" />
     <ClInclude Include="src\d2gi\d2gi_prim_flip_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_prim_single_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_resource.h" />

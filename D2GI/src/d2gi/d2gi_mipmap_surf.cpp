@@ -34,7 +34,7 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 		D3D9::D3DLOCKED_RECT sLockedRect;
 		D3D9::D3DSURFACE_DESC sSurfDesc;
 
-		m_pSurface->LockRect(&sLockedRect, NULL, (m_uLevelID == 0) ? D3DLOCK_DISCARD : 0);
+		m_pSurface->LockRect(&sLockedRect, NULL, 0);
 		m_pSurface->GetDesc(&sSurfDesc);
 
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));

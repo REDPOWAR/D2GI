@@ -8,7 +8,7 @@
 D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwW, DWORD dwH, DWORD dwMipMapCount, D3D7::DDPIXELFORMAT* ppf) 
 	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), 
 	m_dwMipMapCount(dwMipMapCount == 0 ? 1 : dwMipMapCount), m_pTexture(NULL), m_lpMipMapLevels(NULL),
-	m_sPixelFormat(*ppf)
+	m_sPixelFormat(*ppf), m_bRenderTarget(FALSE)
 {
 	INT i;
 
@@ -37,6 +37,7 @@ VOID D2GITexture::LoadResource()
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 	D3D9::D3DFORMAT eFormat;
+	DWORD dwUsage;
 	DWORD i;
 
 	if (m_sPixelFormat == g_pf16_565)
@@ -50,9 +51,11 @@ VOID D2GITexture::LoadResource()
 	else
 		return;
 
+	dwUsage = m_bRenderTarget ? D3DUSAGE_RENDERTARGET : D3DUSAGE_DYNAMIC;
+
 
 	pDev->CreateTexture(m_dwWidth, m_dwHeight,
-		m_dwMipMapCount, D3DUSAGE_DYNAMIC, 
+		m_dwMipMapCount, dwUsage, 
 		eFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
 
 	for (i = 0; i < m_dwMipMapCount; i++)
@@ -147,4 +150,15 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 	pDesc->ddpfPixelFormat = g_pf16_565;
 
 	return DD_OK;
+}
+
+
+VOID D2GITexture::MakeRenderTarget()
+{
+	if (m_bRenderTarget)
+		return;
+
+	m_bRenderTarget = TRUE;
+	ReleaseResource();
+	LoadResource();
 }

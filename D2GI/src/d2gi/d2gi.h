@@ -20,7 +20,7 @@ enum RENDERSTATE
 class D2GISystemMemorySurface;
 class D2GIPrimarySingleSurface;
 class D2GIBackBufferSurface;
-class D2GIPaletteBlitter;
+class D2GIBlitter;
 class D2GITexture;
 class D2GIStridedPrimitiveRenderer;
 
@@ -37,8 +37,9 @@ class D2GI
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
 
 	RENDERSTATE m_eRenderState;
+	BOOL m_bSceneBegun;
 
-	D2GIPaletteBlitter* m_pPaletteBlitter;
+	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
 	VOID LoadD3D9Library();
