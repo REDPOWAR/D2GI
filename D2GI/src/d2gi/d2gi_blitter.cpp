@@ -149,7 +149,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	DWORD dwZEnable, dwZWriteEnable;
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, *pCurrentTexture2 = NULL;
-	DWORD dwMinFilter, dwMagFilter, dwCullMode;
+	DWORD dwMinFilter, dwMagFilter, dwCullMode, dwAlphaBlending;
 
 	pDst->GetDesc(&sDstDesc);
 	pSrc->GetLevelDesc(0, &sSrcDesc);
@@ -162,6 +162,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->GetSamplerState(0, D3DSAMP_MINFILTER, &dwMinFilter);
 	pDev->GetSamplerState(0, D3DSAMP_MAGFILTER, &dwMagFilter);
 	pDev->GetRenderState(D3DRS_CULLMODE, &dwCullMode);
+	pDev->GetRenderState(D3DRS_ALPHABLENDENABLE, &dwAlphaBlending);
 
 	if (pSrcRT != NULL)
 	{
@@ -231,6 +232,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetRenderState(D3DRS_ZENABLE, dwZEnable);
 	pDev->SetRenderState(D3DRS_ZWRITEENABLE, dwZWriteEnable);
 	pDev->SetRenderState(D3DRS_CULLMODE, dwCullMode);
+	pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, dwAlphaBlending);
 }
 
 
@@ -244,7 +246,7 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	DWORD dwZEnable, dwZWriteEnable;
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, * pCurrentTexture2 = NULL;
-	DWORD dwMinFilter, dwMagFilter, dwCullMode;
+	DWORD dwMinFilter, dwMagFilter, dwCullMode, dwAlphaBlending;
 	FLOAT afColorKey[] = 
 	{
 		(FLOAT)((dwColorKey >> 24) & 0xFF) / 255.0f,
@@ -264,6 +266,7 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->GetSamplerState(0, D3DSAMP_MINFILTER, &dwMinFilter);
 	pDev->GetSamplerState(0, D3DSAMP_MAGFILTER, &dwMagFilter);
 	pDev->GetRenderState(D3DRS_CULLMODE, &dwCullMode);
+	pDev->GetRenderState(D3DRS_ALPHABLENDENABLE, &dwAlphaBlending);
 
 	if (pSrcRT != NULL)
 	{
@@ -332,4 +335,5 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetRenderState(D3DRS_ZENABLE, dwZEnable);
 	pDev->SetRenderState(D3DRS_ZWRITEENABLE, dwZWriteEnable);
 	pDev->SetRenderState(D3DRS_CULLMODE, dwCullMode);
+	pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, dwAlphaBlending);
 }

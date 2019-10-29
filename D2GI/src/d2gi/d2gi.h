@@ -38,6 +38,7 @@ class D2GI
 
 	RENDERSTATE m_eRenderState;
 	BOOL m_bSceneBegun;
+	CRITICAL_SECTION m_sCriticalSection;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
@@ -46,6 +47,8 @@ class D2GI
 	VOID ResetD3D9Device();
 	VOID ReleaseResources();
 	VOID LoadResources();
+	VOID BeginScene();
+	VOID EndScene();
 	VOID Present();
 public:
 	D2GI();

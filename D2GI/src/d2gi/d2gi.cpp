@@ -16,7 +16,7 @@
 D2GI::D2GI()
 	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL), m_eRenderState(RS_UNKNOWN), m_bSceneBegun(FALSE)
 {
-	//InitializeCriticalSection(&m_sCriticalSection);
+	InitializeCriticalSection(&m_sCriticalSection);
 
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
@@ -33,7 +33,7 @@ D2GI::~D2GI()
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
-	//DeleteCriticalSection(&m_sCriticalSection);
+	DeleteCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -218,18 +218,18 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 {
 	D3D9::IDirect3DSurface9* pRT;
 
+	// MULTITHREADED_ACCESS
 
-//	EnterCriticalSection(&m_sCriticalSection);
-	m_pDev->GetRenderTarget(0, &pRT);
+
 	pDst->MakeRenderTarget();
-	if(!m_bSceneBegun)
-		m_pDev->BeginScene();
+
+	BeginScene();
+	m_pDev->GetRenderTarget(0, &pRT);
 	m_pBlitter->Blit(pDst->GetD3D9Surface(), pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
 	/*D3D9::D3DXSaveSurfaceToFileA("E:\\cksurf_src.bmp", D3D9::D3DXIFF_BMP, pSrc->GetD3D9Surface(), NULL, NULL);
 	D3D9::D3DXSaveSurfaceToFileA("E:\\cksurf_dst.bmp", D3D9::D3DXIFF_BMP, pDst->GetD3D9Surface(), NULL, NULL);*/
-	if (!m_bSceneBegun)
-		m_pDev->EndScene();
 	m_pDev->SetRenderTarget(0, pRT);
+	EndScene();
 	pRT->Release();
 
 //	LeaveCriticalSection(&m_sCriticalSection);
@@ -251,19 +251,37 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 
 VOID D2GI::OnSceneBegin()
 {
-	//EnterCriticalSection(&m_sCriticalSection);
 	m_eRenderState = RS_3D_RENDERING;
-	m_pDev->BeginScene();
-	m_bSceneBegun = TRUE;
+	BeginScene();
+}
+
+
+VOID D2GI::BeginScene()
+{
+	EnterCriticalSection(&m_sCriticalSection);
+	if (!m_bSceneBegun)
+	{
+		m_pDev->BeginScene();
+		m_bSceneBegun = TRUE;
+	}
 }
 
 
 VOID D2GI::OnSceneEnd()
 {
 	m_eRenderState = RS_3D_RENDERING;
-	m_pDev->EndScene();
-	m_bSceneBegun = FALSE;
-	//LeaveCriticalSection(&m_sCriticalSection);
+	EndScene();
+}
+
+
+VOID D2GI::EndScene()
+{
+	if (m_bSceneBegun)
+	{
+		m_pDev->EndScene();
+		m_bSceneBegun = FALSE;
+	}
+	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
