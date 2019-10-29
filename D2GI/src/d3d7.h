@@ -78,6 +78,11 @@ __forceinline BOOL operator == (CONST DDPIXELFORMAT& v1, CONST DDPIXELFORMAT& v2
 			|| v1.dwBBitMask != v2.dwBBitMask || v1.dwGBitMask != v2.dwGBitMask))
 		return FALSE;
 
+	if ((v1.dwFlags & DDPF_BUMPDUDV)
+		&& (v1.dwBumpBitCount != v2.dwBumpBitCount || v1.dwBumpDuBitMask != v2.dwBumpDuBitMask
+			|| v1.dwBumpDvBitMask != v2.dwBumpDvBitMask))
+		return FALSE;
+
 	if ((v1.dwFlags & DDPF_ALPHAPIXELS) && v1.dwRGBAlphaBitMask != v2.dwRGBAlphaBitMask)
 		return FALSE;
 

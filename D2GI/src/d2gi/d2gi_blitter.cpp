@@ -147,11 +147,12 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f };
 	D3DVIEWPORT9 sOriginalVP, sUsedVP;
 	DWORD dwZEnable, dwZWriteEnable;
-	D3DSURFACE_DESC sDstDesc;
+	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, *pCurrentTexture2 = NULL;
 	DWORD dwMinFilter, dwMagFilter, dwCullMode;
 
 	pDst->GetDesc(&sDstDesc);
+	pSrc->GetLevelDesc(0, &sSrcDesc);
 
 	pDev->GetViewport(&sOriginalVP);
 	pDev->GetRenderState(D3DRS_ZENABLE, &dwZEnable);
@@ -164,14 +165,16 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 
 	if (pSrcRT != NULL)
 	{
-		D3DSURFACE_DESC sDesc;
+		D3DSURFACE_DESC ;
 
-		pSrc->GetLevelDesc(0, &sDesc);
-		afSrcRect[0] = (FLOAT)pSrcRT->left / (FLOAT)sDesc.Width;
-		afSrcRect[1] = (FLOAT)pSrcRT->top / (FLOAT)sDesc.Height;
-		afSrcRect[2] = (FLOAT)(pSrcRT->right - pSrcRT->left) / (FLOAT)sDesc.Width;
-		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sDesc.Height;
+		afSrcRect[0] = (FLOAT)pSrcRT->left / (FLOAT)sSrcDesc.Width;
+		afSrcRect[1] = (FLOAT)pSrcRT->top / (FLOAT)sSrcDesc.Height;
+		afSrcRect[2] = (FLOAT)(pSrcRT->right - pSrcRT->left) / (FLOAT)sSrcDesc.Width;
+		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sSrcDesc.Height;
 	}
+
+	afSrcRect[0] += 0.5f / (FLOAT)sSrcDesc.Width;
+	afSrcRect[1] += 0.5f / (FLOAT)sSrcDesc.Height;
 
 	pDev->SetRenderTarget(0, pDst);
 
@@ -239,7 +242,7 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f };
 	D3DVIEWPORT9 sOriginalVP, sUsedVP;
 	DWORD dwZEnable, dwZWriteEnable;
-	D3DSURFACE_DESC sDstDesc;
+	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, * pCurrentTexture2 = NULL;
 	DWORD dwMinFilter, dwMagFilter, dwCullMode;
 	FLOAT afColorKey[] = 
@@ -250,7 +253,8 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 		(FLOAT)((dwColorKey) & 0xFF) / 255.0f,
 	};
 
-	pDst->GetDesc(&sDstDesc);
+	pDst->GetDesc(&sSrcDesc);
+	pSrc->GetLevelDesc(0, &sSrcDesc);
 
 	pDev->GetViewport(&sOriginalVP);
 	pDev->GetRenderState(D3DRS_ZENABLE, &dwZEnable);
@@ -263,14 +267,14 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 
 	if (pSrcRT != NULL)
 	{
-		D3DSURFACE_DESC sDesc;
-
-		pSrc->GetLevelDesc(0, &sDesc);
-		afSrcRect[0] = (FLOAT)pSrcRT->left / (FLOAT)sDesc.Width;
-		afSrcRect[1] = (FLOAT)pSrcRT->top / (FLOAT)sDesc.Height;
-		afSrcRect[2] = (FLOAT)(pSrcRT->right - pSrcRT->left) / (FLOAT)sDesc.Width;
-		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sDesc.Height;
+		afSrcRect[0] = (FLOAT)pSrcRT->left / (FLOAT)sSrcDesc.Width;
+		afSrcRect[1] = (FLOAT)pSrcRT->top / (FLOAT)sSrcDesc.Height;
+		afSrcRect[2] = (FLOAT)(pSrcRT->right - pSrcRT->left) / (FLOAT)sSrcDesc.Width;
+		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sSrcDesc.Height;
 	}
+
+	afSrcRect[0] += 0.5f / (FLOAT)sSrcDesc.Width;
+	afSrcRect[1] += 0.5f / (FLOAT)sSrcDesc.Height;
 
 	pDev->SetRenderTarget(0, pDst);
 

@@ -59,7 +59,8 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->dwFlags & DDSD_WIDTH)
 		&& (lpDesc->dwFlags & DDSD_HEIGHT) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY))
 	{
-		D2GISystemMemorySurface* pSurf = new D2GISystemMemorySurface(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight);
+		D2GISystemMemorySurface* pSurf = new D2GISystemMemorySurface(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, 
+			(lpDesc->dwFlags & DDSD_PIXELFORMAT) ? &lpDesc->ddpfPixelFormat : NULL);
 
 		m_pResourceContainer->Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;

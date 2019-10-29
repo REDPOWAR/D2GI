@@ -201,13 +201,12 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 	m_pDev->GetRenderTarget(0, &pRT);
 	if(!m_bSceneBegun)
 		m_pDev->BeginScene();
+
 	if (pSrc->HasColorKey())
-	{
 		m_pBlitter->BlitWithColorKey(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT, pSrc->GetColorKeyValue());
-		D3D9::D3DXSaveSurfaceToFileA("E:\\cksurf.bmp", D3D9::D3DXIFF_BMP, pSrc->GetD3D9Surface(), NULL, NULL);
-	}
 	else
 		m_pBlitter->Blit(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
+
 	if (!m_bSceneBegun)
 		m_pDev->EndScene();
 
@@ -226,6 +225,8 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 	if(!m_bSceneBegun)
 		m_pDev->BeginScene();
 	m_pBlitter->Blit(pDst->GetD3D9Surface(), pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
+	/*D3D9::D3DXSaveSurfaceToFileA("E:\\cksurf_src.bmp", D3D9::D3DXIFF_BMP, pSrc->GetD3D9Surface(), NULL, NULL);
+	D3D9::D3DXSaveSurfaceToFileA("E:\\cksurf_dst.bmp", D3D9::D3DXIFF_BMP, pDst->GetD3D9Surface(), NULL, NULL);*/
 	if (!m_bSceneBegun)
 		m_pDev->EndScene();
 	m_pDev->SetRenderTarget(0, pRT);
