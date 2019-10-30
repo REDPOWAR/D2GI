@@ -38,4 +38,9 @@ public:
 	VOID UpdateWithPalette(D2GIPalette*);
 	BOOL HasColorKey();
 	DWORD GetColorKeyValue();
+	VOID* GetDataSize();
+	VOID* GetData() { return m_pData; }
+	UINT GetDataPitch() { return m_uPitch; }
+	DWORD GetWidth() { return m_dwWidth; }
+	DWORD GetHeight() { return m_dwHeight; }
 };

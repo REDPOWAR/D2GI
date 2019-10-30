@@ -12,6 +12,8 @@ class D2GIMipMapSurface : public D2GISurface
 	UINT m_uLevelID;
 	D2GIMipMapSurface* m_pNextLevel;
 	D3D9::IDirect3DSurface9* m_pSurface;
+	VOID* m_pData;
+	UINT m_uDataSize;
 public:
 	D2GIMipMapSurface(D2GI*, D2GITexture*, UINT, D2GIMipMapSurface*);
 	virtual ~D2GIMipMapSurface();
@@ -26,4 +28,5 @@ public:
 	STDMETHOD(Lock)(LPRECT, D3D7::LPDDSURFACEDESC2, DWORD, HANDLE);
 	STDMETHOD(Unlock)(LPRECT);
 	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
+	VOID UpdateSurface();
 };

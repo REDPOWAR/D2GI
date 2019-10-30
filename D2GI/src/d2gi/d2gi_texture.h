@@ -34,4 +34,10 @@ public:
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
 	VOID MakeRenderTarget();
+	BOOL HasColorKey();
+	DWORD GetColorKeyValue();
+	DWORD GetOriginalColorKeyValue();
+	DWORD GetWidth() { return m_dwWidth; }
+	DWORD GetHeight() { return m_dwHeight; }
+	D3D7::DDPIXELFORMAT* GetPixelFormat() { return &m_sPixelFormat; }
 };

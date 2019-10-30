@@ -8,7 +8,7 @@
 D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwW, DWORD dwH, DWORD dwMipMapCount, D3D7::DDPIXELFORMAT* ppf) 
 	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), 
 	m_dwMipMapCount(dwMipMapCount == 0 ? 1 : dwMipMapCount), m_pTexture(NULL), m_lpMipMapLevels(NULL),
-	m_sPixelFormat(*ppf), m_bRenderTarget(FALSE)
+	m_sPixelFormat(*ppf), m_bRenderTarget(FALSE), m_dwCKFlags(0)
 {
 	INT i;
 
@@ -51,6 +51,9 @@ VOID D2GITexture::LoadResource()
 	else
 		return;
 
+	if (HasColorKey() && m_sPixelFormat == g_pf16_565)
+		eFormat = D3D9::D3DFMT_A8R8G8B8;
+
 	dwUsage = m_bRenderTarget ? D3DUSAGE_RENDERTARGET : D3DUSAGE_DYNAMIC;
 
 
@@ -81,9 +84,22 @@ VOID D2GITexture::ReleaseResource()
 
 HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 {
+	INT i;
+
+	if (!(dwFlags & DDCKEY_SRCBLT))
+		return DDERR_GENERIC;
+
 	m_dwCKFlags = dwFlags;
-	if(pCK != NULL)	
+	if (pCK != NULL)
 		m_sColorKey = *pCK;
+	else
+		m_dwCKFlags = 0;
+
+	ReleaseResource();
+	LoadResource();
+	for (i = 0; i < m_dwMipMapCount; i++)
+		m_lpMipMapLevels[i]->UpdateSurface();
+
 	return DD_OK;
 }
 
@@ -147,7 +163,7 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 	pDesc->dwWidth = m_dwWidth;
 	pDesc->dwHeight = m_dwHeight;
 	pDesc->ddsCaps.dwCaps = DDSCAPS_COMPLEX | DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY | DDSCAPS_TEXTURE | DDSCAPS_MIPMAP;
-	pDesc->ddpfPixelFormat = g_pf16_565;
+	pDesc->ddpfPixelFormat = m_sPixelFormat;
 
 	return DD_OK;
 }
@@ -161,4 +177,29 @@ VOID D2GITexture::MakeRenderTarget()
 	m_bRenderTarget = TRUE;
 	ReleaseResource();
 	LoadResource();
+}
+
+
+BOOL D2GITexture::HasColorKey()
+{
+	return !!(m_dwCKFlags & DDCKEY_SRCBLT);
+}
+
+
+DWORD D2GITexture::GetColorKeyValue()
+{
+	BYTE r, g, b, a;
+
+	r = ((m_sColorKey.dwColorSpaceLowValue >> 10) & 0x1F) * 255 / 32;
+	g = ((m_sColorKey.dwColorSpaceLowValue >> 5) & 0x1F) * 255 / 32;
+	b = ((m_sColorKey.dwColorSpaceLowValue) & 0x1F) * 255 / 32;
+	a = ((m_sColorKey.dwColorSpaceLowValue >> 15) & 0x1) * 255;
+
+	return (r << 24) | (g << 16) | (b << 8) | a;
+}
+
+
+DWORD D2GITexture::GetOriginalColorKeyValue()
+{
+	return m_sColorKey.dwColorSpaceLowValue;
 }

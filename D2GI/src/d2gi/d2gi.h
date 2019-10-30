@@ -38,6 +38,8 @@ class D2GI
 
 	RENDERSTATE m_eRenderState;
 	BOOL m_bSceneBegun;
+	BOOL m_bColorKeyEnabled;
+	D2GITexture* m_lpCurrentTextures[8];
 	CRITICAL_SECTION m_sCriticalSection;
 
 	D2GIBlitter* m_pBlitter;
