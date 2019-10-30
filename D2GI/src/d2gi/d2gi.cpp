@@ -114,8 +114,9 @@ VOID D2GI::ResetD3D9Device()
 	sParams.BackBufferWidth = m_dwOriginalWidth;
 	sParams.BackBufferHeight = m_dwOriginalHeight;
 	sParams.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_DISCARD;
+	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_FLIP;
 	sParams.Windowed = TRUE;
+	sParams.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, 
 		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED, &sParams, &m_pDev);
@@ -142,9 +143,39 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 }
 
 
-VOID D2GI::OnBackBufferLock()
+VOID D2GI::OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT* pRect)
 {
-	m_eRenderState = RS_BACKBUFFER_STREAMING;
+	if (!bRead)
+	{
+		m_eRenderState = RS_BACKBUFFER_STREAMING;
+	}
+	else
+	{
+		D3D9::IDirect3DSurface9* pRT;
+		D3D9::D3DLOCKED_RECT sSrcRT;
+
+		m_pDev->GetRenderTarget(0, &pRT);
+		pRT->LockRect(&sSrcRT, NULL, D3DLOCK_READONLY);
+		for (INT i = 0; i < m_dwOriginalHeight; i++)
+		{
+			for (INT j = 0; j < m_dwOriginalWidth; j++)
+			{
+				UINT32 uSrcColor = ((UINT32*)((BYTE*)sSrcRT.pBits + i * sSrcRT.Pitch))[j];
+				BYTE r, g, b;
+				UINT16 uDstColor;
+
+				r = ((uSrcColor >> 16) & 0xFF) * 31 / 255;
+				g = ((uSrcColor >> 8) & 0xFF) * 31 / 255;
+				b = ((uSrcColor) & 0xFF) * 31 / 255;
+
+				uDstColor = (1 << 15) | (r << 10) | (g << 5) | b;
+
+				((UINT16*)((BYTE*)pRect->pBits + i * pRect->Pitch))[j] = uDstColor;
+			}
+		}
+		pRT->UnlockRect();
+		pRT->Release();
+	}
 }
 
 

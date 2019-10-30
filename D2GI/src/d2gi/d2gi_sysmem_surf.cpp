@@ -81,6 +81,7 @@ VOID D2GISystemMemorySurface::LoadResource()
 	}
 
 	m_pData = new BYTE[m_uDataSize];
+	memset(m_pData, 0xD800, m_uDataSize);
 
 	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
 		eTextureFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);

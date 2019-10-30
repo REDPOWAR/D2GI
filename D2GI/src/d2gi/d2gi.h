@@ -68,7 +68,7 @@ public:
 	VOID OnDisplayModeSet(DWORD, DWORD, DWORD, DWORD dwFlags);
 	VOID OnViewportSet(D3D7::LPD3DVIEWPORT7);
 	VOID OnFlip();
-	VOID OnBackBufferLock();
+	VOID OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT*);
 	VOID OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface*, RECT*, D2GIPrimarySingleSurface*, RECT*);
 	VOID OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil);
 	VOID OnLightEnable(DWORD, BOOL);

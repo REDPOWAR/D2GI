@@ -43,7 +43,7 @@ VOID D2GIBackBufferSurface::LoadResource()
 }
 
 
-HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWORD, HANDLE)
+HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWORD dwFlags, HANDLE)
 {
 	if (pRect == NULL)
 	{
@@ -61,6 +61,8 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 		pDesc->lPitch = sLockedRect.Pitch;
 		pDesc->lpSurface = sLockedRect.pBits;
 
+		m_pD2GI->OnBackBufferLock(!(dwFlags & DDLOCK_WRITEONLY), &sLockedRect);
+
 		return DD_OK;
 	}
 
@@ -71,7 +73,6 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 HRESULT D2GIBackBufferSurface::Unlock(LPRECT)
 {
 	m_pSurface->UnlockRect();
-	m_pD2GI->OnBackBufferLock();
 	return DD_OK;
 }
 
