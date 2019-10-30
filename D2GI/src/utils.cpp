@@ -127,11 +127,14 @@ UINT CalcFVFStride(DWORD dwFVF)
 	UINT uVertexStride = 0;
 
 	if (dwFVF & ~(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 | 
-		D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_SPECULAR | D3DFVF_RESERVED1))
+		D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_SPECULAR | D3DFVF_RESERVED1 | D3DFVF_XYZRHW))
 		return 0;
 
 	if (dwFVF & D3DFVF_XYZ)
 		uVertexStride += sizeof(FLOAT) * 3;
+
+	if (dwFVF & D3DFVF_XYZRHW)
+		uVertexStride += sizeof(FLOAT) * 4;
 
 	if (dwFVF & D3DFVF_NORMAL)
 		uVertexStride += sizeof(FLOAT) * 3;

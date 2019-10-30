@@ -756,7 +756,11 @@ VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
 	}
 	m_pDev->SetFVF(dwFVF);
+	if (!m_bSceneBegun)
+		m_pDev->BeginScene();
 	m_pDev->DrawPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, uPrimCount, pVerts, uVertexStride);
+	if (!m_bSceneBegun)
+		m_pDev->EndScene();
 
 	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
 	{
