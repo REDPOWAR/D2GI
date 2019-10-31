@@ -4,10 +4,16 @@
 #include "d2gi_enums.h"
 
 
-D2GIMipMapSurface::D2GIMipMapSurface(D2GI* pD2GI, D2GITexture* pParent, UINT uID, D2GIMipMapSurface* pNextSurf) 
-	: D2GISurface(pD2GI), m_pParent(pParent), m_uLevelID(uID), m_pSurface(NULL), m_pNextLevel(pNextSurf)
+D2GIMipMapSurface::D2GIMipMapSurface(D2GITexture* pParent, UINT uLevelID, D2GIMipMapSurface* pNextSurf,
+	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
+	: D2GISurface(pParent->GetD2GI(), dwWidth, dwHeight, eFormat), m_pSurface(NULL), m_pNextLevel(pNextSurf)
 {
-	m_uDataSize = sizeof(UINT16) * pParent->GetWidth() * pParent->GetHeight();
+	m_pParent = pParent;
+	m_pNextLevel = pNextSurf;
+	m_uLevelID = uLevelID;
+
+	m_pSurface = NULL;
+	m_uDataSize = sizeof(UINT16) * m_dwWidth * m_dwHeight;
 	m_pData = new BYTE[m_uDataSize];
 }
 
@@ -33,10 +39,6 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 {
 	if (pRect == NULL)
 	{
-		D3D9::D3DSURFACE_DESC sSurfDesc;
-
-		m_pSurface->GetDesc(&sSurfDesc);
-
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
 		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT;
@@ -50,11 +52,11 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 		}*/
 
 		pDesc->ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM | DDSCAPS_MIPMAP | DDSCAPS_COMPLEX;
-		pDesc->dwWidth = sSurfDesc.Width;
-		pDesc->dwHeight = sSurfDesc.Height;
-		pDesc->ddpfPixelFormat = *m_pParent->GetPixelFormat();
+		pDesc->dwWidth = m_dwWidth;
+		pDesc->dwHeight = m_dwHeight;
+		pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 		pDesc->lpSurface = m_pData;
-		pDesc->lPitch = sizeof(UINT16) * sSurfDesc.Width;
+		pDesc->lPitch = sizeof(UINT16) * m_dwWidth;
 
 		return DD_OK;
 	}
@@ -73,28 +75,26 @@ HRESULT D2GIMipMapSurface::Unlock(LPRECT)
 VOID D2GIMipMapSurface::UpdateSurface()
 {
 	D3D9::D3DLOCKED_RECT sRect;
-	D3D9::D3DSURFACE_DESC sSurfDesc;
 	UINT uPitch;
 
-	m_pSurface->GetDesc(&sSurfDesc);
 	m_pSurface->LockRect(&sRect, NULL, 0);
-	uPitch = sizeof(UINT16) * sSurfDesc.Width;
+	uPitch = sizeof(UINT16) * m_dwWidth;
 
-	if (m_pParent->HasColorKey() && *m_pParent->GetPixelFormat() == g_pf16_565)
+	if (m_pParent->HasColorKeyConversion())
 	{
 		INT i, j;
 
-		for (i = 0; i < sSurfDesc.Height; i++)
+		for (i = 0; i < m_dwHeight; i++)
 		{
-			for (j = 0; j < sSurfDesc.Width; j++)
+			for (j = 0; j < m_dwWidth; j++)
 			{
-				UINT16 uSrcColor = *((UINT16*)m_pData + i * sSurfDesc.Width + j);
+				UINT16 uSrcColor = *((UINT16*)m_pData + i * m_dwWidth + j);
 				UINT32 uDstColor;
 				BYTE r, g, b, a;
 
-				r = ((uSrcColor >> 11) & 0x1F) * 255 / 32;
-				g = ((uSrcColor >> 5) & 0x3F) * 255 / 64;
-				b = (uSrcColor & 0x1F) * 255 / 32;
+				r = ((uSrcColor >> 11) & 0x1F) * 255 / 31;
+				g = ((uSrcColor >> 5) & 0x3F) * 255 / 63;
+				b = (uSrcColor & 0x1F) * 255 / 31;
 				a = (uSrcColor == (UINT16)m_pParent->GetOriginalColorKeyValue()) ? 0 : 255;
 
 				uDstColor = (a << 24) | (r << 16) | (g << 8) | b;
@@ -107,7 +107,7 @@ VOID D2GIMipMapSurface::UpdateSurface()
 	{
 		INT i;
 
-		for (i = 0; i < sSurfDesc.Height; i++)
+		for (i = 0; i < m_dwHeight; i++)
 			CopyMemory((BYTE*)sRect.pBits + i * sRect.Pitch, (BYTE*)m_pData + i * uPitch, uPitch);
 	}
 

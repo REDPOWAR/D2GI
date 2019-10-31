@@ -10,7 +10,7 @@ class D2GIPrimaryFlippableSurface : public D2GISurface
 {
 	D2GIBackBufferSurface* m_pBackBuffer;
 public:
-	D2GIPrimaryFlippableSurface(D2GI*);
+	D2GIPrimaryFlippableSurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
 	virtual ~D2GIPrimaryFlippableSurface();
 
 	virtual SURFACETYPE GetType() { return ST_PRIMARY_FLIPPABLE; }

@@ -6,7 +6,7 @@
 class D2GIZBufferSurface : public D2GISurface
 {
 public:
-	D2GIZBufferSurface(D2GI*);
+	D2GIZBufferSurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
 	virtual ~D2GIZBufferSurface();
 
 	virtual SURFACETYPE GetType() { return ST_ZBUFFER; }

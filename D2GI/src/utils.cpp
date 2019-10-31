@@ -188,3 +188,18 @@ UINT CalcIndexedPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwIndexCount)
 
 	return dwIndexCount / 3;
 }
+
+
+VOID CalcMipMapLevelSize(DWORD dwTextureW, DWORD dwTextureH, UINT uLevel, DWORD* pMipMapW, DWORD* pMipMapH)
+{
+	INT i;
+
+	*pMipMapW = dwTextureW;
+	*pMipMapH = dwTextureH;
+
+	for (i = 0; i < uLevel && !(*pMipMapW == 1 && *pMipMapH == 1); i++)
+	{
+		*pMipMapW = max(*pMipMapW / 2, 1);
+		*pMipMapH = max(*pMipMapH / 2, 1);
+	}
+}

@@ -5,24 +5,14 @@
 #include "d2gi_palette.h"
 
 
-D2GISystemMemorySurface::D2GISystemMemorySurface(D2GI* pD2GI, DWORD dwW, DWORD dwH, D3D7::DDPIXELFORMAT* ppf) 
-	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), m_dwCKFlags(0),
-	m_pTexture(NULL), m_pSurface(NULL), m_pData(NULL)
+D2GISystemMemorySurface::D2GISystemMemorySurface(D2GI* pD2GI, 
+	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
+	: D2GISurface(pD2GI, dwWidth, dwHeight, eFormat)
 {
-	if (ppf != NULL)
-	{
-		m_sPixelFormat = *ppf;
-		m_dwBPP = ppf->dwRGBBitCount;
-	}
-	else
-	{
-		m_dwBPP = m_pD2GI->GetOriginalBPP();
-
-		if (m_dwBPP == 16)
-			m_sPixelFormat = g_pf16_1555;
-		else
-			m_sPixelFormat = g_pf8_Pal;
-	}
+	m_bColorKeySet = FALSE;
+	m_pTexture = NULL;
+	m_pSurface = NULL;
+	m_pData = NULL;
 
 	LoadResource();
 }
@@ -37,15 +27,18 @@ D2GISystemMemorySurface::~D2GISystemMemorySurface()
 
 HRESULT D2GISystemMemorySurface::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 {
-	if (dwFlags & DDCKEY_SRCBLT)
+	if (!(dwFlags & DDCKEY_SRCBLT))
+		return DDERR_GENERIC;
+
+	if (pCK != NULL)
 	{
-		m_dwCKFlags = dwFlags;
 		m_sColorKey = *pCK;
-
-		return DD_OK;
+		m_bColorKeySet = TRUE;
 	}
+	else
+		m_bColorKeySet = FALSE;
 
-	return DDERR_GENERIC;
+	return DD_OK;	
 }
 
 
@@ -66,12 +59,7 @@ VOID D2GISystemMemorySurface::LoadResource()
 	{
 		m_uDataSize = sizeof(UINT16) * m_dwWidth * m_dwHeight;
 		m_uPitch = sizeof(UINT16) * m_dwWidth;
-		if (m_sPixelFormat == g_pf16_565)
-			eTextureFormat = D3D9::D3DFMT_R5G6B5;
-		else if (m_sPixelFormat == g_pf16_4444)
-			eTextureFormat = D3D9::D3DFMT_A4R4G4B4;
-		else
-			eTextureFormat = D3D9::D3DFMT_A1R5G5B5;
+		eTextureFormat = g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat];
 	}
 	else if (m_dwBPP == 8)
 	{
@@ -81,7 +69,6 @@ VOID D2GISystemMemorySurface::LoadResource()
 	}
 
 	m_pData = new BYTE[m_uDataSize];
-	memset(m_pData, 0xD800, m_uDataSize);
 
 	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
 		eTextureFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
@@ -98,7 +85,7 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
 		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_LPSURFACE;
 
-		if (m_dwCKFlags & DDCKEY_SRCBLT)
+		if (m_bColorKeySet)
 		{
 			pDesc->dwFlags |= DDSD_CKSRCBLT;
 			pDesc->ddckCKSrcBlt = m_sColorKey;
@@ -107,7 +94,7 @@ HRESULT D2GISystemMemorySurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc
 		pDesc->ddsCaps.dwCaps = DDSCAPS_SYSTEMMEMORY;
 		pDesc->dwWidth = m_dwWidth;
 		pDesc->dwHeight = m_dwHeight;
-		pDesc->ddpfPixelFormat = m_sPixelFormat;
+		pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 		pDesc->lpSurface = m_pData;
 		pDesc->lPitch = m_uPitch;
 
@@ -169,18 +156,17 @@ HRESULT D2GISystemMemorySurface::GetCaps(D3D7::LPDDSCAPS2 pCaps)
 
 BOOL D2GISystemMemorySurface::HasColorKey()
 {
-	return !!(m_dwCKFlags & DDCKEY_SRCBLT);
+	return m_bColorKeySet;
 }
 
 
 DWORD D2GISystemMemorySurface::GetColorKeyValue()
 {
-	BYTE r, g, b, a;
+	BYTE r, g, b;
 
-	r = ((m_sColorKey.dwColorSpaceLowValue >> 10) & 0x1F) * 255 / 32;
-	g = ((m_sColorKey.dwColorSpaceLowValue >> 5) & 0x1F) * 255 / 32;
-	b = ((m_sColorKey.dwColorSpaceLowValue) & 0x1F) * 255 / 32;
-	a = ((m_sColorKey.dwColorSpaceLowValue >> 15) & 0x1) * 255;
+	r = ((m_sColorKey.dwColorSpaceLowValue >> 11) & 0x1F) * 255 / 31;
+	g = ((m_sColorKey.dwColorSpaceLowValue >> 5) & 0x3F) * 255 / 63;
+	b = ((m_sColorKey.dwColorSpaceLowValue) & 0x1F) * 255 / 31;
 
-	return (r << 24) | (g << 16) | (b << 8) | a;
+	return (r << 24) | (g << 16) | (b << 8) | 255;
 }

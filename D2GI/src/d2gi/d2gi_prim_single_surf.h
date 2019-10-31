@@ -8,7 +8,7 @@ class D2GIPrimarySingleSurface : public D2GISurface
 {
 	D2GIPalette* m_pPalette;
 public:
-	D2GIPrimarySingleSurface(D2GI*);
+	D2GIPrimarySingleSurface(D2GI*, DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat);
 	virtual ~D2GIPrimarySingleSurface();
 
 	virtual SURFACETYPE GetType() { return ST_PRIMARY_SINGLE; }

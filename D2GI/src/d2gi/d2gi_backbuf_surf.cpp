@@ -4,9 +4,13 @@
 #include "d2gi_enums.h"
 
 
-D2GIBackBufferSurface::D2GIBackBufferSurface(D2GI* pD2GI) 
-	: D2GISurface(pD2GI), m_pTexture(NULL), m_pSurface(NULL)
+D2GIBackBufferSurface::D2GIBackBufferSurface(D2GI* pD2GI, DWORD dwWidth, 
+	DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
+	: D2GISurface(pD2GI, dwWidth, dwHeight, eFormat)
 {
+	m_pTexture = NULL;
+	m_pSurface = NULL;
+
 	LoadResource();
 }
 
@@ -28,18 +32,10 @@ VOID D2GIBackBufferSurface::LoadResource()
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 
-	m_dwWidth = m_pD2GI->GetOriginalWidth();
-	m_dwHeight = m_pD2GI->GetOriginalHeight();
-	m_dwBPP = m_pD2GI->GetOriginalBPP();
+	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
+		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
 
-	if (m_dwBPP == 16)
-	{
-		pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
-			D3D9::D3DFMT_A1R5G5B5, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
-
-		m_pTexture->GetSurfaceLevel(0, &m_pSurface);
-		m_sPixelFormat = g_pf16_565;
-	}
+	m_pTexture->GetSurfaceLevel(0, &m_pSurface);
 }
 
 
@@ -57,7 +53,7 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 		pDesc->ddsCaps.dwCaps = DDSCAPS_BACKBUFFER | DDSCAPS_COMPLEX | DDSCAPS_FLIP | DDSCAPS_3DDEVICE | DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY;
 		pDesc->dwWidth = m_dwWidth;
 		pDesc->dwHeight = m_dwHeight;
-		pDesc->ddpfPixelFormat = m_sPixelFormat;
+		pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 		pDesc->lPitch = sLockedRect.Pitch;
 		pDesc->lpSurface = sLockedRect.pBits;
 

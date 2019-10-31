@@ -4,10 +4,11 @@
 #include "d2gi_enums.h"
 
 
-D2GIPrimarySingleSurface::D2GIPrimarySingleSurface(D2GI* pD2GI) 
-	: D2GISurface(pD2GI), m_pPalette(NULL)
+D2GIPrimarySingleSurface::D2GIPrimarySingleSurface(D2GI* pD2GI,
+	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat)
+	: D2GISurface(pD2GI, dwWidth, dwHeight, eFormat)
 {
-
+	m_pPalette = NULL;
 }
 
 
@@ -19,20 +20,15 @@ D2GIPrimarySingleSurface::~D2GIPrimarySingleSurface()
 
 HRESULT D2GIPrimarySingleSurface::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 {
-	DWORD dwBPP = m_pD2GI->GetOriginalBPP();
 
 	ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 	pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
 	pDesc->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PITCH | DDSD_PIXELFORMAT;
-	pDesc->dwWidth = m_pD2GI->GetOriginalWidth();
-	pDesc->dwHeight = m_pD2GI->GetOriginalHeight();
-	pDesc->lPitch = pDesc->dwWidth * dwBPP / 8;
+	pDesc->dwWidth = m_dwWidth;
+	pDesc->dwHeight = m_dwHeight;
+	pDesc->lPitch = pDesc->dwWidth * m_dwBPP / 8;
 	pDesc->ddsCaps.dwCaps = DDSCAPS_FRONTBUFFER | DDSCAPS_PRIMARYSURFACE | DDSCAPS_LOCALVIDMEM | DDSCAPS_VISIBLE | DDSCAPS_VIDEOMEMORY | DDSCAPS_3DDEVICE;
-
-	if (dwBPP == 8)
-		pDesc->ddpfPixelFormat = g_pf8_Pal;
-	else if (dwBPP == 16)
-		pDesc->ddpfPixelFormat = g_pf16_565;
+	pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 
 	return DD_OK;
 }
@@ -71,4 +67,3 @@ HRESULT D2GIPrimarySingleSurface::Blt(LPRECT pDestRT, D3D7::LPDIRECTDRAWSURFACE7
 
 	return DD_OK;
 }
-

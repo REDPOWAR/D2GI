@@ -1,54 +1,88 @@
 
 #define INITGUID
-#include "../d3d7.h"
+#include "d2gi_enums.h"
+
 
 using namespace D3D7;
 
 
-DDPIXELFORMAT g_pf8 = { sizeof(DDPIXELFORMAT), DDPF_PALETTEINDEXED8 | DDPF_RGB, 0, 8, 0, 0, 0, 0, };
-DDPIXELFORMAT g_pf16 = { sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 63488, 2016, 31, 0 };
+DDPIXELFORMAT g_pf16_565 =
+{
+	sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 63488, 2016, 31, 0,
+};
+
+
+DDPIXELFORMAT g_pf16_1555 =
+{
+	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 31744, 992, 31, 32768
+};
+
+
+DDPIXELFORMAT g_pf16_4444 =
+{
+	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 3840, 240, 15, 61440
+};
+
+
+DDPIXELFORMAT g_pf16_v8u8 =
+{
+	sizeof(DDPIXELFORMAT), DDPF_BUMPDUDV, 0, 16, 255, 65280, 0, 0
+};
+
+
+DDPIXELFORMAT g_pf8_Pal =
+{
+	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_PALETTEINDEXED8, 0, 8, 0, 0, 0, 0,
+};
+
+
+DDPIXELFORMAT g_pf16_depth =
+{
+	sizeof(DDPIXELFORMAT), DDPF_ZBUFFER, 0, 16, 0, 65535, 0, 0
+};
+
 
 DDSURFACEDESC2 g_asAvailableDisplayModes[] =
 {
 	// 640x480x8
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		480, 640, 640, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8
+		480, 640, 640, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8_Pal
 	},
 	// 640x480x16
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		480, 640, 1280, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16
+		480, 640, 1280, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16_565
 	},
 	// 800x600x8
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		600, 800, 800, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8
+		600, 800, 800, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8_Pal
 	},
 	// 800x600x16
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		600, 800, 1600, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16
+		600, 800, 1600, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16_565
 	},
 	// 1024x768x8
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		768, 1024, 1024, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8
+		768, 1024, 1024, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8_Pal
 	},
 	// 1024x768x16
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		768, 1024, 2048, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16
+		768, 1024, 2048, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16_565
 	},
 	// 1600x1200x8
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		1200, 1600, 1600, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8
+		1200, 1600, 1600, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf8_Pal
 	},
 	// 1600x1200x16
 	{
 		sizeof(DDSURFACEDESC2), DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT,
-		1200, 1600, 3200, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16
+		1200, 1600, 3200, 0, 0, 0, 0, NULL, {0, 0}, {0, 0}, {0, 0}, {0, 0}, g_pf16_565
 	},
 };
 
@@ -155,37 +189,6 @@ CHAR* g_lpszDeviceNames[] = {
 UINT g_uDeviceCount = ARRAYSIZE(g_asDeviceDescs);
 
 
-DDPIXELFORMAT g_pf16_565 =
-{
-	sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 63488, 2016, 31, 0,
-};
-
-
-DDPIXELFORMAT g_pf16_1555 =
-{
-	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 31744, 992, 31, 32768
-};
-
-
-DDPIXELFORMAT g_pf16_4444 =
-{
-	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 3840, 240, 15, 61440
-};
-
-
-DDPIXELFORMAT g_pf16_v8u8 =
-{
-	sizeof(DDPIXELFORMAT), DDPF_BUMPDUDV, 0, 16, 255, 65280, 0, 0
-};
-
-
-DDPIXELFORMAT g_pf8_Pal =
-{
-	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_PALETTEINDEXED8, 0, 8, 0, 0, 0, 0,
-};
-
-
-
 DDPIXELFORMAT g_asTextureFormats[] =
 {
 	g_pf16_565,
@@ -213,10 +216,51 @@ UINT g_uTextureFormatsCount = ARRAYSIZE(g_asTextureFormats);
 
 DDPIXELFORMAT g_asZBufferFormats[] =
 {
-	{sizeof(DDPIXELFORMAT), DDPF_ZBUFFER, 0, 16, 0, 65535, 0, 0},
+	g_pf16_depth,
 	{sizeof(DDPIXELFORMAT), DDPF_ZBUFFER, 0, 32, 0, 16777215, 0, 0},
 	{sizeof(DDPIXELFORMAT), DDPF_ZBUFFER | DDPF_STENCILBUFFER, 0, 32, 8, 65535, 4278190080, 0},
 	{sizeof(DDPIXELFORMAT), DDPF_ZBUFFER, 0, 24, 0, 16777215, 0, 0},
 };
 
 UINT g_uZBufferFormatsCount = ARRAYSIZE(g_asZBufferFormats);
+
+
+DDPIXELFORMAT g_asD2GIPF_To_DD7PF[] = 
+{
+	g_pf8_Pal,
+	g_pf16_565,
+	g_pf16_1555,
+	g_pf16_4444,
+	g_pf16_v8u8,
+	g_pf16_depth
+};
+
+
+D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[] =
+{
+	D3D9::D3DFMT_P8,
+	D3D9::D3DFMT_R5G6B5,
+	D3D9::D3DFMT_A1R5G5B5,
+	D3D9::D3DFMT_A4R4G4B4,
+	D3D9::D3DFMT_V8U8,
+	D3D9::D3DFMT_D16,
+};
+
+
+D2GIPIXELFORMAT DD7PF_To_D2GIPF(D3D7::DDPIXELFORMAT* ppf)
+{
+	if (*ppf == g_pf8_Pal)
+		return D2GIPF_8_PAL;
+	else if (*ppf == g_pf16_565)
+		return D2GIPF_16_565;
+	else if (*ppf == g_pf16_1555)
+		return D2GIPF_16_1555;
+	else if (*ppf == g_pf16_4444)
+		return D2GIPF_16_4444;
+	else if (*ppf == g_pf16_v8u8)
+		return D2GIPF_16_V8U8;
+	else if (*ppf == g_pf16_depth)
+		return D2GIPF_16_DEPTH;
+	
+	return D2GIPF_UNKNOWN;
+}

@@ -5,14 +5,11 @@
 
 class D2GIBackBufferSurface : public D2GISurface
 {
-	DWORD m_dwWidth, m_dwHeight, m_dwBPP;
-	D3D7::DDPIXELFORMAT m_sPixelFormat;
-
 	D3D9::IDirect3DTexture9* m_pTexture;
 	D3D9::IDirect3DSurface9* m_pSurface;
 
 public:
-	D2GIBackBufferSurface(D2GI*);
+	D2GIBackBufferSurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
 	virtual ~D2GIBackBufferSurface();
 
 	virtual SURFACETYPE GetType() { return ST_BACKBUFFER; }

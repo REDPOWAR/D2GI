@@ -1,20 +1,34 @@
 
+#include "../utils.h"
+
 #include "d2gi_texture.h"
 #include "d2gi_enums.h"
 #include "d2gi_sysmem_surf.h"
 #include "d2gi.h"
 
 
-D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwW, DWORD dwH, DWORD dwMipMapCount, D3D7::DDPIXELFORMAT* ppf) 
-	: D2GISurface(pD2GI), m_dwWidth(dwW), m_dwHeight(dwH), 
-	m_dwMipMapCount(dwMipMapCount == 0 ? 1 : dwMipMapCount), m_pTexture(NULL), m_lpMipMapLevels(NULL),
-	m_sPixelFormat(*ppf), m_bRenderTarget(FALSE), m_dwCKFlags(0)
+D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight, 
+	D2GIPIXELFORMAT eFormat, DWORD dwMipMapCount) 
+	: D2GISurface(pD2GI, dwWidth, dwHeight, eFormat)
 {
+	m_dwMipMapCount = (dwMipMapCount == 0) ? 1 : dwMipMapCount;
+	m_lpMipMapLevels = NULL;
+	m_pTexture = NULL;
+	m_bIsRenderTarget = FALSE;
+	m_bColorKeySet = FALSE;
+
 	INT i;
 
 	m_lpMipMapLevels = new D2GIMipMapSurface* [m_dwMipMapCount];
 	for (i = (INT)m_dwMipMapCount - 1; i >= 0; i--)
-		m_lpMipMapLevels[i] = new D2GIMipMapSurface(m_pD2GI, this, i, (i < m_dwMipMapCount - 1) ? m_lpMipMapLevels[i + 1] : NULL);
+	{
+		DWORD dwMipMapWidth, dwMipMapHeight;
+		D2GIMipMapSurface* pNextMipMap = (i < m_dwMipMapCount - 1) ? m_lpMipMapLevels[i + 1] : NULL;
+
+		CalcMipMapLevelSize(m_dwWidth, m_dwHeight, i, &dwMipMapWidth, &dwMipMapHeight);
+		m_lpMipMapLevels[i] = new D2GIMipMapSurface(this, i, pNextMipMap, 
+			dwMipMapWidth, dwMipMapHeight, m_eD2GIPixelFormat);
+	}
 
 	LoadResource();
 }
@@ -40,21 +54,12 @@ VOID D2GITexture::LoadResource()
 	DWORD dwUsage;
 	DWORD i;
 
-	if (m_sPixelFormat == g_pf16_565)
-		eFormat = D3D9::D3DFMT_R5G6B5;
-	else if (m_sPixelFormat == g_pf16_1555)
-		eFormat = D3D9::D3DFMT_A1R5G5B5;
-	else if (m_sPixelFormat == g_pf16_4444)
-		eFormat = D3D9::D3DFMT_A4R4G4B4;
-	else if (m_sPixelFormat == g_pf16_v8u8)
-		eFormat = D3D9::D3DFMT_V8U8;
-	else
-		return;
+	eFormat = g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat];
 
-	if (HasColorKey() && m_sPixelFormat == g_pf16_565)
+	if (HasColorKeyConversion())
 		eFormat = D3D9::D3DFMT_A8R8G8B8;
 
-	dwUsage = m_bRenderTarget ? D3DUSAGE_RENDERTARGET : D3DUSAGE_DYNAMIC;
+	dwUsage = m_bIsRenderTarget ? D3DUSAGE_RENDERTARGET : D3DUSAGE_DYNAMIC;
 
 
 	pDev->CreateTexture(m_dwWidth, m_dwHeight,
@@ -89,11 +94,13 @@ HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 	if (!(dwFlags & DDCKEY_SRCBLT))
 		return DDERR_GENERIC;
 
-	m_dwCKFlags = dwFlags;
 	if (pCK != NULL)
+	{
 		m_sColorKey = *pCK;
+		m_bColorKeySet = TRUE;
+	}
 	else
-		m_dwCKFlags = 0;
+		m_bColorKeySet = FALSE;
 
 	ReleaseResource();
 	LoadResource();
@@ -163,7 +170,7 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 	pDesc->dwWidth = m_dwWidth;
 	pDesc->dwHeight = m_dwHeight;
 	pDesc->ddsCaps.dwCaps = DDSCAPS_COMPLEX | DDSCAPS_LOCALVIDMEM | DDSCAPS_VIDEOMEMORY | DDSCAPS_TEXTURE | DDSCAPS_MIPMAP;
-	pDesc->ddpfPixelFormat = m_sPixelFormat;
+	pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 
 	return DD_OK;
 }
@@ -171,18 +178,18 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 
 VOID D2GITexture::MakeRenderTarget()
 {
-	if (m_bRenderTarget)
+	if (m_bIsRenderTarget)
 		return;
 
-	m_bRenderTarget = TRUE;
+	m_bIsRenderTarget = TRUE;
 	ReleaseResource();
 	LoadResource();
 }
 
 
-BOOL D2GITexture::HasColorKey()
+BOOL D2GITexture::HasColorKeyConversion()
 {
-	return !!(m_dwCKFlags & DDCKEY_SRCBLT);
+	return m_bColorKeySet && m_eD2GIPixelFormat == D2GIPF_16_565;
 }
 
 

@@ -165,10 +165,10 @@ VOID D2GI::OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT* pRect)
 				UINT16 uDstColor;
 
 				r = ((uSrcColor >> 16) & 0xFF) * 31 / 255;
-				g = ((uSrcColor >> 8) & 0xFF) * 31 / 255;
+				g = ((uSrcColor >> 8) & 0xFF) * 63 / 255;
 				b = ((uSrcColor) & 0xFF) * 31 / 255;
 
-				uDstColor = (1 << 15) | (r << 10) | (g << 5) | b;
+				uDstColor = (r << 11) | (g << 5) | b;
 
 				((UINT16*)((BYTE*)pRect->pBits + i * pRect->Pitch))[j] = uDstColor;
 			}
@@ -679,7 +679,7 @@ VOID D2GI::OnIndexedPrimitiveStridedDraw(
 
 	EnterCriticalSection(&m_sCriticalSection);
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
@@ -690,7 +690,7 @@ VOID D2GI::OnIndexedPrimitiveStridedDraw(
 	}
 	m_pStridedRenderer->DrawIndexedPrimitiveStrided(pt, dwFVF, pData, dwCount, pIdx, dwIdxCount, dwFlags);
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
@@ -711,7 +711,7 @@ VOID D2GI::OnPrimitiveStridedDraw(
 	EnterCriticalSection(&m_sCriticalSection);
 
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
@@ -722,7 +722,7 @@ VOID D2GI::OnPrimitiveStridedDraw(
 	}
 	m_pStridedRenderer->DrawPrimitiveStrided(pt, dwFVF, pData, dwCount, dwFlags);
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
@@ -746,7 +746,7 @@ VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts
 	uVertexStride = CalcFVFStride(dwFVF);
 	uPrimCount = CalcPrimitiveCount(pt, dwVertCount);
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
@@ -762,7 +762,7 @@ VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts
 	if (!m_bSceneBegun)
 		m_pDev->EndScene();
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
@@ -785,7 +785,7 @@ VOID D2GI::OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID
 	uVertexStride = CalcFVFStride(dwFVF);
 	uPrimCount = CalcIndexedPrimitiveCount(pt, dwIdxCount);
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
@@ -798,7 +798,7 @@ VOID D2GI::OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID
 	m_pDev->DrawIndexedPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, 0, dwVertCount, 
 		uPrimCount, pIdx, D3D9::D3DFMT_INDEX16, pVerts, uVertexStride);
 
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKey())
+	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
 	{
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);

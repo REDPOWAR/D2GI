@@ -6,16 +6,17 @@
 
 class D2GITexture : public D2GISurface
 {
-	BOOL m_bRenderTarget;
-	DWORD m_dwWidth, m_dwHeight, m_dwMipMapCount;
+	BOOL m_bIsRenderTarget;
+
+	DWORD m_dwMipMapCount;
 	D2GIMipMapSurface** m_lpMipMapLevels;
+
 	D3D9::IDirect3DTexture9* m_pTexture;
-	D3D7::DDPIXELFORMAT m_sPixelFormat;
 
 	D3D7::DDCOLORKEY m_sColorKey;
-	DWORD m_dwCKFlags;
+	BOOL m_bColorKeySet;
 public:
-	D2GITexture(D2GI*, DWORD dwW, DWORD dwH, DWORD dwMipMapCount, D3D7::DDPIXELFORMAT*);
+	D2GITexture(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT, DWORD dwMipMapCount);
 	virtual ~D2GITexture();
 
 	virtual SURFACETYPE GetType() { return ST_TEXTURE; }
@@ -34,10 +35,7 @@ public:
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
 	VOID MakeRenderTarget();
-	BOOL HasColorKey();
 	DWORD GetColorKeyValue();
 	DWORD GetOriginalColorKeyValue();
-	DWORD GetWidth() { return m_dwWidth; }
-	DWORD GetHeight() { return m_dwHeight; }
-	D3D7::DDPIXELFORMAT* GetPixelFormat() { return &m_sPixelFormat; }
+	BOOL HasColorKeyConversion();
 };

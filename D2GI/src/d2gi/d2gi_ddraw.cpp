@@ -46,9 +46,12 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 
 HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf, IUnknown FAR* pUnknown)
 {
+	D2GIPIXELFORMAT eStdPF = (m_pD2GI->GetOriginalBPP() == 8) ? D2GIPF_8_PAL : D2GIPF_16_565;
+
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_FLIP))
 	{
-		m_pPrimaryFlippableSurf = new D2GIPrimaryFlippableSurface(m_pD2GI);
+		m_pPrimaryFlippableSurf = new D2GIPrimaryFlippableSurface(m_pD2GI, 
+			m_pD2GI->GetOriginalWidth(), m_pD2GI->GetOriginalHeight(), eStdPF);
 
 		m_pResourceContainer->Add((D2GIResource*)m_pPrimaryFlippableSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimaryFlippableSurf;
@@ -60,7 +63,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		&& (lpDesc->dwFlags & DDSD_HEIGHT) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY))
 	{
 		D2GISystemMemorySurface* pSurf = new D2GISystemMemorySurface(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, 
-			(lpDesc->dwFlags & DDSD_PIXELFORMAT) ? &lpDesc->ddpfPixelFormat : NULL);
+			(lpDesc->dwFlags & DDSD_PIXELFORMAT) ? DD7PF_To_D2GIPF(&lpDesc->ddpfPixelFormat) : eStdPF);
 
 		m_pResourceContainer->Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
@@ -70,7 +73,8 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE))
 	{
-		m_pPrimarySingleSurf = new D2GIPrimarySingleSurface(m_pD2GI);
+		m_pPrimarySingleSurf = new D2GIPrimarySingleSurface(m_pD2GI,
+			m_pD2GI->GetOriginalWidth(), m_pD2GI->GetOriginalHeight(), eStdPF);
 
 		m_pResourceContainer->Add((D2GIResource*)m_pPrimarySingleSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimarySingleSurf;
@@ -80,7 +84,8 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 
 	if ((lpDesc->dwFlags & DDSD_CAPS) && (lpDesc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER))
 	{
-		D2GIZBufferSurface* pSurf = new D2GIZBufferSurface(m_pD2GI);
+		D2GIZBufferSurface* pSurf = new D2GIZBufferSurface(m_pD2GI,
+			m_pD2GI->GetOriginalWidth(), m_pD2GI->GetOriginalHeight(), D2GIPF_16_DEPTH);
 
 		m_pResourceContainer->Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
@@ -95,7 +100,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		// MULTITHREADED ACCESS
 		DWORD dwMipMapCount = (lpDesc->dwFlags & DDSD_MIPMAPCOUNT) ? lpDesc->dwMipMapCount : 0;
 		D2GITexture* pTex = new D2GITexture(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, 
-			dwMipMapCount, &lpDesc->ddpfPixelFormat);
+			DD7PF_To_D2GIPF(&lpDesc->ddpfPixelFormat), dwMipMapCount);
 
 		m_pResourceContainer->Add((D2GIResource*)pTex); // MT-safe
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pTex;
@@ -110,8 +115,6 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 HRESULT D2GIDirectDraw::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 {
 	Debug(TEXT("Setting coop level for window 0x%08x (%i)"), hWnd, dwFlags);
-	if (dwFlags & DDSCL_MULTITHREADED)
-		dwFlags = dwFlags;
 
 	m_pD2GI->OnCooperativeLevelSet(hWnd, dwFlags);
 

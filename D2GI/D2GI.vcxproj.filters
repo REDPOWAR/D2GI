@@ -31,6 +31,12 @@
     <Filter Include="Исходные файлы\d2gi">
       <UniqueIdentifier>{1f5536a1-1470-43f7-9cb7-50819d4a39fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\d2gi\surfaces">
+      <UniqueIdentifier>{c33bf210-2946-4139-a99d-5e76a5b25fff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\d2gi\surfaces">
+      <UniqueIdentifier>{0ee434d0-487f-4979-8df3-435bd80533e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
@@ -63,9 +69,6 @@
     <ClCompile Include="src\ddraw\dd_surface.cpp">
       <Filter>Исходные файлы\ddraw</Filter>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_surface.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -87,31 +90,10 @@
     <ClCompile Include="src\d2gi\d2gi_container.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_backbuf_surf.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_sysmem_surf.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_prim_single_surf.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
     <ClCompile Include="src\ddraw\dd_palette.cpp">
       <Filter>Исходные файлы\ddraw</Filter>
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_palette.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_texture.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_mipmap_surf.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_buffer_container.cpp">
@@ -128,6 +110,30 @@
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_blitter.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_backbuf_surf.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_mipmap_surf.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_prim_single_surf.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_surface.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_sysmem_surf.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_texture.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp">
+      <Filter>Исходные файлы\d2gi\surfaces</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -152,9 +158,6 @@
     <ClInclude Include="src\ddraw\dd_surface.h">
       <Filter>Файлы заголовков\ddraw</Filter>
     </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_surface.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
     <ClInclude Include="src\utils.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -176,37 +179,16 @@
     <ClInclude Include="src\d3d7.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_prim_flip_surf.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_container.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_resource.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_backbuf_surf.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_sysmem_surf.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_prim_single_surf.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
     <ClInclude Include="src\ddraw\dd_palette.h">
       <Filter>Файлы заголовков\ddraw</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_palette.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_texture.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_strided_renderer.h">
@@ -223,6 +205,30 @@
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_blitter.h">
       <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_backbuf_surf.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_prim_flip_surf.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_prim_single_surf.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_surface.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_sysmem_surf.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_texture.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h">
+      <Filter>Файлы заголовков\d2gi\surfaces</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -4,9 +4,11 @@
 #include "d2gi_backbuf_surf.h"
 
 
-D2GIPrimaryFlippableSurface::D2GIPrimaryFlippableSurface(D2GI* pD2GI) : D2GISurface(pD2GI)
+D2GIPrimaryFlippableSurface::D2GIPrimaryFlippableSurface(D2GI* pD2GI, 
+	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
+	: D2GISurface(pD2GI, dwWidth, dwHeight, eFormat)
 {
-	m_pBackBuffer = new D2GIBackBufferSurface(m_pD2GI);
+	m_pBackBuffer = new D2GIBackBufferSurface(m_pD2GI, dwWidth, dwHeight, eFormat);
 }
 
 
@@ -47,13 +49,11 @@ HRESULT D2GIPrimaryFlippableSurface::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc
 	pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
 	pDesc->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT;
 	pDesc->dwBackBufferCount = 1;
-	pDesc->dwWidth = m_pD2GI->GetOriginalWidth();
-	pDesc->dwHeight = m_pD2GI->GetOriginalHeight();
-	pDesc->lPitch = pDesc->dwWidth * m_pD2GI->GetOriginalBPP() / 8;
+	pDesc->dwWidth = m_dwWidth;
+	pDesc->dwHeight = m_dwHeight;
+	pDesc->lPitch = pDesc->dwWidth * m_dwBPP / 8;
 	pDesc->ddsCaps.dwCaps = DDSCAPS_COMPLEX | DDSCAPS_FLIP | DDSCAPS_FRONTBUFFER | DDSCAPS_PRIMARYSURFACE | DDSCAPS_LOCALVIDMEM | DDSCAPS_VISIBLE | DDSCAPS_VIDEOMEMORY | DDSCAPS_3DDEVICE;
-	pDesc->ddpfPixelFormat.dwSize = sizeof(D3D7::DDPIXELFORMAT);
-	pDesc->ddpfPixelFormat.dwFlags = DDPF_RGB;
-	pDesc->ddpfPixelFormat.dwRGBBitCount = m_pD2GI->GetOriginalBPP();
+	pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 
 	return DD_OK;
 }

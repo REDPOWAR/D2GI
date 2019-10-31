@@ -9,13 +9,15 @@ class D2GITexture;
 class D2GIMipMapSurface : public D2GISurface
 {
 	D2GITexture* m_pParent;
-	UINT m_uLevelID;
 	D2GIMipMapSurface* m_pNextLevel;
+	UINT m_uLevelID;
+
 	D3D9::IDirect3DSurface9* m_pSurface;
 	VOID* m_pData;
 	UINT m_uDataSize;
+
 public:
-	D2GIMipMapSurface(D2GI*, D2GITexture*, UINT, D2GIMipMapSurface*);
+	D2GIMipMapSurface(D2GITexture*, UINT, D2GIMipMapSurface*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
 	virtual ~D2GIMipMapSurface();
 
 	virtual SURFACETYPE GetType() { return ST_MIPMAP; }
