@@ -14,12 +14,16 @@
 
 
 D2GI::D2GI()
-	: m_hD3D9Lib(NULL), m_pD3D9(NULL), m_pDev(NULL), m_eRenderState(RS_UNKNOWN), 
-	m_bSceneBegun(FALSE), m_bColorKeyEnabled(FALSE)
 {
-	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
+	m_hD3D9Lib = NULL;
+	m_pD3D9 = NULL;
+	m_pDev = NULL;
 
-	InitializeCriticalSection(&m_sCriticalSection);
+	m_eRenderState = RS_UNKNOWN;
+	m_bSceneBegun = FALSE;
+	m_bColorKeyEnabled = FALSE;
+
+	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
@@ -36,7 +40,6 @@ D2GI::~D2GI()
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
-	DeleteCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -128,8 +131,6 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 {
 	D3D9::D3DVIEWPORT9 sD3D9Viewport;
 
-	EnterCriticalSection(&m_sCriticalSection);
-
 	sD3D9Viewport.X = pVP->dwX;
 	sD3D9Viewport.Y = pVP->dwY;
 	sD3D9Viewport.Width = pVP->dwWidth;
@@ -138,8 +139,6 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 	sD3D9Viewport.MaxZ = pVP->dvMaxZ;
 
 	m_pDev->SetViewport(&sD3D9Viewport);
-
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -181,8 +180,6 @@ VOID D2GI::OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT* pRect)
 
 VOID D2GI::OnFlip()
 {
-	EnterCriticalSection(&m_sCriticalSection);
-
 	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
 	{
 		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
@@ -199,15 +196,12 @@ VOID D2GI::OnFlip()
 	{
 		Present();
 	}
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIPrimarySingleSurface* pDst, RECT* pDstRT)
 {
 	D3D9::IDirect3DSurface9* pRT;
-
-	EnterCriticalSection(&m_sCriticalSection);
 
 	m_eRenderState = RS_PRIMARY_SURFACE_BLITTING;
 
@@ -220,33 +214,24 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 		pRT->Release();
 	}
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
 {
-	EnterCriticalSection(&m_sCriticalSection);
 	m_pDev->Clear(dwCount, (D3D9::D3DRECT*)lpRects, dwFlags, col, z, dwStencil);
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
 {
-	EnterCriticalSection(&m_sCriticalSection);
 	m_pDev->LightEnable(i, bEnable);
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
 {
 	D3D9::IDirect3DSurface9* pRT;
-
-	EnterCriticalSection(&m_sCriticalSection);
 
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
 
@@ -266,8 +251,6 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 	pRT->Release();
 	//EndScene();
 
-
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -317,11 +300,8 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 
 VOID D2GI::OnSceneBegin()
 {
-	EnterCriticalSection(&m_sCriticalSection);
-
 	m_eRenderState = RS_3D_RENDERING;
 	BeginScene();
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -337,12 +317,8 @@ VOID D2GI::BeginScene()
 
 VOID D2GI::OnSceneEnd()
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 	m_eRenderState = RS_3D_RENDERING;
 	EndScene();
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -358,9 +334,6 @@ VOID D2GI::EndScene()
 
 VOID D2GI::OnRenderStateSet(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 	switch (eState)
 	{
 		case D3D7::D3DRENDERSTATE_CULLMODE:
@@ -441,9 +414,6 @@ VOID D2GI::OnRenderStateSet(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
 			m_pDev->SetRenderState(D3D9::D3DRS_TEXTUREFACTOR, dwValue);
 			break;
 	}
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -474,9 +444,6 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 		D3D9::D3DTEXF_POINT,
 		D3D9::D3DTEXF_LINEAR,
 	};
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 
 	switch (eState)
 	{
@@ -556,41 +523,25 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			break;
 	}
 
-
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnTextureSet(DWORD i, D2GITexture* pTex)
 {
-	EnterCriticalSection(&m_sCriticalSection);
-
 	m_lpCurrentTextures[i] = pTex;
 
 	m_pDev->SetTexture(i, pTex == NULL ? NULL : pTex->GetD3D9Texture());
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 BOOL D2GI::OnDeviceValidate(DWORD* pdw)
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
-	BOOL bRes = SUCCEEDED(m_pDev->ValidateDevice(pdw));
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
-
-	return bRes;
+	return SUCCEEDED(m_pDev->ValidateDevice(pdw));
 }
 
 
 VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pMatrix)
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 	switch (eType)
 	{
 		case D3D7::D3DTRANSFORMSTATE_WORLD:
@@ -609,27 +560,18 @@ VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pM
 			m_pDev->SetTransform((D3D9::D3DTRANSFORMSTATETYPE)eType, (D3D9::D3DMATRIX*)pMatrix);
 			break;
 	}
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnLightSet(DWORD i, D3D7::LPD3DLIGHT7 pLight)
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 	m_pDev->SetLight(i, (D3D9::D3DLIGHT9*)pLight);
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
 VOID D2GI::OnMaterialSet(D3D7::LPD3DMATERIAL7 pMaterial)
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 	m_pDev->SetMaterial((D3D9::D3DMATERIAL9*)pMaterial);
-	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
@@ -675,30 +617,7 @@ VOID D2GI::OnIndexedPrimitiveStridedDraw(
 	D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData,
 	DWORD dwCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
 {
-	DWORD dwATEnable, dwATFunc, dwATRef;
-
-	EnterCriticalSection(&m_sCriticalSection);
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwATRef);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
-	}
-	m_pStridedRenderer->DrawIndexedPrimitiveStrided(pt, dwFVF, pData, dwCount, pIdx, dwIdxCount, dwFlags);
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwATRef);
-	}
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
+	DrawPrimitive(pt, dwFVF, TRUE, pData, dwCount, pIdx, dwIdxCount, dwFlags);
 }
 
 
@@ -706,125 +625,32 @@ VOID D2GI::OnPrimitiveStridedDraw(
 	D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData,
 	DWORD dwCount, DWORD dwFlags)
 {
-	DWORD dwATEnable, dwATFunc, dwATRef;
-
-	EnterCriticalSection(&m_sCriticalSection);
-
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwATRef);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
-	}
-	m_pStridedRenderer->DrawPrimitiveStrided(pt, dwFVF, pData, dwCount, dwFlags);
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwATRef);
-	}
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
+	DrawPrimitive(pt, dwFVF, TRUE, pData, dwCount, NULL, 0, dwFlags);
 }
 
 
 
 VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
 {
-	UINT uVertexStride, uPrimCount;
-	DWORD dwATEnable, dwATFunc, dwATRef;
-
-	EnterCriticalSection(&m_sCriticalSection);
-
-
-	uVertexStride = CalcFVFStride(dwFVF);
-	uPrimCount = CalcPrimitiveCount(pt, dwVertCount);
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwATRef);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
-	}
-	m_pDev->SetFVF(dwFVF);
-	if (!m_bSceneBegun)
-		m_pDev->BeginScene();
-	m_pDev->DrawPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, uPrimCount, pVerts, uVertexStride);
-	if (!m_bSceneBegun)
-		m_pDev->EndScene();
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwATRef);
-	}
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
+	DrawPrimitive(pt, dwFVF, FALSE, pVerts, dwVertCount, NULL, 0, dwFlags);
 }
 
 
 VOID D2GI::OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
 {
-	UINT uVertexStride, uPrimCount;
-	DWORD dwATEnable, dwATFunc, dwATRef;
-
-	EnterCriticalSection(&m_sCriticalSection);
-
-
-	uVertexStride = CalcFVFStride(dwFVF);
-	uPrimCount = CalcIndexedPrimitiveCount(pt, dwIdxCount);
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwATEnable);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwATFunc);
-		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwATRef);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
-	}
-	m_pDev->SetFVF(dwFVF);
-	m_pDev->DrawIndexedPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, 0, dwVertCount, 
-		uPrimCount, pIdx, D3D9::D3DFMT_INDEX16, pVerts, uVertexStride);
-
-	if (m_bColorKeyEnabled && m_lpCurrentTextures[0] && m_lpCurrentTextures[0]->HasColorKeyConversion())
-	{
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwATEnable);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwATFunc);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwATRef);
-	}
-
-
-	LeaveCriticalSection(&m_sCriticalSection);
+	DrawPrimitive(pt, dwFVF, FALSE, pVerts, dwVertCount, pIdx, dwIdxCount, dwFlags);
 }
 
 
 BOOL D2GI::OnRenderStateGet(D3D7::D3DRENDERSTATETYPE eState, DWORD* pValue)
 {
-
-	EnterCriticalSection(&m_sCriticalSection);
-
 	switch (eState)
 	{
-	case D3D7::D3DRENDERSTATE_CULLMODE:
-		m_pDev->GetRenderState(D3D9::D3DRS_CULLMODE, pValue);
-
-		LeaveCriticalSection(&m_sCriticalSection);
-		return TRUE;
+		case D3D7::D3DRENDERSTATE_CULLMODE:
+			m_pDev->GetRenderState(D3D9::D3DRS_CULLMODE, pValue);
+			return TRUE;
 	}
 
-	LeaveCriticalSection(&m_sCriticalSection);
 	return FALSE;
 }
 
@@ -845,4 +671,70 @@ VOID D2GI::OnColorFillOnBackBuffer(DWORD dwColor, RECT* pRect)
 	m_pDev->SetViewport(&sFillingViewport);
 	m_pDev->Clear(0, NULL, D3DCLEAR_TARGET, dwColor, 1.0f, 0);
 	m_pDev->SetViewport(&sOriginalViewport);
+}
+
+
+VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
+	DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags)
+{
+	DWORD        dwAlphaTestEnable, dwAlphaTestFunc, dwAlphaTestRef;
+	D2GITexture* pTexture = m_lpCurrentTextures[0];
+
+	BOOL bEmulateColorKey = (m_bColorKeyEnabled && pTexture != NULL && pTexture->HasColorKeyConversion());
+
+
+	if (bEmulateColorKey)
+	{
+		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwAlphaTestEnable);
+		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwAlphaTestFunc);
+		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwAlphaTestRef);
+		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
+		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
+		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
+	}
+
+	if (bStrided)
+	{
+		if (pIndexData != NULL)
+		{
+			m_pStridedRenderer->DrawIndexedPrimitiveStrided(pt, dwFVF,
+				(D3D7::D3DDRAWPRIMITIVESTRIDEDDATA*)pVertexData, dwVertexCount,
+				pIndexData, dwIndexCount, dwFlags);
+		}
+		else
+		{
+			m_pStridedRenderer->DrawPrimitiveStrided(pt, dwFVF,
+				(D3D7::D3DDRAWPRIMITIVESTRIDEDDATA*)pVertexData, dwVertexCount, dwFlags);
+		}
+	}
+	else
+	{
+		UINT uVertexStride, uPrimCount;
+
+		uVertexStride = CalcFVFStride(dwFVF);
+		uPrimCount = CalcPrimitiveCount(pt, (pIndexData != NULL) ? dwIndexCount : dwVertexCount);
+
+		m_pDev->SetFVF(dwFVF);
+		if (pIndexData != NULL)
+		{
+			m_pDev->DrawIndexedPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, 0, dwVertexCount,
+				uPrimCount, pIndexData, D3D9::D3DFMT_INDEX16, pVertexData, uVertexStride);
+		}
+		else
+		{
+			// TODO: think about this scene begin/end fix
+			if (!m_bSceneBegun)
+				m_pDev->BeginScene();
+			m_pDev->DrawPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, uPrimCount, pVertexData, uVertexStride);
+			if (!m_bSceneBegun)
+				m_pDev->EndScene();
+		}
+	}
+
+	if (bEmulateColorKey)
+	{
+		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwAlphaTestEnable);
+		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwAlphaTestFunc);
+		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwAlphaTestRef);
+	}
 }

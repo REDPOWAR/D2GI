@@ -40,7 +40,6 @@ class D2GI
 	BOOL m_bSceneBegun;
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
-	CRITICAL_SECTION m_sCriticalSection;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
@@ -52,6 +51,8 @@ class D2GI
 	VOID BeginScene();
 	VOID EndScene();
 	VOID Present();
+	VOID DrawPrimitive(D3D7::D3DPRIMITIVETYPE, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
+		DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags);
 public:
 	D2GI();
 	~D2GI();

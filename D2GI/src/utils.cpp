@@ -154,21 +154,21 @@ UINT CalcFVFStride(DWORD dwFVF)
 }
 
 
-UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwVertexCount)
+UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwVertexOrIndexCount)
 {
 	switch (pt)
 	{
 		case D3D7::D3DPT_TRIANGLELIST:
-			return dwVertexCount / 3;
+			return dwVertexOrIndexCount / 3;
 		case D3D7::D3DPT_TRIANGLEFAN:
 		case D3D7::D3DPT_TRIANGLESTRIP:
-			return dwVertexCount - 2;
+			return dwVertexOrIndexCount - 2;
 		case D3D7::D3DPT_POINTLIST:
-			return dwVertexCount;
+			return dwVertexOrIndexCount;
 		case D3D7::D3DPT_LINELIST:
-			return dwVertexCount / 2;
+			return dwVertexOrIndexCount / 2;
 		case D3D7::D3DPT_LINESTRIP:
-			return dwVertexCount - 1;
+			return dwVertexOrIndexCount - 1;
 	}
 
 	return 0;
@@ -178,15 +178,6 @@ UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwVertexCount)
 UINT CalcFVFTextureCount(DWORD dwFVF)
 {
 	return (dwFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-}
-
-
-UINT CalcIndexedPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwIndexCount)
-{
-	if (pt != D3D7::D3DPT_TRIANGLELIST)
-		return 0;
-
-	return dwIndexCount / 3;
 }
 
 
