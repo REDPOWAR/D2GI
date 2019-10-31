@@ -827,3 +827,22 @@ BOOL D2GI::OnRenderStateGet(D3D7::D3DRENDERSTATETYPE eState, DWORD* pValue)
 	LeaveCriticalSection(&m_sCriticalSection);
 	return FALSE;
 }
+
+
+VOID D2GI::OnColorFillOnBackBuffer(DWORD dwColor, RECT* pRect)
+{
+	D3D9::D3DVIEWPORT9 sOriginalViewport, sFillingViewport;
+
+
+	m_pDev->GetViewport(&sOriginalViewport);
+	sFillingViewport.X = pRect->left;
+	sFillingViewport.Y = pRect->top;
+	sFillingViewport.Width = pRect->right - pRect->left;
+	sFillingViewport.Height = pRect->bottom - pRect->top;
+	sFillingViewport.MinZ = 0.0;
+	sFillingViewport.MaxZ = 1.0f;
+
+	m_pDev->SetViewport(&sFillingViewport);
+	m_pDev->Clear(0, NULL, D3DCLEAR_TARGET, dwColor, 1.0f, 0);
+	m_pDev->SetViewport(&sOriginalViewport);
+}

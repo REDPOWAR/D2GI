@@ -88,8 +88,17 @@ HRESULT D2GIBackBufferSurface::AddAttachedSurface(D3D7::LPDIRECTDRAWSURFACE7 pSu
 }
 
 
-HRESULT D2GIBackBufferSurface::Blt(LPRECT pDestRT, D3D7::LPDIRECTDRAWSURFACE7 pSrc, LPRECT pSrcRT, DWORD dwFlags, D3D7::LPDDBLTFX lpFX)
+HRESULT D2GIBackBufferSurface::Blt(LPRECT pDestRT, D3D7::LPDIRECTDRAWSURFACE7 pSrc, LPRECT pSrcRT, DWORD dwFlags, D3D7::LPDDBLTFX pFX)
 {
+	if (dwFlags & DDBLT_COLORFILL)
+	{
+		// TODO: this color fill must affect backbuffer locked data
+		// while streaming video playback
+
+		m_pD2GI->OnColorFillOnBackBuffer(pFX->dwFillColor, pDestRT);
+		return DD_OK;
+	}
+
 	D2GISurface* pSurf = (D2GISurface*)pSrc;
 
 	if (pSrc == NULL || pSurf->GetType() != ST_SYSMEM)
