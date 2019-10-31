@@ -36,6 +36,8 @@ class D2GI
 	HWND m_hWnd;
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
 
+	DWORD m_dwForcedWidth, m_dwForcedHeight;
+
 	RENDERSTATE m_eRenderState;
 	BOOL m_bSceneBegun;
 	BOOL m_bColorKeyEnabled;
@@ -63,6 +65,8 @@ public:
 	DWORD GetOriginalWidth() { return m_dwOriginalWidth; }
 	DWORD GetOriginalHeight() { return m_dwOriginalHeight; }
 	DWORD GetOriginalBPP() { return m_dwOriginalBPP; }
+	DWORD GetForcedWidth() { return m_dwForcedWidth; }
+	DWORD GetForcedHeight() { return m_dwForcedHeight; }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);

@@ -23,6 +23,9 @@ D2GI::D2GI()
 	m_bSceneBegun = FALSE;
 	m_bColorKeyEnabled = FALSE;
 
+	m_dwForcedWidth = 1366;
+	m_dwForcedHeight = 768;
+
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
@@ -108,14 +111,15 @@ VOID D2GI::ResetD3D9Device()
 
 	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
-	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwOriginalWidth, m_dwOriginalHeight, SWP_DRAWFRAME);
+	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwForcedWidth, m_dwForcedHeight, SWP_DRAWFRAME);
 
 	ZeroMemory(&sParams, sizeof(sParams));
 	sParams.AutoDepthStencilFormat = D3D9::D3DFMT_D24X8;
 	sParams.EnableAutoDepthStencil = TRUE;
 	sParams.BackBufferCount = 1;
-	sParams.BackBufferWidth = m_dwOriginalWidth;
-	sParams.BackBufferHeight = m_dwOriginalHeight;
+	sParams.BackBufferWidth = m_dwForcedWidth;
+	sParams.BackBufferHeight = m_dwForcedHeight;
+	sParams.BackBufferFormat = D3D9::D3DFMT_A8R8G8B8;
 	sParams.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_FLIP;
 	sParams.Windowed = TRUE;
