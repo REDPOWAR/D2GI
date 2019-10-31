@@ -108,7 +108,7 @@ VOID D2GI::ResetD3D9Device()
 
 	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
-	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwOriginalWidth, m_dwOriginalHeight, 0);
+	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwOriginalWidth, m_dwOriginalHeight, SWP_DRAWFRAME);
 
 	ZeroMemory(&sParams, sizeof(sParams));
 	sParams.AutoDepthStencilFormat = D3D9::D3DFMT_D24X8;
