@@ -34,6 +34,7 @@ class D2GI
 	D3D9::IDirect3DDevice9* m_pDev;
 
 	HWND m_hWnd;
+	WNDPROC m_pfnOriginalWndProc;
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
 
 	DWORD m_dwForcedWidth, m_dwForcedHeight;
@@ -55,6 +56,11 @@ class D2GI
 	VOID Present();
 	VOID DrawPrimitive(D3D7::D3DPRIMITIVETYPE, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
 		DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags);
+	VOID ScaleRect(RECT* pSrc, RECT* pOut);
+	static LRESULT CALLBACK WndProc_Static(HWND, UINT, WPARAM, LPARAM);
+	LRESULT WndProc(HWND, UINT, WPARAM, LPARAM);
+	VOID AttachWndProc();
+	VOID DetachWndProc();
 public:
 	D2GI();
 	~D2GI();

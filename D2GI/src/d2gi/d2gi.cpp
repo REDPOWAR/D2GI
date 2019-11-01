@@ -18,6 +18,7 @@ D2GI::D2GI()
 	m_hD3D9Lib = NULL;
 	m_pD3D9 = NULL;
 	m_pDev = NULL;
+	m_pfnOriginalWndProc = NULL;
 
 	m_eRenderState = RS_UNKNOWN;
 	m_bSceneBegun = FALSE;
@@ -38,6 +39,7 @@ D2GI::D2GI()
 
 D2GI::~D2GI()
 {
+	DetachWndProc();
 	DEL(m_pStridedRenderer);
 	DEL(m_pBlitter);
 	RELEASE(m_pDev);
@@ -73,6 +75,7 @@ VOID D2GI::LoadD3D9Library()
 VOID D2GI::OnCooperativeLevelSet(HWND hWnd, DWORD dwFlags)
 {
 	m_hWnd = hWnd;
+	AttachWndProc();
 }
 
 
@@ -211,9 +214,13 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 	if (m_dwOriginalBPP == 8)
 	{
+		RECT sScaledRect;
+
+		ScaleRect(pDstRT, &sScaledRect);
+
 		pSrc->UpdateWithPalette(pDst->GetPalette());
 		m_pDev->GetRenderTarget(0, &pRT);
-		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, pDstRT, D3D9::D3DTEXF_POINT);
+		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, &sScaledRect, D3D9::D3DTEXF_LINEAR);
 		Present();
 
 		pRT->Release();
@@ -741,4 +748,79 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwAlphaTestFunc);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwAlphaTestRef);
 	}
+}
+
+
+VOID D2GI::ScaleRect(RECT* pSrc, RECT* pOut)
+{
+	if (pSrc == NULL)
+	{
+		pOut->left = pOut->top = 0;
+		pOut->right = m_dwForcedWidth;
+		pOut->bottom = m_dwForcedHeight;
+		return;
+	}
+
+	pOut->left = pSrc->left * m_dwForcedWidth / m_dwOriginalWidth;
+	pOut->top = pSrc->top * m_dwForcedHeight / m_dwOriginalHeight;
+	pOut->right = pSrc->right * m_dwForcedWidth / m_dwOriginalWidth;
+	pOut->bottom = pSrc->bottom * m_dwForcedHeight / m_dwOriginalHeight;
+}
+
+
+VOID D2GI::AttachWndProc()
+{
+	if (m_pfnOriginalWndProc != NULL)
+		return;
+
+	m_pfnOriginalWndProc = (WNDPROC)GetWindowLong(m_hWnd, GWL_WNDPROC);
+	SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)WndProc_Static);
+	SetWindowLong(m_hWnd, GWL_USERDATA, (LONG)this);
+}
+
+
+VOID D2GI::DetachWndProc()
+{
+	if (m_pfnOriginalWndProc == NULL)
+		return;
+
+	SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)m_pfnOriginalWndProc);
+	SetWindowLong(m_hWnd, GWL_USERDATA, 0);
+	m_pfnOriginalWndProc = NULL;
+}
+
+
+LRESULT D2GI::WndProc_Static(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	return ((D2GI*)GetWindowLong(hWnd, GWL_USERDATA))->WndProc(hWnd, uMsg, wParam, lParam);
+}
+
+
+LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	INT x, y;
+
+	switch (uMsg)
+	{
+		case WM_MOUSEMOVE:
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONDBLCLK:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+		case WM_RBUTTONDBLCLK:
+		case WM_MBUTTONDOWN:
+		case WM_MBUTTONUP:
+		case WM_MBUTTONDBLCLK:
+			x = LOWORD(lParam);
+			y = HIWORD(lParam);
+
+			x = x * m_dwOriginalWidth / m_dwForcedWidth;
+			y = y * m_dwOriginalHeight / m_dwForcedHeight;
+
+			lParam = MAKELPARAM(x, y);
+			break;
+	}
+
+	return CallWindowProc(m_pfnOriginalWndProc, hWnd, uMsg, wParam, lParam);
 }
