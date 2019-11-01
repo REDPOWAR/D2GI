@@ -29,6 +29,7 @@ D2GI::D2GI()
 
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
+	m_pClearRects = new D3D9RECTVector();
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
@@ -42,6 +43,7 @@ D2GI::~D2GI()
 	DetachWndProc();
 	DEL(m_pStridedRenderer);
 	DEL(m_pBlitter);
+	DEL(m_pClearRects);
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
@@ -138,10 +140,10 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 {
 	D3D9::D3DVIEWPORT9 sD3D9Viewport;
 
-	sD3D9Viewport.X = pVP->dwX;
-	sD3D9Viewport.Y = pVP->dwY;
-	sD3D9Viewport.Width = pVP->dwWidth;
-	sD3D9Viewport.Height = pVP->dwHeight;
+	sD3D9Viewport.X = pVP->dwX * m_dwForcedWidth / m_dwOriginalWidth;
+	sD3D9Viewport.Y = pVP->dwY * m_dwForcedHeight / m_dwOriginalHeight;
+	sD3D9Viewport.Width = pVP->dwWidth * m_dwForcedWidth / m_dwOriginalWidth;
+	sD3D9Viewport.Height = pVP->dwHeight * m_dwForcedHeight / m_dwOriginalHeight;
 	sD3D9Viewport.MinZ = pVP->dvMinZ;
 	sD3D9Viewport.MaxZ = pVP->dvMaxZ;
 
@@ -164,9 +166,12 @@ VOID D2GI::OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT* pRect)
 		pRT->LockRect(&sSrcRT, NULL, D3DLOCK_READONLY);
 		for (INT i = 0; i < m_dwOriginalHeight; i++)
 		{
+			INT ySrc = i * m_dwForcedHeight / m_dwOriginalHeight;
+
 			for (INT j = 0; j < m_dwOriginalWidth; j++)
 			{
-				UINT32 uSrcColor = ((UINT32*)((BYTE*)sSrcRT.pBits + i * sSrcRT.Pitch))[j];
+				INT xSrc = j * m_dwForcedWidth / m_dwOriginalWidth;
+				UINT32 uSrcColor = ((UINT32*)((BYTE*)sSrcRT.pBits + ySrc * sSrcRT.Pitch))[xSrc];
 				BYTE r, g, b;
 				UINT16 uDstColor;
 
@@ -228,9 +233,21 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 }
 
 
-VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
+VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT pRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
 {
-	m_pDev->Clear(dwCount, (D3D9::D3DRECT*)lpRects, dwFlags, col, z, dwStencil);
+	INT i;
+
+	m_pClearRects->clear();
+
+	for (i = 0; i < dwCount; i++)
+	{
+		D3D9::D3DRECT sRect;
+
+		ScaleD3D9Rect((D3D9::D3DRECT*)pRects + i, &sRect);
+		m_pClearRects->push_back(sRect);
+	}
+
+	m_pDev->Clear(dwCount, m_pClearRects->data(), dwFlags, col, z, dwStencil);
 }
 
 
@@ -243,8 +260,10 @@ VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
 VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
 {
 	D3D9::IDirect3DSurface9* pRT;
+	RECT sScaledRect;
 
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
+	ScaleRect(pDstRT, &sScaledRect);
 
 	//BeginScene();
 	m_pDev->GetRenderTarget(0, &pRT);
@@ -252,9 +271,9 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 		m_pDev->BeginScene();
 
 	if (pSrc->HasColorKey())
-		m_pBlitter->BlitWithColorKey(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT, pSrc->GetColorKeyValue());
+		m_pBlitter->BlitWithColorKey(pRT, &sScaledRect, pSrc->GetD3D9Texture(), pSrcRT, pSrc->GetColorKeyValue());
 	else
-		m_pBlitter->Blit(pRT, pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
+		m_pBlitter->Blit(pRT, &sScaledRect, pSrc->GetD3D9Texture(), pSrcRT);
 
 	if (!m_bSceneBegun)
 		m_pDev->EndScene();
@@ -823,4 +842,21 @@ LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return CallWindowProc(m_pfnOriginalWndProc, hWnd, uMsg, wParam, lParam);
+}
+
+
+VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
+{
+	if (pSrc == NULL)
+	{
+		pOut->x1 = pOut->y1 = 0;
+		pOut->x2 = m_dwForcedWidth;
+		pOut->y2 = m_dwForcedHeight;
+		return;
+	}
+
+	pOut->x1 = pSrc->x1 * m_dwForcedWidth / m_dwOriginalWidth;
+	pOut->y1 = pSrc->y1 * m_dwForcedHeight / m_dwOriginalHeight;
+	pOut->x2 = pSrc->x2 * m_dwForcedWidth / m_dwOriginalWidth;
+	pOut->y2 = pSrc->y2 * m_dwForcedHeight / m_dwOriginalHeight;
 }

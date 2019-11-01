@@ -189,8 +189,8 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 
 	pDev->SetTexture(0, pSrc);
 	pDev->SetTexture(1, NULL);
-	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 	pDev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 
 	if (pDstRT != NULL)
