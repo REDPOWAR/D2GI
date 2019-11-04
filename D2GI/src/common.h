@@ -22,4 +22,10 @@ public:
 };
 
 
+struct SPHERE
+{
+	FLOAT fX, fY, fZ, fRadius;
+};
+
+
 VOID Debug(CONST TCHAR*, ...);

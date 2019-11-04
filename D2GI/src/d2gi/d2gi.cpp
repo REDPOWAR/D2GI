@@ -572,6 +572,10 @@ BOOL D2GI::OnDeviceValidate(DWORD* pdw)
 
 VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pMatrix)
 {
+	D3D9::D3DMATRIX sMatrix;
+	FLOAT fAspectRatio;
+	FLOAT fAspectRatioScale = ((FLOAT)m_dwForcedWidth / (FLOAT)m_dwForcedHeight) / ((FLOAT)m_dwOriginalWidth / (FLOAT)m_dwOriginalHeight);
+
 	switch (eType)
 	{
 		case D3D7::D3DTRANSFORMSTATE_WORLD:
@@ -585,6 +589,13 @@ VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pM
 			break;
 		case D3D7::D3DTRANSFORMSTATE_WORLD3:
 			m_pDev->SetTransform(D3D9::D3DTS_WORLD3, (D3D9::D3DMATRIX*)pMatrix);
+			break;
+		case D3D7::D3DTRANSFORMSTATE_PROJECTION:
+			sMatrix = *(D3D9::D3DMATRIX*)pMatrix;
+			/*fAspectRatio = sMatrix._22 / sMatrix._11;
+			sMatrix._11 = sMatrix._22 / (fAspectRatio * fAspectRatioScale);*/
+
+			m_pDev->SetTransform(D3D9::D3DTS_PROJECTION, &sMatrix);
 			break;
 		default:
 			m_pDev->SetTransform((D3D9::D3DTRANSFORMSTATETYPE)eType, (D3D9::D3DMATRIX*)pMatrix);
@@ -859,4 +870,10 @@ VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
 	pOut->y1 = pSrc->y1 * m_dwForcedHeight / m_dwOriginalHeight;
 	pOut->x2 = pSrc->x2 * m_dwForcedWidth / m_dwOriginalWidth;
 	pOut->y2 = pSrc->y2 * m_dwForcedHeight / m_dwOriginalHeight;
+}
+
+
+DWORD D2GI::OnSphereVisibilityCheck(VOID* pThis, SPHERE* pSphere)
+{
+	return 0;
 }

@@ -135,6 +135,9 @@
     <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp">
       <Filter>Исходные файлы\d2gi\surfaces</Filter>
     </ClCompile>
+    <ClCompile Include="src\hooks.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -229,6 +232,9 @@
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h">
       <Filter>Файлы заголовков\d2gi\surfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hooks.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

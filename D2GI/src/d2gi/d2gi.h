@@ -106,4 +106,5 @@ public:
 	VOID OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, LPWORD, DWORD, DWORD);
 	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
+	DWORD OnSphereVisibilityCheck(VOID* pThis, SPHERE*);
 };

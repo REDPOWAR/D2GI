@@ -1,4 +1,5 @@
 
+#include "hooks.h"
 #include "d2gi/d2gi.h"
 
 
@@ -160,3 +161,10 @@ EXPORT VOID WINAPI SetAppCompatData()
 }
 
 
+BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
+{
+	if (dwReason == DLL_PROCESS_ATTACH)
+		InjectHooks();
+
+	return TRUE;
+}
