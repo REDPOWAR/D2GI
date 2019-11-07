@@ -24,6 +24,9 @@ class D2GIBackBufferSurface;
 class D2GIBlitter;
 class D2GITexture;
 class D2GIStridedPrimitiveRenderer;
+class D2GIFrustum;
+
+struct D2OBJECT;
 
 typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
 
@@ -41,15 +44,18 @@ class D2GI
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
 
 	DWORD m_dwForcedWidth, m_dwForcedHeight;
+	FLOAT m_fAspectRatioScale;
 
 	RENDERSTATE m_eRenderState;
 	BOOL m_bSceneBegun;
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
 	D3D9RECTVector* m_pClearRects;
+	D3D9::D3DXMATRIX m_mView, m_mInvView;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
+	D2GIFrustum* m_pFrustum;
 
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
@@ -107,4 +113,5 @@ public:
 	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
 	DWORD OnSphereVisibilityCheck(VOID* pThis, SPHERE*);
+	INT OnRoomPortalVisibilityCheck(D2OBJECT* pThis, D3D9::D3DXVECTOR3* pPortal, INT);
 };
