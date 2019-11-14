@@ -31,12 +31,14 @@ static CHAR* g_szPS =
 	"sampler g_txSourceTexture : register(s0);\n"
 
 	"float4 g_vTextureRect : register(c0);\n"
+	"float2 g_vScreenPosBias: register(c1);\n"
 
 	"float4 main(float2 vScreenPos : TEXCOORD0) : COLOR0\n"
 	"{\n"
 
 	"	float2 vRealScreenPos = (vScreenPos + 1.0f) * 0.5f;\n"
 	"	vRealScreenPos.y = 1.0f - vRealScreenPos.y;\n"
+	"	vRealScreenPos += g_vScreenPosBias;\n"
 
 	"	float2 vTexPos = g_vTextureRect.xy + (vRealScreenPos * g_vTextureRect.zw);\n"
 
@@ -50,13 +52,15 @@ static CHAR* g_szPSCK =
 	"sampler g_txSourceTexture : register(s0);\n"
 
 	"float4 g_vTextureRect : register(c0);\n"
-	"float4 g_clColorKey: register(c1);\n"
+	"float2 g_vScreenPosBias: register(c1);\n"
+	"float4 g_clColorKey: register(c2);\n"
 
 	"float4 main(float2 vScreenPos : TEXCOORD0) : COLOR0\n"
 	"{\n"
 
 	"	float2 vRealScreenPos = (vScreenPos + 1.0f) * 0.5f;\n"
 	"	vRealScreenPos.y = 1.0f - vRealScreenPos.y;\n"
+	"	vRealScreenPos += g_vScreenPosBias;\n"
 
 	"	float2 vTexPos = g_vTextureRect.xy + (vRealScreenPos * g_vTextureRect.zw);\n"
 
@@ -144,7 +148,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	D3D9::IDirect3DTexture9* pSrc, RECT* pSrcRT)
 {
 	IDirect3DDevice9* pDev = GetD3D9Device();
-	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f };
+	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f }, afBiasRect[] = { 0.0, 0.0, 0.0f, 0.0f };
 	D3DVIEWPORT9 sOriginalVP, sUsedVP;
 	DWORD dwZEnable, dwZWriteEnable;
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
@@ -174,8 +178,8 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sSrcDesc.Height;
 	}
 
-	afSrcRect[0] += 0.5f / (FLOAT)sSrcDesc.Width;
-	afSrcRect[1] += 0.5f / (FLOAT)sSrcDesc.Height;
+	afBiasRect[0] = 0.5f / (FLOAT)(pDstRT->right - pDstRT->left);
+	afBiasRect[1] = 0.5f / (FLOAT)(pDstRT->bottom - pDstRT->top);
 
 	pDev->SetRenderTarget(0, pDst);
 
@@ -186,6 +190,7 @@ VOID D2GIBlitter::Blit(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetPixelShader(m_pPS);
 	
 	pDev->SetPixelShaderConstantF(0, afSrcRect, 1);
+	pDev->SetPixelShaderConstantF(1, afBiasRect, 1);
 
 	pDev->SetTexture(0, pSrc);
 	pDev->SetTexture(1, NULL);
@@ -241,7 +246,7 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	D3D9::IDirect3DTexture9* pSrc, RECT* pSrcRT, DWORD dwColorKey)
 {
 	IDirect3DDevice9* pDev = GetD3D9Device();
-	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f };
+	FLOAT afSrcRect[] = { 0.0, 0.0, 1.0f, 1.0f }, afBiasRect[] = {0.0, 0.0, 0.0, 0.0};
 	D3DVIEWPORT9 sOriginalVP, sUsedVP;
 	DWORD dwZEnable, dwZWriteEnable;
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
@@ -276,8 +281,8 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 		afSrcRect[3] = (FLOAT)(pSrcRT->bottom - pSrcRT->top) / (FLOAT)sSrcDesc.Height;
 	}
 
-	afSrcRect[0] += 0.5f / (FLOAT)sSrcDesc.Width;
-	afSrcRect[1] += 0.5f / (FLOAT)sSrcDesc.Height;
+	afBiasRect[0] = 0.5f / (FLOAT)(pDstRT->right - pDstRT->left);
+	afBiasRect[1] = 0.5f / (FLOAT)(pDstRT->bottom - pDstRT->top);
 
 	pDev->SetRenderTarget(0, pDst);
 
@@ -288,7 +293,8 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetPixelShader(m_pPSCK);
 
 	pDev->SetPixelShaderConstantF(0, afSrcRect, 1);
-	pDev->SetPixelShaderConstantF(1, afColorKey, 1);
+	pDev->SetPixelShaderConstantF(1, afBiasRect, 1);
+	pDev->SetPixelShaderConstantF(2, afColorKey, 1);
 
 	pDev->SetTexture(0, pSrc);
 	pDev->SetTexture(1, NULL);
