@@ -40,3 +40,24 @@ MAT3X4::operator D3D9::D3DXMATRIX()
 
 	return mResult;
 }
+
+
+MAT3X4 MAT3X4::Transpose()
+{
+	MAT3X4 mOut;
+
+	mOut._11 = _11;
+	mOut._12 = _21;
+	mOut._13 = _31;
+	mOut._21 = _12;
+	mOut._22 = _22;
+	mOut._23 = _32;
+	mOut._31 = _13;
+	mOut._32 = _23;
+	mOut._33 = _33;
+	mOut._41 = _41;
+	mOut._42 = _42;
+	mOut._43 = _43;
+
+	return mOut;
+}

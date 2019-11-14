@@ -21,4 +21,5 @@ struct MAT3X4
 	MAT3X4() {};
 	MAT3X4(CONST D3D9::D3DXMATRIX&);
 	operator D3D9::D3DXMATRIX();
+	MAT3X4 Transpose();
 };

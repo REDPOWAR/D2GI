@@ -21,6 +21,7 @@ class D2GIFrustum : public D2GIBase
 	FLOAT m_fZNear, m_fZFar, m_fFOV, m_fAspectRatio;
 
 	D3D9::D3DXPLANE m_asPlanes[6];
+	D3D9::D3DXVECTOR3 m_avPoints[8];
 
 	VOID UpdatePlanes();
 public:
@@ -31,4 +32,5 @@ public:
 	VOID SetView(D3D9::D3DXVECTOR3* pPos, D3D9::D3DXVECTOR3* pDir, D3D9::D3DXVECTOR3* pRight, D3D9::D3DXVECTOR3* pUp);
 
 	BOOL TestSphereClipping(SPHERE*, UINT*);
+	D3D9::D3DXVECTOR3* GetPoints() { return m_avPoints; }
 };

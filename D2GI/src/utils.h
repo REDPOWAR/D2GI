@@ -9,4 +9,3 @@ UINT CalcFVFStride(DWORD);
 UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE, DWORD dwVertexOrIndexCount);
 UINT CalcFVFTextureCount(DWORD);
 VOID CalcMipMapLevelSize(DWORD, DWORD, UINT, DWORD*, DWORD*);
-VOID ScaleProjectionAspectRatio(D3D9::D3DXMATRIX*, FLOAT fScale);

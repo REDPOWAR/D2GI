@@ -103,4 +103,13 @@ VOID D2GIFrustum::UpdatePlanes()
 	D3DXPlaneFromPoints(m_asPlanes + 3, &vFarRT, &vFarRB, &vNearRB);
 	D3DXPlaneFromPoints(m_asPlanes + 4, &vFarRB, &vFarLB, &vNearLB);
 	D3DXPlaneFromPoints(m_asPlanes + 5, &vFarRT, &vNearRT, &vNearLT);
+
+	m_avPoints[0] = vNearLB;
+	m_avPoints[1] = vNearLT;
+	m_avPoints[2] = vNearRB;
+	m_avPoints[3] = vNearRT;
+	m_avPoints[4] = vFarLB;
+	m_avPoints[5] = vFarLT;
+	m_avPoints[6] = vFarRB;
+	m_avPoints[7] = vFarRT;
 }

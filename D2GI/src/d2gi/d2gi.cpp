@@ -581,11 +581,6 @@ BOOL D2GI::OnDeviceValidate(DWORD* pdw)
 
 VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pMatrix)
 {
-	D3D9::D3DXMATRIX sMatrix;
-	D3D9::D3DXVECTOR3 vDir, vRight, vUp, vPos;
-	FLOAT fFOV, fZNear, fZFar, fZRange, fAspectRatio;
-	FLOAT fAspectRatioScale;
-	
 	switch (eType)
 	{
 		case D3D7::D3DTRANSFORMSTATE_WORLD:
@@ -599,31 +594,6 @@ VOID D2GI::OnTransformSet(D3D7::D3DTRANSFORMSTATETYPE eType, D3D7::D3DMATRIX* pM
 			break;
 		case D3D7::D3DTRANSFORMSTATE_WORLD3:
 			m_pDev->SetTransform(D3D9::D3DTS_WORLD3, (D3D9::D3DMATRIX*)pMatrix);
-			break;
-		case D3D7::D3DTRANSFORMSTATE_PROJECTION:
-			fFOV = atanf(1.0f / pMatrix->_22) * 2.0f;
-			fZNear = -pMatrix->_43 / pMatrix->_33;
-			fZRange = fZNear / (pMatrix->_33 - 1.0f);
-			fZFar = fZRange + fZNear;
-			fAspectRatioScale = ((FLOAT)m_dwForcedWidth / (FLOAT)m_dwForcedHeight) / ((FLOAT)m_dwOriginalWidth / (FLOAT)m_dwOriginalHeight);
-			fAspectRatio = (pMatrix->_22 / pMatrix->_11) * fAspectRatioScale;
-			m_pFrustum->SetPerspective(fZNear, fZFar, fFOV, fAspectRatio);
-
-			sMatrix = *(D3D9::D3DXMATRIX*)pMatrix;
-			ScaleProjectionAspectRatio(&sMatrix, m_fAspectRatioScale);
-			m_pDev->SetTransform(D3D9::D3DTS_PROJECTION, &sMatrix);
-			break;
-		case D3D7::D3DTRANSFORMSTATE_VIEW:
-			D3D9::D3DXMatrixInverse(&sMatrix, NULL, (D3D9::D3DXMATRIX*)pMatrix);
-			vRight = D3D9::D3DXVECTOR3(sMatrix._11, sMatrix._12, sMatrix._13);
-			vUp = D3D9::D3DXVECTOR3(sMatrix._21, sMatrix._22, sMatrix._23);
-			vDir = D3D9::D3DXVECTOR3(sMatrix._31, sMatrix._32, sMatrix._33);
-			vPos = D3D9::D3DXVECTOR3(sMatrix._41, sMatrix._42, sMatrix._43);
-			m_pFrustum->SetView(&vPos, &vDir, &vRight, &vUp);
-
-			m_mInvView = sMatrix;
-			m_mView = *(D3D9::D3DXMATRIX*)pMatrix;
-			m_pDev->SetTransform(D3D9::D3DTS_VIEW, (D3D9::D3DMATRIX*)pMatrix);
 			break;
 		default:
 			m_pDev->SetTransform((D3D9::D3DTRANSFORMSTATETYPE)eType, (D3D9::D3DMATRIX*)pMatrix);
@@ -901,60 +871,11 @@ VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
 }
 
 
-DWORD D2GI::OnSphereVisibilityCheck(VOID* pThis, SPHERE* pSphere)
+INT D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 {
-	UINT uClipFlags;
-	DWORD* pdwState = (DWORD*)pThis + 2068;
+	MAT3X4 mFixedProj = *pmProj;
 
-	return *pdwState = 0x1F;
+	mFixedProj._11 /= m_fAspectRatioScale;
 
-	if (pSphere->fRadius == 0.0)
-		return *pdwState = 0x1F;
-
-
-	SPHERE sNewSphere;
-	INT v4 = 3 * *((DWORD*)pThis + 2056);
-	FLOAT* pm3x4 = (FLOAT*)&((DOUBLE*)pThis)[2 * v4 + 280];
-	D3D9::D3DXMATRIX mView, mInvView;
-
-	*pdwState = 64;
-
-	D3D9::D3DXMatrixIdentity(&mView);
-	CopyMemory(&mView._11, pm3x4, sizeof(FLOAT) * 3);
-	CopyMemory(&mView._21, pm3x4 + 3, sizeof(FLOAT) * 3);
-	CopyMemory(&mView._31, pm3x4 + 6, sizeof(FLOAT) * 3);
-	CopyMemory(&mView._41, pm3x4 + 9, sizeof(FLOAT) * 3);
-
-	return *pdwState;
-
-	D3D9::D3DXMatrixInverse(&mInvView, NULL, &mView);
-	D3D9::D3DXVec3Transform((D3D9::D3DXVECTOR4*)&sNewSphere, (D3D9::D3DXVECTOR3*)pSphere, &mInvView);
-	sNewSphere.fRadius = pSphere->fRadius;
-
-	if (!m_pFrustum->TestSphereClipping(&sNewSphere, &uClipFlags))
-		return *pdwState = 0;
-
-	*pdwState = uClipFlags;
-	return uClipFlags ? uClipFlags : 0x40;
-}
-
-
-INT D2GI::OnRoomPortalVisibilityCheck(D2OBJECT* pThis, D3D9::D3DXVECTOR3* pPortal, INT nVal)
-{
-	INT nResult;
-	MAT3X4 m3x4Src;
-	D3D9::D3DXMATRIX mVP, mProj;
-
-	m3x4Src = pThis->amMatrices[pThis->dwIdx];
-
-	mVP = m3x4Src;
-	mProj = m_mInvView * mVP;
-	ScaleProjectionAspectRatio(&mProj, m_fAspectRatioScale);
-	mVP = m_mView * mProj;
-
-	pThis->amMatrices[pThis->dwIdx] = MAT3X4(mVP);
-	nResult = CallOriginalCheckRoomPortalVisibility(pThis, pPortal, nVal);
-	pThis->amMatrices[pThis->dwIdx] = m3x4Src;
-
-	return nResult;
+	return CallOriginalSetupTransforms(pThis, pmView, &mFixedProj);
 }

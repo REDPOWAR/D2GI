@@ -26,7 +26,7 @@ class D2GITexture;
 class D2GIStridedPrimitiveRenderer;
 class D2GIFrustum;
 
-struct D2OBJECT;
+struct MAT3X4;
 
 typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
 
@@ -51,7 +51,6 @@ class D2GI
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
 	D3D9RECTVector* m_pClearRects;
-	D3D9::D3DXMATRIX m_mView, m_mInvView;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
@@ -112,6 +111,5 @@ public:
 	VOID OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, LPWORD, DWORD, DWORD);
 	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
-	DWORD OnSphereVisibilityCheck(VOID* pThis, SPHERE*);
-	INT OnRoomPortalVisibilityCheck(D2OBJECT* pThis, D3D9::D3DXVECTOR3* pPortal, INT);
+	INT OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
 };

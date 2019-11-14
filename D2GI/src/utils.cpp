@@ -194,11 +194,3 @@ VOID CalcMipMapLevelSize(DWORD dwTextureW, DWORD dwTextureH, UINT uLevel, DWORD*
 		*pMipMapH = max(*pMipMapH / 2, 1);
 	}
 }
-
-
-VOID ScaleProjectionAspectRatio(D3D9::D3DXMATRIX* pMatrix, FLOAT fScale)
-{
-	FLOAT fAspectRatio = pMatrix->_22 / pMatrix->_11;
-
-	pMatrix->_11 = pMatrix->_22 / (fAspectRatio * fScale);
-}
