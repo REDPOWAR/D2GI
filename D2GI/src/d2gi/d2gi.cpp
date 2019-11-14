@@ -13,7 +13,6 @@
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_texture.h"
 #include "d2gi_strided_renderer.h"
-#include "d2gi_frustum.h"
 
 
 D2GI::D2GI()
@@ -36,7 +35,6 @@ D2GI::D2GI()
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
-	m_pFrustum = new D2GIFrustum(this);
 
 	LoadD3D9Library();
 }
@@ -45,7 +43,6 @@ D2GI::D2GI()
 D2GI::~D2GI()
 {
 	DetachWndProc();
-	DEL(m_pFrustum);
 	DEL(m_pStridedRenderer);
 	DEL(m_pBlitter);
 	DEL(m_pClearRects);

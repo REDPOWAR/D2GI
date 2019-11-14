@@ -164,7 +164,6 @@
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
     <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
-    <ClCompile Include="src\d2gi\d2gi_frustum.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ib_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_mipmap_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_palette.cpp" />
@@ -183,7 +182,6 @@
     <ClCompile Include="src\ddraw\dd_palette.cpp" />
     <ClCompile Include="src\ddraw\dd_surface.cpp" />
     <ClCompile Include="src\hooks.cpp" />
-    <ClCompile Include="src\m3x4.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
@@ -198,7 +196,6 @@
     <ClInclude Include="src\d2gi\d2gi_device.h" />
     <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
     <ClInclude Include="src\d2gi\d2gi_enums.h" />
-    <ClInclude Include="src\d2gi\d2gi_frustum.h" />
     <ClInclude Include="src\d2gi\d2gi_ib_container.h" />
     <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_palette.h" />

@@ -24,7 +24,6 @@ class D2GIBackBufferSurface;
 class D2GIBlitter;
 class D2GITexture;
 class D2GIStridedPrimitiveRenderer;
-class D2GIFrustum;
 
 struct MAT3X4;
 
@@ -54,7 +53,6 @@ class D2GI
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
-	D2GIFrustum* m_pFrustum;
 
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();

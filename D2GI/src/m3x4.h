@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include "d3d9.h"
 
 
 struct MAT3X4
@@ -17,9 +16,4 @@ struct MAT3X4
 		};
 		FLOAT m[4][3];
 	};
-
-	MAT3X4() {};
-	MAT3X4(CONST D3D9::D3DXMATRIX&);
-	operator D3D9::D3DXMATRIX();
-	MAT3X4 Transpose();
 };

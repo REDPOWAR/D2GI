@@ -141,13 +141,7 @@
     <ClCompile Include="src\hooks.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_frustum.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils.cpp">
-      <Filter>Исходные файлы\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\m3x4.cpp">
       <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -244,9 +238,6 @@
     </ClInclude>
     <ClInclude Include="src\hooks.h">
       <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_frustum.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\utils.h">
       <Filter>Файлы заголовков\utils</Filter>
