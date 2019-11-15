@@ -33,7 +33,7 @@ public:
 	D3D9::IDirect3DSurface9* GetD3D9Surface() { return m_pSurface; }
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	VOID UpdateWithPalette(D2GIPalette*);
-	BOOL HasColorKey();
+	BOOL HasColorKeyConversion();
 	DWORD GetColorKeyValue();
 	VOID* GetData() { return m_pData; }
 	UINT GetDataPitch() { return m_uPitch; }

@@ -259,6 +259,7 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 		(FLOAT)((dwColorKey >> 8) & 0xFF) / 255.0f,
 		(FLOAT)((dwColorKey) & 0xFF) / 255.0f,
 	};
+	DWORD        dwAlphaTestEnable, dwAlphaTestFunc, dwAlphaTestRef;
 
 	pDst->GetDesc(&sSrcDesc);
 	pSrc->GetLevelDesc(0, &sSrcDesc);
@@ -272,6 +273,9 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->GetSamplerState(0, D3DSAMP_MAGFILTER, &dwMagFilter);
 	pDev->GetRenderState(D3DRS_CULLMODE, &dwCullMode);
 	pDev->GetRenderState(D3DRS_ALPHABLENDENABLE, &dwAlphaBlending);
+	pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwAlphaTestEnable);
+	pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwAlphaTestFunc);
+	pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwAlphaTestRef);
 
 	if (pSrcRT != NULL)
 	{
@@ -290,16 +294,16 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetStreamSource(0, m_pVB, 0, sizeof(FLOAT) * 3);
 
 	pDev->SetVertexShader(m_pVS);
-	pDev->SetPixelShader(m_pPSCK);
+	pDev->SetPixelShader(m_pPS);
 
 	pDev->SetPixelShaderConstantF(0, afSrcRect, 1);
 	pDev->SetPixelShaderConstantF(1, afBiasRect, 1);
-	pDev->SetPixelShaderConstantF(2, afColorKey, 1);
+	//pDev->SetPixelShaderConstantF(2, afColorKey, 1);
 
 	pDev->SetTexture(0, pSrc);
 	pDev->SetTexture(1, NULL);
-	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 	pDev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 
 	if (pDstRT != NULL)
@@ -320,6 +324,9 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetRenderState(D3DRS_ZENABLE, FALSE);
 	pDev->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 	pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+	pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
+	pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
+	pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
 
 	pDev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 	/*D3DRECT rt;
@@ -342,4 +349,7 @@ VOID D2GIBlitter::BlitWithColorKey(D3D9::IDirect3DSurface9* pDst, RECT* pDstRT,
 	pDev->SetRenderState(D3DRS_ZWRITEENABLE, dwZWriteEnable);
 	pDev->SetRenderState(D3DRS_CULLMODE, dwCullMode);
 	pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, dwAlphaBlending);
+	pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwAlphaTestEnable);
+	pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwAlphaTestFunc);
+	pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwAlphaTestRef);
 }

@@ -38,6 +38,8 @@ HRESULT D2GISystemMemorySurface::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY p
 	else
 		m_bColorKeySet = FALSE;
 
+	ReleaseResource();
+	LoadResource();
 	return DD_OK;	
 }
 
@@ -60,6 +62,8 @@ VOID D2GISystemMemorySurface::LoadResource()
 		m_uDataSize = sizeof(UINT16) * m_dwWidth * m_dwHeight;
 		m_uPitch = sizeof(UINT16) * m_dwWidth;
 		eTextureFormat = g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat];
+		if (HasColorKeyConversion())
+			eTextureFormat = D3D9::D3DFMT_A8R8G8B8;
 	}
 	else if (m_dwBPP == 8)
 	{
@@ -110,13 +114,38 @@ HRESULT D2GISystemMemorySurface::Unlock(LPRECT)
 	if (m_dwBPP == 16)
 	{
 		D3D9::D3DLOCKED_RECT sLockedRect;
-		INT i;
+		INT i, j;
 
 		m_pSurface->LockRect(&sLockedRect, NULL, 0);
 
-		for (i = 0; i < (INT)m_dwHeight; i++)
-			CopyMemory((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch, 
+		if (HasColorKeyConversion())
+		{
+
+			for (i = 0; i < m_dwHeight; i++)
+			{
+				for (j = 0; j < m_dwWidth; j++)
+				{
+					UINT16 uSrcColor = *((UINT16*)m_pData + i * m_dwWidth + j);
+					UINT32 uDstColor;
+					BYTE r, g, b, a;
+
+					r = ((uSrcColor >> 11) & 0x1F) * 255 / 31;
+					g = ((uSrcColor >> 5) & 0x3F) * 255 / 63;
+					b = (uSrcColor & 0x1F) * 255 / 31;
+					a = (uSrcColor == (UINT16)m_sColorKey.dwColorSpaceLowValue) ? 0 : 255;
+
+					uDstColor = (a << 24) | (r << 16) | (g << 8) | b;
+
+					((UINT32*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = uDstColor;
+				}
+			}
+		}
+		else
+		{
+			for (i = 0; i < (INT)m_dwHeight; i++)
+				CopyMemory((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch,
 				(BYTE*)m_pData + i * m_uPitch, sizeof(UINT16) * m_dwWidth);
+		}
 
 		m_pSurface->UnlockRect();
 	}
@@ -154,9 +183,9 @@ HRESULT D2GISystemMemorySurface::GetCaps(D3D7::LPDDSCAPS2 pCaps)
 }
 
 
-BOOL D2GISystemMemorySurface::HasColorKey()
+BOOL D2GISystemMemorySurface::HasColorKeyConversion()
 {
-	return m_bColorKeySet;
+	return m_bColorKeySet && m_eD2GIPixelFormat == D2GIPF_16_565;
 }
 
 

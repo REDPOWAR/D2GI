@@ -276,7 +276,7 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 	if(!m_bSceneBegun)
 		m_pDev->BeginScene();
 
-	if (pSrc->HasColorKey())
+	if (pSrc->HasColorKeyConversion())
 		m_pBlitter->BlitWithColorKey(pRT, &sScaledRect, pSrc->GetD3D9Texture(), pSrcRT, pSrc->GetColorKeyValue());
 	else
 		m_pBlitter->Blit(pRT, &sScaledRect, pSrc->GetD3D9Texture(), pSrcRT);
