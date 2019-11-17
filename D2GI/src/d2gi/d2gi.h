@@ -26,6 +26,7 @@ class D2GITexture;
 class D2GIStridedPrimitiveRenderer;
 
 struct MAT3X4;
+struct FRECT;
 
 typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
 
@@ -43,7 +44,7 @@ class D2GI
 	DWORD m_dwOriginalWidth, m_dwOriginalHeight, m_dwOriginalBPP;
 
 	DWORD m_dwForcedWidth, m_dwForcedHeight;
-	FLOAT m_fAspectRatioScale;
+	FLOAT m_fAspectRatioScale, m_fWidthScale, m_fHeightScale;
 
 	RENDERSTATE m_eRenderState;
 	BOOL m_bSceneBegun;
@@ -63,6 +64,7 @@ class D2GI
 	VOID Present();
 	VOID DrawPrimitive(D3D7::D3DPRIMITIVETYPE, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
 		DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags);
+	VOID ScaleFRect(FRECT* pSrc, FRECT* pOut);
 	VOID ScaleRect(RECT* pSrc, RECT* pOut);
 	static LRESULT CALLBACK WndProc_Static(HWND, UINT, WPARAM, LPARAM);
 	LRESULT WndProc(HWND, UINT, WPARAM, LPARAM);

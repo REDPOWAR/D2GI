@@ -3,6 +3,7 @@
 #include "../utils.h"
 #include "../hooks.h"
 #include "../m3x4.h"
+#include "../frect.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
@@ -89,7 +90,8 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 	m_dwOriginalHeight = dwHeight;
 	m_dwOriginalBPP = dwBPP;
 
-
+	m_fWidthScale = (FLOAT)m_dwForcedWidth / (FLOAT)m_dwOriginalWidth;
+	m_fHeightScale = (FLOAT)m_dwForcedHeight / (FLOAT)m_dwOriginalHeight;
 	m_fAspectRatioScale = ((FLOAT)m_dwForcedWidth / (FLOAT)m_dwForcedHeight);
 	m_fAspectRatioScale /= ((FLOAT)m_dwOriginalWidth / (FLOAT)m_dwOriginalHeight);
 
@@ -145,14 +147,26 @@ VOID D2GI::ResetD3D9Device()
 VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 {
 	D3D9::D3DVIEWPORT9 sD3D9Viewport;
+	FRECT frtVP, frtScaledVP;
 
-	sD3D9Viewport.X = pVP->dwX * m_dwForcedWidth / m_dwOriginalWidth;
-	sD3D9Viewport.Y = pVP->dwY * m_dwForcedHeight / m_dwOriginalHeight;
-	sD3D9Viewport.Width = pVP->dwWidth * m_dwForcedWidth / m_dwOriginalWidth;
-	sD3D9Viewport.Height = pVP->dwHeight * m_dwForcedHeight / m_dwOriginalHeight;
+	frtVP = FRECT(pVP->dwX, pVP->dwY, pVP->dwX + pVP->dwWidth, pVP->dwY + pVP->dwHeight);
+	ScaleFRect(&frtVP, &frtScaledVP);
+
+	if (pVP->dwX != 0 && pVP->dwY != 0 
+		&& pVP->dwWidth != m_dwOriginalWidth && pVP->dwHeight != m_dwOriginalHeight)
+	{
+		frtScaledVP.fLeft = max(0.0, floorf(frtScaledVP.fLeft - 0.5f));
+		frtScaledVP.fTop = max(0.0, floorf(frtScaledVP.fTop - 0.5f));
+		frtScaledVP.fRight = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fRight + 0.5f));
+		frtScaledVP.fBottom = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fBottom + 0.5f));
+	}
+
+	sD3D9Viewport.X = (DWORD)frtScaledVP.fLeft;
+	sD3D9Viewport.Y = (DWORD)frtScaledVP.fTop;
+	sD3D9Viewport.Width = (DWORD)(frtScaledVP.GetWidth());
+	sD3D9Viewport.Height = (DWORD)(frtScaledVP.GetHeight());
 	sD3D9Viewport.MinZ = pVP->dvMinZ;
 	sD3D9Viewport.MaxZ = pVP->dvMaxZ;
-
 	m_pDev->SetViewport(&sD3D9Viewport);
 }
 
@@ -266,20 +280,36 @@ VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
 VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
 {
 	D3D9::IDirect3DSurface9* pRT;
-	RECT sScaledRect;
+	D3D9::D3DSURFACE_DESC sSrcDesc, sDstDesc;
+	FRECT frtSrc, frtDst;
+	FRECT frtScaledDst;
 
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
-	ScaleRect(pDstRT, &sScaledRect);
+
 
 	//BeginScene();
 	m_pDev->GetRenderTarget(0, &pRT);
 	if(!m_bSceneBegun)
 		m_pDev->BeginScene();
 
-	if (pSrc->HasColorKeyConversion())
-		m_pBlitter->BlitWithColorKey(pRT, &sScaledRect, pSrc->GetD3D9Texture(), pSrcRT, pSrc->GetColorKeyValue());
+
+	pSrc->GetD3D9Texture()->GetLevelDesc(0, &sSrcDesc);
+	pRT->GetDesc(&sDstDesc);
+	if (pSrcRT != NULL)
+		frtSrc = FRECT(*pSrcRT);
 	else
-		m_pBlitter->Blit(pRT, &sScaledRect, pSrc->GetD3D9Texture(), pSrcRT);
+		frtSrc = FRECT(0, 0, sSrcDesc.Width, sSrcDesc.Height);
+
+	if (pDstRT != NULL)
+		frtDst = FRECT(*pDstRT);
+	else
+		frtDst = FRECT(0, 0, sDstDesc.Width, sDstDesc.Height);
+
+	
+
+	ScaleFRect(&frtDst, &frtScaledDst);
+	m_pBlitter->Blit(pRT, &frtScaledDst,
+		pSrc->GetD3D9Texture(), &frtSrc, pSrc->HasColorKeyConversion());
 
 	if (!m_bSceneBegun)
 		m_pDev->EndScene();
@@ -773,6 +803,23 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwAlphaTestFunc);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, dwAlphaTestRef);
 	}
+}
+
+
+VOID D2GI::ScaleFRect(FRECT* pSrc, FRECT* pOut)
+{
+	if (pSrc == NULL)
+	{
+		pOut->fLeft = pOut->fTop = 0;
+		pOut->fRight = m_dwForcedWidth;
+		pOut->fBottom = m_dwForcedHeight;
+		return;
+	}
+
+	pOut->fLeft = (pSrc->fLeft * m_fWidthScale);
+	pOut->fTop = (pSrc->fTop * m_fHeightScale);
+	pOut->fRight = (pSrc->fRight * m_fWidthScale);
+	pOut->fBottom = (pSrc->fBottom * m_fHeightScale);
 }
 
 

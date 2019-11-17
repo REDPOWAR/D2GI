@@ -216,6 +216,7 @@
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
     <ClInclude Include="src\ddraw\dd_palette.h" />
     <ClInclude Include="src\ddraw\dd_surface.h" />
+    <ClInclude Include="src\frect.h" />
     <ClInclude Include="src\hooks.h" />
     <ClInclude Include="src\m3x4.h" />
     <ClInclude Include="src\utils.h" />
