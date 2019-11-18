@@ -121,6 +121,7 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	FRECT rtSrc, rtDst;
 
+	IDirect3DSurface9* pOriginalRT = NULL;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, * pCurrentTexture2 = NULL;
 	DWORD dwMinFilter, dwMagFilter, dwCullMode, dwAlphaTestEnable; 
 	DWORD dwAlphaBlending, dwAlphaOp, dwAlphaSrc, dwAlphaDst;
@@ -140,6 +141,7 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 	else
 		rtDst = FRECT(0.0, 0.0, sDstDesc.Width, sDstDesc.Height);
 
+	pDev->GetRenderTarget(0, &pOriginalRT);
 	pDev->GetViewport(&sOriginalVP);
 	pDev->GetRenderState(D3DRS_ZENABLE, &dwZEnable);
 	pDev->GetRenderState(D3DRS_ZWRITEENABLE, &dwZWriteEnable);
@@ -179,7 +181,8 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 	sUsedVP.MinZ = 0.0;
 	sUsedVP.MaxZ = 1.0f;
 
-	pDev->SetRenderTarget(0, pDst);
+	if(pDst != pOriginalRT)
+		pDev->SetRenderTarget(0, pDst);
 	pDev->SetViewport(&sUsedVP);
 
 	pDev->SetVertexDeclaration(m_pVDecl);
@@ -233,4 +236,7 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 		pDev->SetRenderState(D3DRS_SRCBLEND, dwAlphaSrc);
 		pDev->SetRenderState(D3DRS_DESTBLEND, dwAlphaDst);
 	}
+	if (pDst != pOriginalRT)
+		pDev->SetRenderTarget(0, pOriginalRT);
+	RELEASE(pOriginalRT);
 }

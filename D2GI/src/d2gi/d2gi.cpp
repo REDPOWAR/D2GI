@@ -281,7 +281,7 @@ VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
 
 VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
 {
-	D3D9::IDirect3DSurface9* pRT;
+	D3D9::IDirect3DSurface9* pRT = NULL;
 	D3D9::D3DSURFACE_DESC sSrcDesc, sDstDesc;
 	FRECT frtSrc, frtDst;
 	FRECT frtScaledDst;
