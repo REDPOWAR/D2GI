@@ -8,8 +8,10 @@ D2GIBackBufferSurface::D2GIBackBufferSurface(D2GI* pD2GI, DWORD dwWidth,
 	DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
 	: D2GISurface(pD2GI, dwWidth, dwHeight, eFormat)
 {
-	m_pTexture = NULL;
-	m_pSurface = NULL;
+	m_pStreamingTexture = NULL;
+	m_pStreamingSurface = NULL;
+	m_pReadingSurface = NULL;
+	m_pOffSurface = NULL;
 
 	LoadResource();
 }
@@ -23,8 +25,10 @@ D2GIBackBufferSurface::~D2GIBackBufferSurface()
 
 VOID D2GIBackBufferSurface::ReleaseResource()
 {
-	RELEASE(m_pSurface);
-	RELEASE(m_pTexture);
+	RELEASE(m_pStreamingTexture);
+	RELEASE(m_pStreamingSurface);
+	RELEASE(m_pReadingSurface);
+	RELEASE(m_pOffSurface);
 }
 
 
@@ -32,10 +36,15 @@ VOID D2GIBackBufferSurface::LoadResource()
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 
-	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
-		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
+	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], 
+		D3D9::D3DPOOL_DEFAULT, &m_pStreamingTexture, NULL);
+	m_pStreamingTexture->GetSurfaceLevel(0, &m_pStreamingSurface);
 
-	m_pTexture->GetSurfaceLevel(0, &m_pSurface);
+	pDev->CreateRenderTarget(m_dwWidth, m_dwHeight, g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat],
+		D3D9::D3DMULTISAMPLE_NONE, 0, FALSE, &m_pReadingSurface, NULL);
+
+	pDev->CreateOffscreenPlainSurface(m_dwWidth, m_dwHeight, 
+		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_SYSTEMMEM, &m_pOffSurface, NULL);
 }
 
 
@@ -43,9 +52,18 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 {
 	if (pRect == NULL)
 	{
+		m_bLastLockReadOnly = !(dwFlags & DDLOCK_WRITEONLY);
+
+		m_pD2GI->OnBackBufferLock(m_bLastLockReadOnly);
+
 		D3D9::D3DLOCKED_RECT sLockedRect;
 
-		m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+		if (m_bLastLockReadOnly)	
+		{
+			GetD3D9Device()->GetRenderTargetData(m_pReadingSurface, m_pOffSurface);
+			m_pOffSurface->LockRect(&sLockedRect, NULL, D3DLOCK_READONLY);
+		}else
+			m_pStreamingSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
 		
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
@@ -57,8 +75,6 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 		pDesc->lPitch = sLockedRect.Pitch;
 		pDesc->lpSurface = sLockedRect.pBits;
 
-		m_pD2GI->OnBackBufferLock(!(dwFlags & DDLOCK_WRITEONLY), &sLockedRect);
-
 		return DD_OK;
 	}
 
@@ -68,7 +84,10 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 
 HRESULT D2GIBackBufferSurface::Unlock(LPRECT)
 {
-	m_pSurface->UnlockRect();
+	if (m_bLastLockReadOnly)
+		m_pOffSurface->UnlockRect();
+	else
+		m_pStreamingSurface->UnlockRect();
 	return DD_OK;
 }
 

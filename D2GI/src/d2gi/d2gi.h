@@ -39,6 +39,8 @@ class D2GI
 	HMODULE m_hD3D9Lib;
 	D3D9::IDirect3D9* m_pD3D9;
 	D3D9::IDirect3DDevice9* m_pDev;
+	D3D9::IDirect3DTexture9* m_pBackBufferCopy;
+	D3D9::IDirect3DSurface9* m_pBackBufferCopySurf;
 
 	HWND m_hWnd;
 	WNDPROC m_pfnOriginalWndProc;
@@ -92,7 +94,7 @@ public:
 	VOID OnDisplayModeSet(DWORD, DWORD, DWORD, DWORD dwFlags);
 	VOID OnViewportSet(D3D7::LPD3DVIEWPORT7);
 	VOID OnFlip();
-	VOID OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT*);
+	VOID OnBackBufferLock(BOOL bRead);
 	VOID OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface*, RECT*, D2GIPrimarySingleSurface*, RECT*);
 	VOID OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil);
 	VOID OnLightEnable(DWORD, BOOL);

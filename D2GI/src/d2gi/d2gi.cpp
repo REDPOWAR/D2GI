@@ -21,6 +21,8 @@ D2GI::D2GI()
 	m_hD3D9Lib = NULL;
 	m_pD3D9 = NULL;
 	m_pDev = NULL;
+	m_pBackBufferCopy = NULL;
+	m_pBackBufferCopySurf = NULL;
 	m_pfnOriginalWndProc = NULL;
 
 	m_eRenderState = RS_UNKNOWN;
@@ -122,6 +124,8 @@ VOID D2GI::ResetD3D9Device()
 	D3D9::D3DPRESENT_PARAMETERS sParams;
 
 	ReleaseResources();
+	RELEASE(m_pBackBufferCopySurf);
+	RELEASE(m_pBackBufferCopy);
 	RELEASE(m_pDev);
 
 	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
@@ -135,13 +139,16 @@ VOID D2GI::ResetD3D9Device()
 	sParams.BackBufferWidth = m_dwForcedWidth;
 	sParams.BackBufferHeight = m_dwForcedHeight;
 	sParams.BackBufferFormat = D3D9::D3DFMT_A8R8G8B8;
-	sParams.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+	sParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_FLIP;
 	sParams.Windowed = TRUE;
-	sParams.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+	//sParams.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, 
 		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE, &sParams, &m_pDev);
+	m_pDev->CreateTexture(m_dwForcedWidth, m_dwOriginalHeight, 1, D3DUSAGE_RENDERTARGET, 
+		D3D9::D3DFMT_A8R8G8B8, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL);
+	m_pBackBufferCopy->GetSurfaceLevel(0, &m_pBackBufferCopySurf);
 	LoadResources();
 }
 
@@ -173,7 +180,7 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 }
 
 
-VOID D2GI::OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT* pRect)
+VOID D2GI::OnBackBufferLock(BOOL bRead)
 {
 	if (!bRead)
 	{
@@ -182,32 +189,21 @@ VOID D2GI::OnBackBufferLock(BOOL bRead, D3D9::D3DLOCKED_RECT* pRect)
 	else
 	{
 		D3D9::IDirect3DSurface9* pRT;
-		D3D9::D3DLOCKED_RECT sSrcRT;
+		D2GIBackBufferSurface* pBackBuf;
+
+
+		if (!m_bSceneBegun)
+			m_pDev->BeginScene();
+
+		pBackBuf = m_pDirectDrawProxy->GetPrimaryFlippableSurface()->GetBackBufferSurface();
 
 		m_pDev->GetRenderTarget(0, &pRT);
-		pRT->LockRect(&sSrcRT, NULL, D3DLOCK_READONLY);
-		for (INT i = 0; i < m_dwOriginalHeight; i++)
-		{
-			INT ySrc = i * m_dwForcedHeight / m_dwOriginalHeight;
-
-			for (INT j = 0; j < m_dwOriginalWidth; j++)
-			{
-				INT xSrc = j * m_dwForcedWidth / m_dwOriginalWidth;
-				UINT32 uSrcColor = ((UINT32*)((BYTE*)sSrcRT.pBits + ySrc * sSrcRT.Pitch))[xSrc];
-				BYTE r, g, b;
-				UINT16 uDstColor;
-
-				r = ((uSrcColor >> 16) & 0xFF) * 31 / 255;
-				g = ((uSrcColor >> 8) & 0xFF) * 63 / 255;
-				b = ((uSrcColor) & 0xFF) * 31 / 255;
-
-				uDstColor = (r << 11) | (g << 5) | b;
-
-				((UINT16*)((BYTE*)pRect->pBits + i * pRect->Pitch))[j] = uDstColor;
-			}
-		}
-		pRT->UnlockRect();
+		m_pDev->StretchRect(pRT, NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
+		m_pBlitter->Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
 		pRT->Release();
+
+		if (!m_bSceneBegun)
+			m_pDev->EndScene();
 	}
 }
 
@@ -217,7 +213,7 @@ VOID D2GI::OnFlip()
 	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
 	{
 		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
-		D3D9::IDirect3DSurface9* pSurf = pPrimSurf->GetBackBufferSurface()->GetD3D9Surface();
+		D3D9::IDirect3DSurface9* pSurf = pPrimSurf->GetBackBufferSurface()->GetD3D9StreamingSurface();
 		D3D9::IDirect3DSurface9* pRT;
 
 		m_pDev->GetRenderTarget(0, &pRT);

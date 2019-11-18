@@ -5,8 +5,11 @@
 
 class D2GIBackBufferSurface : public D2GISurface
 {
-	D3D9::IDirect3DTexture9* m_pTexture;
-	D3D9::IDirect3DSurface9* m_pSurface;
+	D3D9::IDirect3DTexture9* m_pStreamingTexture;
+	D3D9::IDirect3DSurface9* m_pStreamingSurface;
+	D3D9::IDirect3DSurface9* m_pReadingSurface;
+	D3D9::IDirect3DSurface9* m_pOffSurface;
+	BOOL m_bLastLockReadOnly;
 
 public:
 	D2GIBackBufferSurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
@@ -22,5 +25,6 @@ public:
 	STDMETHOD(AddAttachedSurface)(D3D7::LPDIRECTDRAWSURFACE7);
 	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX);
 
-	D3D9::IDirect3DSurface9* GetD3D9Surface() { return m_pSurface; }
+	D3D9::IDirect3DSurface9* GetD3D9StreamingSurface() { return m_pStreamingSurface; }
+	D3D9::IDirect3DSurface9* GetD3D9ReadingSurface() { return m_pReadingSurface; }
 };
