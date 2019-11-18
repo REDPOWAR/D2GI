@@ -12,6 +12,12 @@ DDPIXELFORMAT g_pf16_565 =
 };
 
 
+DDPIXELFORMAT g_pf16_555 =
+{
+	sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 31744, 992, 31, 0,
+};
+
+
 DDPIXELFORMAT g_pf16_1555 =
 {
 	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 31744, 992, 31, 32768
@@ -192,6 +198,7 @@ UINT g_uDeviceCount = ARRAYSIZE(g_asDeviceDescs);
 DDPIXELFORMAT g_asTextureFormats[] =
 {
 	g_pf16_565,
+	g_pf16_555,
 	g_pf16_1555,
 	g_pf16_4444,
 	{sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 32, 16711680, 65280, 255, 0},
@@ -232,7 +239,8 @@ DDPIXELFORMAT g_asD2GIPF_To_DD7PF[] =
 	g_pf16_1555,
 	g_pf16_4444,
 	g_pf16_v8u8,
-	g_pf16_depth
+	g_pf16_depth,
+	g_pf16_555,
 };
 
 
@@ -244,6 +252,7 @@ D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[] =
 	D3D9::D3DFMT_A4R4G4B4,
 	D3D9::D3DFMT_V8U8,
 	D3D9::D3DFMT_D16,
+	D3D9::D3DFMT_A1R5G5B5,
 };
 
 
@@ -261,6 +270,8 @@ D2GIPIXELFORMAT DD7PF_To_D2GIPF(D3D7::DDPIXELFORMAT* ppf)
 		return D2GIPF_16_V8U8;
 	else if (*ppf == g_pf16_depth)
 		return D2GIPF_16_DEPTH;
+	else if (*ppf == g_pf16_555)
+		return D2GIPF_16_555;
 	
 	return D2GIPF_UNKNOWN;
 }
