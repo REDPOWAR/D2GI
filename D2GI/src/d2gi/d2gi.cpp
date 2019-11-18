@@ -33,6 +33,8 @@ D2GI::D2GI()
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pClearRects = new D3D9RECTVector();
+	m_p2DBuffer = new ByteBuffer();
+
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
@@ -698,6 +700,24 @@ VOID D2GI::OnPrimitiveStridedDraw(
 
 VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
 {
+	if (dwFVF & D3DFVF_XYZRHW)
+	{
+		UINT uStride = CalcFVFStride(dwFVF);
+		UINT uSize = uStride * dwVertCount;
+		INT i;
+
+		m_p2DBuffer->clear();
+		m_p2DBuffer->insert(m_p2DBuffer->begin(), (BYTE*)pVerts, (BYTE*)pVerts + uSize);
+		for (i = 0; i < dwVertCount; i++)
+		{
+			FLOAT* pV = (FLOAT*)(m_p2DBuffer->data() + i * uStride);
+			
+			pV[0] *= m_fWidthScale;
+			pV[1] *= m_fHeightScale;
+		}
+		pVerts = m_p2DBuffer->data();
+	}
+
 	DrawPrimitive(pt, dwFVF, FALSE, pVerts, dwVertCount, NULL, 0, dwFlags);
 }
 

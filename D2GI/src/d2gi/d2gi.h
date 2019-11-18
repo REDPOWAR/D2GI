@@ -29,6 +29,7 @@ struct MAT3X4;
 struct FRECT;
 
 typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
+typedef std::vector<BYTE>          ByteBuffer;
 
 
 class D2GI
@@ -50,7 +51,9 @@ class D2GI
 	BOOL m_bSceneBegun;
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
+
 	D3D9RECTVector* m_pClearRects;
+	ByteBuffer*     m_p2DBuffer;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
