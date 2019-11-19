@@ -144,6 +144,12 @@
     <ClCompile Include="src\utils.cpp">
       <Filter>Исходные файлы\utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\dir.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logger.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -246,6 +252,12 @@
       <Filter>Файлы заголовков\utils</Filter>
     </ClInclude>
     <ClInclude Include="src\frect.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logger.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dir.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

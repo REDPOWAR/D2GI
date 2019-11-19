@@ -94,6 +94,7 @@
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -182,7 +183,9 @@
     <ClCompile Include="src\ddraw\dd_ddraw.cpp" />
     <ClCompile Include="src\ddraw\dd_palette.cpp" />
     <ClCompile Include="src\ddraw\dd_surface.cpp" />
+    <ClCompile Include="src\dir.cpp" />
     <ClCompile Include="src\hooks.cpp" />
+    <ClCompile Include="src\logger.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
@@ -217,8 +220,10 @@
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
     <ClInclude Include="src\ddraw\dd_palette.h" />
     <ClInclude Include="src\ddraw\dd_surface.h" />
+    <ClInclude Include="src\dir.h" />
     <ClInclude Include="src\frect.h" />
     <ClInclude Include="src\hooks.h" />
+    <ClInclude Include="src\logger.h" />
     <ClInclude Include="src\m3x4.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>

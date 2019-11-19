@@ -2,6 +2,12 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <stdio.h>
+
+
+#ifndef D2GI_VERSION
+#define D2GI_VERSION TEXT("UNDEFINED")
+#endif
 
 
 #define RELEASE(x) {if((x) != NULL) {(x)->Release(); (x) = NULL;} }

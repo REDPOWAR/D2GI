@@ -1,6 +1,8 @@
 
 #include "common.h"
 #include "hooks.h"
+#include "logger.h"
+#include "dir.h"
 
 #include "d2gi/d2gi.h"
 #include "d2gi/d2gi_device.h"
@@ -92,14 +94,12 @@ HookInjector::D2VERSION HookInjector::DetectD2Version()
 		0x400502EA, 0x4760F7AC
 	};
 
-	TCHAR szEXEPath[MAX_PATH];
 	FILE* pFile;
 	IMAGE_DOS_HEADER sDOSHeader;
 	IMAGE_FILE_HEADER sImageHeader;
 	INT i;
 
-	GetModuleFileName(NULL, szEXEPath, MAX_PATH);
-	pFile = _tfopen(szEXEPath, TEXT("rb"));
+	pFile = _tfopen(Directory::GetEXEPath(), TEXT("rb"));
 	fread(&sDOSHeader, sizeof(sDOSHeader), 1, pFile);
 	fseek(pFile, sDOSHeader.e_lfanew + 4, SEEK_SET);
 	fread(&sImageHeader, sizeof(sImageHeader), 1, pFile);
@@ -127,14 +127,29 @@ BOOL HookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallA
 
 VOID HookInjector::InjectHooks()
 {
-	DWORD c_adwSetupTransformsCalls[] =
+	static DWORD c_adwSetupTransformsCalls[] =
 	{
 		0x005EB682, 0x005EB622
 	};
+	static TCHAR* c_lpszVersionNames[] =
+	{
+		TEXT("8.1"),
+		TEXT("8.1B")
+	};
+
+
+	Logger::Log(TEXT("Trying to inject hooks..."));
 
 	s_eCurrentD2Version = DetectD2Version();
 	if (s_eCurrentD2Version == D2V_UNKNOWN)
+	{
+		Logger::Log(TEXT("Current D2 executable version is unknown, injection aborted"));
 		return;
+	}
 
-	PatchCallOperation(c_adwSetupTransformsCalls[s_eCurrentD2Version], (DWORD)SetupTransformsHook);
+	Logger::Log(TEXT("Detected D2 version %s"), c_lpszVersionNames[s_eCurrentD2Version]);
+	if (PatchCallOperation(c_adwSetupTransformsCalls[s_eCurrentD2Version], (DWORD)SetupTransformsHook))
+		Logger::Log(TEXT("Successfully injected hooks"));
+	else
+		Logger::Log(TEXT("Unable to write process memory to inject hooks"));
 }

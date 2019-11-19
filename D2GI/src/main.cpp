@@ -1,5 +1,6 @@
 
 #include "hooks.h"
+#include "logger.h"
 #include "d2gi/d2gi.h"
 
 
@@ -164,7 +165,12 @@ EXPORT VOID WINAPI SetAppCompatData()
 BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
+	{
+		Logger::Log(TEXT("D2GI %s module loaded"), D2GI_VERSION);
 		HookInjector::InjectHooks();
+	}
+	else if (dwReason == DLL_PROCESS_DETACH)
+		Logger::Log(TEXT("D2GI module unloaded\n"));
 
 	return TRUE;
 }

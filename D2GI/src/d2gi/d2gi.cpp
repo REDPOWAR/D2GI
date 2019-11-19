@@ -4,6 +4,7 @@
 #include "../hooks.h"
 #include "../m3x4.h"
 #include "../frect.h"
+#include "../logger.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
@@ -84,6 +85,7 @@ VOID D2GI::LoadD3D9Library()
 VOID D2GI::OnCooperativeLevelSet(HWND hWnd, DWORD dwFlags)
 {
 	m_hWnd = hWnd;
+	Logger::SetHWND(hWnd);
 	AttachWndProc();
 }
 
