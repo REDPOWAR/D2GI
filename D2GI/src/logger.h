@@ -13,5 +13,6 @@ class Logger
 public:
 	static VOID SetHWND(HWND hWnd) { s_hWnd = hWnd; };
 	static VOID Error(TCHAR*, ...);
+	static VOID Warning(TCHAR*, ...);
 	static VOID Log(TCHAR*, ...);
 };

@@ -2,6 +2,7 @@
 #define INITGUID
 #include "../common.h"
 #include "../utils.h"
+#include "../logger.h"
 
 #include "../d3d7.h"
 #include "../d3d9.h"
@@ -40,6 +41,7 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 		return DD_OK;
 	}
 
+	Logger::Warning(TEXT("Requested unknown interface from DDraw"));
 	return DDERR_GENERIC;
 }
 
@@ -108,6 +110,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		return DD_OK;
 	}
 
+	Logger::Warning(TEXT("Requested unknown surface creation"));
 	return DDERR_GENERIC;
 }
 
@@ -184,6 +187,7 @@ VOID D2GIDirectDraw::LoadResources()
 
 HRESULT D2GIDirectDraw::GetAvailableVidMem(D3D7::LPDDSCAPS2 pCaps, LPDWORD lpdwTotal, LPDWORD lpdwFree)
 {
+	// TODO: think about this vmemory profiling
 	*lpdwTotal = *lpdwFree = 1778384896;
 	return DD_OK;
 }
@@ -207,5 +211,6 @@ HRESULT D2GIDirectDraw::CreatePalette(DWORD dwFlags, LPPALETTEENTRY pEntries, D3
 		return DD_OK;
 	}
 
+	Logger::Warning(TEXT("Requested unknown palette creation"));
 	return DDERR_GENERIC;
 }

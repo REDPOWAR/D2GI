@@ -41,15 +41,32 @@ VOID Logger::WriteLog(TCHAR* pszMessage)
 VOID Logger::Error(TCHAR* pszFmt, ...)
 {
 	TCHAR szMessage[1024];
+	TCHAR* pszMsgWithoutPrefix;
 	va_list args;
 
 	va_start(args, pszFmt);
-	_vstprintf(szMessage, pszFmt, args);
+	_tcscpy(szMessage, TEXT("***FATAL ERROR***\n"));
+	pszMsgWithoutPrefix = szMessage + _tcslen(szMessage);
+	_vstprintf(pszMsgWithoutPrefix, pszFmt, args);
 	va_end(args);
 
 	WriteLog(szMessage);
-	MessageBox(s_hWnd, szMessage, TEXT("D2GI Fatal Error"), MB_OK | MB_ICONERROR);
+	MessageBox(s_hWnd, pszMsgWithoutPrefix, TEXT("D2GI Fatal Error"), MB_OK | MB_ICONERROR);
 	ExitProcess(-1);
+}
+
+
+VOID Logger::Warning(TCHAR* pszFmt, ...)
+{
+	TCHAR szMessage[1024];
+	va_list args;
+
+	va_start(args, pszFmt);
+	_tcscpy(szMessage, TEXT("!WARNING! "));
+	_vstprintf(szMessage + _tcslen(szMessage), pszFmt, args);
+	va_end(args);
+
+	WriteLog(szMessage);
 }
 
 

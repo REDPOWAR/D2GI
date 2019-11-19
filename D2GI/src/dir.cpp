@@ -2,6 +2,7 @@
 #include "dir.h"
 
 
+TCHAR Directory::s_szSysDir[MAX_PATH] = { '\0' };
 TCHAR Directory::s_szEXEDir[MAX_PATH] = { '\0' };
 TCHAR Directory::s_szEXEPath[MAX_PATH] = { '\0' };
 
@@ -28,4 +29,13 @@ TCHAR* Directory::GetEXEPath()
 		GetModuleFileName(NULL, s_szEXEPath, MAX_PATH);
 
 	return s_szEXEPath;
+}
+
+
+TCHAR* Directory::GetSysDirectory()
+{
+	if (*s_szSysDir == '\0')
+		GetSystemDirectory(s_szSysDir, MAX_PATH);
+
+	return s_szSysDir;
 }

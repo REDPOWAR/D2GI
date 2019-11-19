@@ -1,5 +1,6 @@
 
 #include "../common.h"
+#include "../logger.h"
 
 #include "d2gi_device.h"
 #include "d2gi_surface.h"
@@ -25,7 +26,10 @@ D2GIDevice::~D2GIDevice()
 HRESULT D2GIDevice::SetTexture(DWORD i, LPDIRECTDRAWSURFACE7 pTex)
 {
 	if (pTex != NULL && ((D2GISurface*)pTex)->GetType() != ST_TEXTURE)
+	{
+		Logger::Warning(TEXT("Setting invalid surface as texture"));
 		return DDERR_GENERIC;
+	}
 
 	m_pD2GI->OnTextureSet(i, (pTex == NULL) ? NULL : (D2GITexture*)pTex);
 	return DD_OK;
@@ -100,6 +104,7 @@ HRESULT D2GIDevice::ValidateDevice(LPDWORD pdw)
 	if (m_pD2GI->OnDeviceValidate(pdw))
 		return DD_OK;
 
+	Logger::Log(TEXT("Device validation failed"));
 	return DDERR_GENERIC;
 }
 
@@ -168,5 +173,6 @@ HRESULT D2GIDevice::GetRenderState(D3D7::D3DRENDERSTATETYPE eState, LPDWORD pV)
 	if (m_pD2GI->OnRenderStateGet(eState, pV))
 		return DD_OK;
 
+	Logger::Warning(TEXT("Requested render state %i (not implemented)"), eState);
 	return DDERR_GENERIC;
 }

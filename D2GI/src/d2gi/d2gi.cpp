@@ -5,6 +5,7 @@
 #include "../m3x4.h"
 #include "../frect.h"
 #include "../logger.h"
+#include "../dir.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
@@ -71,14 +72,20 @@ VOID D2GI::LoadD3D9Library()
 	TCHAR           szPath[MAX_PATH];
 	DIRECT3DCREATE9 pfnDirect3DCreate9;
 
-	GetSystemDirectory(szPath, MAX_PATH);
+	_tcscpy(szPath, Directory::GetSysDirectory());
 	_tcscat(szPath, TEXT("\\d3d9.dll"));
 
 	m_hD3D9Lib = LoadLibrary(szPath);
+	if (m_hD3D9Lib == NULL)
+		Logger::Error(TEXT("Failed to load D3D9 library"));
 
 	pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
+	if (pfnDirect3DCreate9 == NULL)
+		Logger::Error(TEXT("Failed to get Direct3DCreate9 address"));
 
 	m_pD3D9 = pfnDirect3DCreate9(D3D_SDK_VERSION);
+	if (m_pD3D9 == NULL)
+		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
 }
 
 
@@ -146,11 +153,18 @@ VOID D2GI::ResetD3D9Device()
 	sParams.Windowed = TRUE;
 	//sParams.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
-	m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd, 
-		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE, &sParams, &m_pDev);
-	m_pDev->CreateTexture(m_dwForcedWidth, m_dwOriginalHeight, 1, D3DUSAGE_RENDERTARGET, 
-		D3D9::D3DFMT_A8R8G8B8, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL);
-	m_pBackBufferCopy->GetSurfaceLevel(0, &m_pBackBufferCopySurf);
+	if (FAILED(m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd,
+		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
+		&sParams, &m_pDev)))
+		Logger::Error(TEXT("Failed to create D3D9 device"));
+
+	if (FAILED(m_pDev->CreateTexture(m_dwForcedWidth, m_dwOriginalHeight, 1, D3DUSAGE_RENDERTARGET,
+		D3D9::D3DFMT_A8R8G8B8, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL)))
+		Logger::Error(TEXT("Failed to create backbuffer copy texture"));
+
+	if (FAILED(m_pBackBufferCopy->GetSurfaceLevel(0, &m_pBackBufferCopySurf)))
+		Logger::Error(TEXT("Failed to get backbuffer copy surface"));
+
 	LoadResources();
 }
 
