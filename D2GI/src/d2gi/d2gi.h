@@ -116,5 +116,5 @@ public:
 	VOID OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, LPWORD, DWORD, DWORD);
 	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
-	INT OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
+	VOID OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
 };

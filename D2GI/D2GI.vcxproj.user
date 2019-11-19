@@ -4,7 +4,7 @@
     <LocalDebuggerCommand>$(D2EXE)</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>$(D2DIR)</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>$(D2EXE)</LocalDebuggerCommand>

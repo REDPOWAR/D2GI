@@ -6,24 +6,65 @@
 #include "d2gi/d2gi_device.h"
 
 
-#define DEVICE_PTR_ADDRESS       0x00720908
-#define SETUP_TRANSFORMS_ADDRESS 0x005AE0E0
-
-#define OBTAIN_DEVICE()   (*(D3D7::IDirect3DDevice7**)DEVICE_PTR_ADDRESS)
-
 #define CALL_INSTRUCTION_SIZE 5
-#define OPCODE_SIZE 1
+#define OPCODE_SIZE           1
 
 
-DWORD g_adwSetupTransformsCalls[] =
+HookInjector::D2VERSION HookInjector::s_eCurrentD2Version;
+
+
+D2GI* HookInjector::ObtainD2GI()
 {
-	0x005EB682,
-};
+	static DWORD c_adwDeviceAddresses[] =
+	{
+		0x00720908, 0x00720928
+	};
+
+	DWORD                   dwDevAddr = c_adwDeviceAddresses[s_eCurrentD2Version];
+	D3D7::IDirect3DDevice7* pDev      = *(D3D7::IDirect3DDevice7**)dwDevAddr;
+
+	if (pDev == NULL)
+		return NULL;
+
+	return ((D2GIDevice*)pDev)->GetD2GI();
+}
 
 
-INT CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+INT HookInjector::SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 {
-	INT nResult, nAddr = SETUP_TRANSFORMS_ADDRESS;
+	D2GI* pD2GI = ObtainD2GI();
+	MAT3X4 mPatchedView = *pmView, mPatchedProj = *pmProj;
+
+	if(pD2GI != NULL)
+		pD2GI->OnTransformsSetup(pThis, &mPatchedView, &mPatchedProj);
+
+	return CallOriginalSetupTransforms(pThis, &mPatchedView, &mPatchedProj);
+}
+
+
+__declspec(naked) VOID SetupTransformsHook()
+{
+	__asm
+	{
+		mov eax, [esp + 8];
+		push eax;
+		mov eax, [esp + 8];
+		push eax;
+		push ecx;
+		call HookInjector::SetupTransforms;
+		ret 8;
+	};
+}
+
+
+INT HookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+{
+	static DWORD c_adwSetupTransformsAddresses[] =
+	{
+		0x005AE0E0, 0x005AE070
+	};
+
+	INT nResult, nAddr = c_adwSetupTransformsAddresses[s_eCurrentD2Version];
 
 	__asm
 	{
@@ -44,49 +85,56 @@ INT CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 }
 
 
-INT __stdcall SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+HookInjector::D2VERSION HookInjector::DetectD2Version()
 {
-	D3D7::IDirect3DDevice7* pDev = OBTAIN_DEVICE();
-
-	if (pDev == NULL)
-		return CallOriginalSetupTransforms(pThis, pmView, pmProj);
-
-	return ((D2GIDevice*)pDev)->GetD2GI()->OnTransformsSetup(pThis, pmView, pmProj);
-}
-
-
-__declspec(naked) VOID SetupTransformsHook()
-{
-	__asm
+	static DWORD c_adwTimestamps[] =
 	{
-		mov eax, [esp + 8];
-		push eax;
-		mov eax, [esp + 8];
-		push eax;
-		push ecx;
-		call SetupTransforms;
-		ret 8;
+		0x400502EA, 0x4760F7AC
 	};
-}
 
-
-
-VOID InjectHooks()
-{
-	INT32 nCallOffset;
-	DWORD dwCurrentAddress;
-	SIZE_T uBytesWritten;
+	TCHAR szEXEPath[MAX_PATH];
+	FILE* pFile;
+	IMAGE_DOS_HEADER sDOSHeader;
+	IMAGE_FILE_HEADER sImageHeader;
 	INT i;
 
-	for (i = 0; i < ARRAYSIZE(g_adwSetupTransformsCalls); i++)
+	GetModuleFileName(NULL, szEXEPath, MAX_PATH);
+	pFile = _tfopen(szEXEPath, TEXT("rb"));
+	fread(&sDOSHeader, sizeof(sDOSHeader), 1, pFile);
+	fseek(pFile, sDOSHeader.e_lfanew + 4, SEEK_SET);
+	fread(&sImageHeader, sizeof(sImageHeader), 1, pFile);
+	fclose(pFile);
+
+	for (i = 0; i < ARRAYSIZE(c_adwTimestamps); i++)
+		if (c_adwTimestamps[i] == sImageHeader.TimeDateStamp)
+			return (D2VERSION)i;
+
+	return D2V_UNKNOWN;
+}
+
+
+BOOL HookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallAddress)
+{
+	INT nCallOffset;
+
+	nCallOffset = (INT32)dwNewCallAddress;
+	nCallOffset -= (INT32)dwOperationAddress + CALL_INSTRUCTION_SIZE;
+
+	return WriteProcessMemory(GetCurrentProcess(), 
+		(BYTE*)dwOperationAddress + OPCODE_SIZE, &nCallOffset, sizeof(nCallOffset), NULL);
+}
+
+
+VOID HookInjector::InjectHooks()
+{
+	DWORD c_adwSetupTransformsCalls[] =
 	{
-		dwCurrentAddress = g_adwSetupTransformsCalls[i];
+		0x005EB682, 0x005EB622
+	};
 
-		nCallOffset = (INT32)SetupTransformsHook;
-		nCallOffset -= (INT32)dwCurrentAddress + CALL_INSTRUCTION_SIZE;
+	s_eCurrentD2Version = DetectD2Version();
+	if (s_eCurrentD2Version == D2V_UNKNOWN)
+		return;
 
-		if (!WriteProcessMemory(GetCurrentProcess(), (BYTE*)dwCurrentAddress + OPCODE_SIZE,
-			&nCallOffset, sizeof(nCallOffset), &uBytesWritten))
-			uBytesWritten = uBytesWritten;
-	}
+	PatchCallOperation(c_adwSetupTransformsCalls[s_eCurrentD2Version], (DWORD)SetupTransformsHook);
 }

@@ -163,8 +163,8 @@ EXPORT VOID WINAPI SetAppCompatData()
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 {
-	/*if (dwReason == DLL_PROCESS_ATTACH)
-		InjectHooks();*/
+	if (dwReason == DLL_PROCESS_ATTACH)
+		HookInjector::InjectHooks();
 
 	return TRUE;
 }

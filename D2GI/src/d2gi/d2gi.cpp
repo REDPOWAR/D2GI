@@ -931,11 +931,7 @@ VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
 }
 
 
-INT D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+VOID D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 {
-	MAT3X4 mFixedProj = *pmProj;
-
-	mFixedProj._11 /= m_fAspectRatioScale;
-
-	return CallOriginalSetupTransforms(pThis, pmView, &mFixedProj);
+	pmProj->_11 /= m_fAspectRatioScale;
 }
