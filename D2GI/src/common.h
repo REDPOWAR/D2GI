@@ -27,11 +27,3 @@ public:
 	STDMETHOD(QueryInterface)(REFIID, LPVOID FAR*) { return S_FALSE; }
 };
 
-
-struct SPHERE
-{
-	FLOAT fX, fY, fZ, fRadius;
-};
-
-
-VOID Debug(CONST TCHAR*, ...);

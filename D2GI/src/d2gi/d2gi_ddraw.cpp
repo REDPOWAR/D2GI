@@ -114,20 +114,14 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 
 HRESULT D2GIDirectDraw::SetCooperativeLevel(HWND hWnd, DWORD dwFlags)
 {
-	Debug(TEXT("Setting coop level for window 0x%08x (%i)"), hWnd, dwFlags);
-
 	m_pD2GI->OnCooperativeLevelSet(hWnd, dwFlags);
-
 	return DD_OK;
 }
 
 
 HRESULT D2GIDirectDraw::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
-	Debug(TEXT("Setting display mode %ix%ix%i (%i %i)"), dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
-
 	m_pD2GI->OnDisplayModeSet(dwWidth, dwHeight, dwBPP, dwFlags);
-
 	return DD_OK;
 }
 

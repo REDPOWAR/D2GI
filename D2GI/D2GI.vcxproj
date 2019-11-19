@@ -152,7 +152,6 @@
     <None Include="defs.props" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\common.cpp" />
     <ClCompile Include="src\d2gi\d2gi.cpp" />
     <ClCompile Include="src\d2gi\d2gi_backbuf_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_blitter.cpp" />
