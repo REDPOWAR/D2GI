@@ -1,4 +1,6 @@
 
+#include "../logger.h"
+
 #include "d2gi.h"
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_enums.h"
@@ -28,7 +30,10 @@ D2GISystemMemorySurface::~D2GISystemMemorySurface()
 HRESULT D2GISystemMemorySurface::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 {
 	if (!(dwFlags & DDCKEY_SRCBLT))
+	{
+		Logger::Warning(TEXT("Setting unknown color key to sysmem surface"));
 		return DDERR_GENERIC;
+	}
 
 	if (pCK != NULL)
 	{
@@ -74,10 +79,12 @@ VOID D2GISystemMemorySurface::LoadResource()
 
 	m_pData = new BYTE[m_uDataSize];
 
-	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, 
-		eTextureFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
+	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC,
+		eTextureFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL)))
+		Logger::Error(TEXT("Failed to create texture for sysmem surface"));
 
-	m_pTexture->GetSurfaceLevel(0, &m_pSurface);
+	if (FAILED(m_pTexture->GetSurfaceLevel(0, &m_pSurface)))
+		Logger::Error(TEXT("Failed to get surface for sysmem surface"));
 }
 
 
@@ -116,7 +123,8 @@ HRESULT D2GISystemMemorySurface::Unlock(LPRECT)
 		D3D9::D3DLOCKED_RECT sLockedRect;
 		INT i, j;
 
-		m_pSurface->LockRect(&sLockedRect, NULL, 0);
+		if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, 0)))
+			Logger::Error(TEXT("Failed to lock sysmem surface"));
 
 		if (HasColorKeyConversion())
 		{
@@ -166,7 +174,8 @@ VOID D2GISystemMemorySurface::UpdateWithPalette(D2GIPalette* pPal)
 	UINT16* pPalette16 = pPal->GetEntries16();
 	INT i, j;
 
-	m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+	if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))
+		Logger::Error(TEXT("Failed to lock sysmem surface to update with palette"));
 	for (i = 0; i < m_dwHeight; i++)
 		for (j = 0; j < m_dwWidth; j++)
 			((UINT16*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = pPalette16[((BYTE*)m_pData)[i * m_dwWidth + j]];

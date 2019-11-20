@@ -1,4 +1,6 @@
 
+#include  "../logger.h"
+
 #include "d2gi_texture.h"
 #include "d2gi_mipmap_surf.h"
 #include "d2gi_enums.h"
@@ -77,7 +79,9 @@ VOID D2GIMipMapSurface::UpdateSurface()
 	D3D9::D3DLOCKED_RECT sRect;
 	UINT uPitch;
 
-	m_pSurface->LockRect(&sRect, NULL, 0);
+	if (FAILED(m_pSurface->LockRect(&sRect, NULL, 0)))
+		Logger::Error(TEXT("Failed to lock mip map surface"));
+
 	uPitch = sizeof(UINT16) * m_dwWidth;
 
 	if (m_pParent->HasColorKeyConversion())
@@ -124,5 +128,6 @@ HRESULT D2GIMipMapSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDI
 		return DD_OK;
 	}
 
+	Logger::Warning(TEXT("Requested unknown attached surface to mipmap"));
 	return DDERR_NOTFOUND;
 }

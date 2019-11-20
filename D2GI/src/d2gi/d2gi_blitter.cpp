@@ -1,6 +1,7 @@
 
 #include "../common.h"
 #include "../frect.h"
+#include "../logger.h"
 
 #include "d2gi.h"
 #include "d2gi_blitter.h"
@@ -78,7 +79,8 @@ VOID D2GIBlitter::LoadResource()
 	};
 	IDirect3DDevice9* pDev = GetD3D9Device();
 
-	pDev->CreateVertexDeclaration(asVertexElements, &m_pVDecl);
+	if (FAILED(pDev->CreateVertexDeclaration(asVertexElements, &m_pVDecl)))
+		Logger::Error(TEXT("Failed to create blitter vertex declaration"));
 
 	FLOAT afVerts[] =
 	{
@@ -92,22 +94,44 @@ VOID D2GIBlitter::LoadResource()
 	};
 	VOID* pData;
 
-	pDev->CreateVertexBuffer(sizeof(afVerts), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &m_pVB, NULL);
-	m_pVB->Lock(0, 0, &pData, 0);
+	if (FAILED(pDev->CreateVertexBuffer(sizeof(afVerts), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &m_pVB, NULL)))
+		Logger::Error(TEXT("Failed to create blitter vertex buffer"));
+
+	if (FAILED(m_pVB->Lock(0, 0, &pData, 0)))
+		Logger::Error(TEXT("Failed to lock blitter vertex buffer"));
+
 	CopyMemory(pData, afVerts, sizeof(afVerts));
 	m_pVB->Unlock();
 
-	ID3DXBuffer* pBuf;
+	ID3DXBuffer* pCodeBuf = NULL, *pErrBuf = NULL;
 
-	D3DXCompileShader(g_szVS, strlen(g_szVS), NULL, NULL,
-		"main", "vs_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pBuf, NULL, NULL);
-	pDev->CreateVertexShader((DWORD*)pBuf->GetBufferPointer(), &m_pVS);
-	pBuf->Release();
+	if (FAILED(D3DXCompileShader(g_szVS, strlen(g_szVS), NULL, NULL,
+		"main", "vs_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pCodeBuf, &pErrBuf, NULL)))
+	{
+		Logger::Error(
+			TEXT("Blitter vertex shader compilation failed with error:\n") ASCII_STR,
+				pErrBuf->GetBufferPointer());
+	}
 
-	D3DXCompileShader(g_szPS, strlen(g_szPS), NULL, NULL,
-		"main", "ps_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pBuf, NULL, NULL);
-	pDev->CreatePixelShader((DWORD*)pBuf->GetBufferPointer(), &m_pPS);
-	pBuf->Release();
+	if (FAILED(pDev->CreateVertexShader((DWORD*)pCodeBuf->GetBufferPointer(), &m_pVS)))
+		Logger::Error(TEXT("Failed to create blitter vertex shader"));
+
+	RELEASE(pCodeBuf);
+	RELEASE(pErrBuf);
+
+	if (FAILED(D3DXCompileShader(g_szPS, strlen(g_szPS), NULL, NULL,
+		"main", "ps_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pCodeBuf, &pErrBuf, NULL)))
+	{
+		Logger::Error(
+			TEXT("Blitter pixel shader compilation failed with error:\n") ASCII_STR,
+				pErrBuf->GetBufferPointer());
+	}
+
+	if (FAILED(pDev->CreatePixelShader((DWORD*)pCodeBuf->GetBufferPointer(), &m_pPS)))
+		Logger::Error(TEXT("Failed to create blitter pixel shader"));
+
+	RELEASE(pCodeBuf);
+	RELEASE(pErrBuf);
 }
 
 

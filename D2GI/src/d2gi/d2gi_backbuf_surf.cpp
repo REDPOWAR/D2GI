@@ -1,4 +1,6 @@
 
+#include "../logger.h"
+
 #include "d2gi_backbuf_surf.h"
 #include "d2gi.h"
 #include "d2gi_enums.h"
@@ -36,15 +38,21 @@ VOID D2GIBackBufferSurface::LoadResource()
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 
-	pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC, g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], 
-		D3D9::D3DPOOL_DEFAULT, &m_pStreamingTexture, NULL);
-	m_pStreamingTexture->GetSurfaceLevel(0, &m_pStreamingSurface);
+	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC,
+		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat],
+		D3D9::D3DPOOL_DEFAULT, &m_pStreamingTexture, NULL)))
+		Logger::Error(TEXT("Failed to create backbuffer streaming texture"));
 
-	pDev->CreateRenderTarget(m_dwWidth, m_dwHeight, g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat],
-		D3D9::D3DMULTISAMPLE_NONE, 0, FALSE, &m_pReadingSurface, NULL);
+	if (FAILED(m_pStreamingTexture->GetSurfaceLevel(0, &m_pStreamingSurface)))
+		Logger::Error(TEXT("Failed to get backbuffer streaming surface"));
 
-	pDev->CreateOffscreenPlainSurface(m_dwWidth, m_dwHeight, 
-		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_SYSTEMMEM, &m_pOffSurface, NULL);
+	if (FAILED(pDev->CreateRenderTarget(m_dwWidth, m_dwHeight, g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat],
+		D3D9::D3DMULTISAMPLE_NONE, 0, FALSE, &m_pReadingSurface, NULL)))
+		Logger::Error(TEXT("Failed to create backbuffer reading render target"));
+
+	if (FAILED(pDev->CreateOffscreenPlainSurface(m_dwWidth, m_dwHeight,
+		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_SYSTEMMEM, &m_pOffSurface, NULL)))
+		Logger::Error(TEXT("Failed to create backbuffer reading offscreen surface"));
 }
 
 
@@ -61,9 +69,14 @@ HRESULT D2GIBackBufferSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, 
 		if (m_bLastLockReadOnly)	
 		{
 			GetD3D9Device()->GetRenderTargetData(m_pReadingSurface, m_pOffSurface);
-			m_pOffSurface->LockRect(&sLockedRect, NULL, D3DLOCK_READONLY);
-		}else
-			m_pStreamingSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD);
+			if (FAILED(m_pOffSurface->LockRect(&sLockedRect, NULL, D3DLOCK_READONLY)))
+				Logger::Error(TEXT("Failed to lock backbuffer offscreen surface"));
+		}
+		else
+		{
+			if (FAILED(m_pStreamingSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))
+				Logger::Error(TEXT("Failed to lock backbuffer streaming surface"));
+		}
 		
 		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
@@ -103,6 +116,7 @@ HRESULT D2GIBackBufferSurface::AddAttachedSurface(D3D7::LPDIRECTDRAWSURFACE7 pSu
 	if (((D2GISurface*)pSurf)->GetType() == ST_ZBUFFER)
 		return DD_OK;
 
+	Logger::Warning(TEXT("Attaching unknown surface to backbuffer"));
 	return DDERR_GENERIC;
 }
 

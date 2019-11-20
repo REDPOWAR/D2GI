@@ -1,4 +1,6 @@
 
+#include "../logger.h"
+
 #include "d2gi_vb_container.h"
 
 
@@ -24,7 +26,10 @@ VERTEX_STREAMING_BUFFER* D2GIVertexBufferContainer::AllocNewBuffer(UINT uRequire
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 	D3D9::IDirect3DVertexBuffer9* pVB;
 
-	pDev->CreateVertexBuffer(uSelectedSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 0, D3D9::D3DPOOL_DEFAULT, &pVB, NULL);
+	if (FAILED(pDev->CreateVertexBuffer(uSelectedSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+		0, D3D9::D3DPOOL_DEFAULT, &pVB, NULL)))
+		Logger::Error(TEXT("Failed to alloc new vertex buffer for streaming"));
+
 	push_back(VERTEX_STREAMING_BUFFER(pVB, uSelectedSize));
 	pVB->Release();
 

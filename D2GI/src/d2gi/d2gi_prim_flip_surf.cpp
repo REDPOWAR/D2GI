@@ -1,4 +1,6 @@
 
+#include "../logger.h"
+
 #include "d2gi.h"
 #include "d2gi_prim_flip_surf.h"
 #include "d2gi_backbuf_surf.h"
@@ -39,6 +41,7 @@ HRESULT D2GIPrimaryFlippableSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, 
 		return DD_OK;
 	}
 
+	Logger::Warning(TEXT("Requested unknown attached surface to primary flippable surface"));
 	return DDERR_GENERIC;
 }
 

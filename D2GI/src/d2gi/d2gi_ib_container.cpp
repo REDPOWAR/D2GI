@@ -1,4 +1,6 @@
 
+#include "../logger.h"
+
 #include "d2gi_ib_container.h"
 
 
@@ -24,8 +26,10 @@ INDEX_STREAMING_BUFFER* D2GIIndexBufferContainer::AllocNewBuffer(UINT uRequiredS
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 	D3D9::IDirect3DIndexBuffer9* pIB;
 
-	pDev->CreateIndexBuffer(uSelectedSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 
-		D3D9::D3DFMT_INDEX16, D3D9::D3DPOOL_DEFAULT, &pIB, NULL);
+	if (FAILED(pDev->CreateIndexBuffer(uSelectedSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+		D3D9::D3DFMT_INDEX16, D3D9::D3DPOOL_DEFAULT, &pIB, NULL)))
+		Logger::Error(TEXT("Failed to alloc new index buffer for streaming"));
+
 	push_back(INDEX_STREAMING_BUFFER(pIB, uSelectedSize));
 	pIB->Release();
 

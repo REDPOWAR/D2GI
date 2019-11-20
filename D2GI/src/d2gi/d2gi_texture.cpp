@@ -1,5 +1,6 @@
 
 #include "../utils.h"
+#include "../logger.h"
 
 #include "d2gi_texture.h"
 #include "d2gi_enums.h"
@@ -62,15 +63,17 @@ VOID D2GITexture::LoadResource()
 	dwUsage = m_bIsRenderTarget ? D3DUSAGE_RENDERTARGET : D3DUSAGE_DYNAMIC;
 
 
-	pDev->CreateTexture(m_dwWidth, m_dwHeight,
-		m_dwMipMapCount, dwUsage, 
-		eFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL);
+	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight,
+		m_dwMipMapCount, dwUsage,
+		eFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL)))
+		Logger::Error(TEXT("Failed to create texture"));
 
 	for (i = 0; i < m_dwMipMapCount; i++)
 	{
 		D3D9::IDirect3DSurface9* pSurf;
 
-		m_pTexture->GetSurfaceLevel(i, &pSurf);
+		if (FAILED(m_pTexture->GetSurfaceLevel(i, &pSurf)))
+			Logger::Error(TEXT("Failed to get surface for texture"));
 		m_lpMipMapLevels[i]->SetD3D9Surface(pSurf);
 	}
 }
@@ -92,7 +95,10 @@ HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 	INT i;
 
 	if (!(dwFlags & DDCKEY_SRCBLT))
+	{
+		Logger::Warning(TEXT("Setting unknown color key for texture"));
 		return DDERR_GENERIC;
+	}
 
 	if (pCK != NULL)
 	{
@@ -157,6 +163,7 @@ HRESULT D2GITexture::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDIRECTDR
 		return DD_OK;
 	}
 
+	Logger::Warning(TEXT("Requested unknown attached surface to texture"));
 	return DDERR_NOTFOUND;
 }
 

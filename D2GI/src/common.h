@@ -10,6 +10,13 @@
 #endif
 
 
+#ifdef UNICODE
+#define ASCII_STR TEXT("%S")
+#else
+#define ASCII_STR TEXT("%s")
+#endif
+
+
 #define RELEASE(x) {if((x) != NULL) {(x)->Release(); (x) = NULL;} }
 #define DEL(x)     {if((x) != NULL) {delete (x); (x) = NULL;}}
 

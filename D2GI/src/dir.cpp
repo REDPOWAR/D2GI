@@ -15,7 +15,7 @@ TCHAR* Directory::GetEXEDirectory()
 
 		GetModuleFileName(NULL, s_szEXEDir, MAX_PATH);
 		c = s_szEXEDir + _tcslen(s_szEXEDir);
-		while (*c != '\\')
+		while (*c != '\\' && c >= s_szEXEDir)
 			*(c--) = '\0';
 	}
 
