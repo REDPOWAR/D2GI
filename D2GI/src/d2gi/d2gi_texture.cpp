@@ -15,7 +15,6 @@ D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight,
 	m_dwMipMapCount = (dwMipMapCount == 0) ? 1 : dwMipMapCount;
 	m_lpMipMapLevels = NULL;
 	m_pTexture = NULL;
-	m_bIsRenderTarget = FALSE;
 	m_bColorKeySet = FALSE;
 
 	INT i;
@@ -60,11 +59,8 @@ VOID D2GITexture::LoadResource()
 	if (HasColorKeyConversion())
 		eFormat = D3D9::D3DFMT_A8R8G8B8;
 
-	dwUsage = m_bIsRenderTarget ? D3DUSAGE_RENDERTARGET : D3DUSAGE_DYNAMIC;
-
-
 	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight,
-		m_dwMipMapCount, dwUsage,
+		m_dwMipMapCount, D3DUSAGE_DYNAMIC,
 		eFormat, D3D9::D3DPOOL_DEFAULT, &m_pTexture, NULL)))
 		Logger::Error(TEXT("Failed to create texture"));
 
@@ -180,17 +176,6 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 	pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 
 	return DD_OK;
-}
-
-
-VOID D2GITexture::MakeRenderTarget()
-{
-	if (m_bIsRenderTarget)
-		return;
-
-	m_bIsRenderTarget = TRUE;
-	ReleaseResource();
-	LoadResource();
 }
 
 

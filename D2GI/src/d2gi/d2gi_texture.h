@@ -6,8 +6,6 @@
 
 class D2GITexture : public D2GISurface
 {
-	BOOL m_bIsRenderTarget;
-
 	DWORD m_dwMipMapCount;
 	D2GIMipMapSurface** m_lpMipMapLevels;
 
@@ -34,7 +32,6 @@ public:
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
-	VOID MakeRenderTarget();
 	DWORD GetColorKeyValue();
 	DWORD GetOriginalColorKeyValue();
 	BOOL HasColorKeyConversion();

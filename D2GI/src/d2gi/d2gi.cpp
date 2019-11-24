@@ -340,40 +340,19 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 
 	// MULTITHREADED_ACCESS
 
-
-	/*EnterCriticalSection(&m_sCriticalSection);
-
-
-	pDst->MakeRenderTarget();
-
-	if(!m_bSceneBegun)
-		m_pDev->BeginScene();
-	m_pDev->GetRenderTarget(0, &pRT);
-	m_pBlitter->Blit(pDst->GetD3D9Surface(), pDstRT, pSrc->GetD3D9Texture(), pSrcRT);
-	m_pDev->SetRenderTarget(0, pRT);
-
-	if (!m_bSceneBegun)
-		m_pDev->EndScene();
-	pRT->Release();
-
-
-	LeaveCriticalSection(&m_sCriticalSection);*/
-
-//	LeaveCriticalSection(&m_sCriticalSection);
-	//m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pDst->GetD3D9Surface(), pDstRT, D3D9::D3DTEXF_POINT);
-
 	if (pDst->GetWidth() != pSrc->GetWidth() || pDst->GetHeight() != pSrc->GetHeight())
 		return;
 
 	VOID* pData;
 	D3D9::D3DLOCKED_RECT rt;
+	INT i, j;
 
 	pDst->GetD3D9Texture()->LockRect(0, &rt, NULL, D3DLOCK_DISCARD);
-	INT i, j;
 
 	for (i = 0; i < (INT)pDst->GetHeight(); i++)
 		CopyMemory((BYTE*)rt.pBits + i * rt.Pitch, 
 		(BYTE*)pSrc->GetData() + i * pSrc->GetDataPitch(), pSrc->GetDataPitch());
+
 	pDst->GetD3D9Texture()->UnlockRect(0);
 }
 
