@@ -152,6 +152,9 @@
     <None Include="defs.props" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\common\dir.cpp" />
+    <ClCompile Include="src\common\logger.cpp" />
+    <ClCompile Include="src\common\utils.cpp" />
     <ClCompile Include="src\d2gi\d2gi.cpp" />
     <ClCompile Include="src\d2gi\d2gi_backbuf_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_blitter.cpp" />
@@ -165,6 +168,7 @@
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
     <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_hooks.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ib_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_mipmap_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_palette.cpp" />
@@ -182,14 +186,17 @@
     <ClCompile Include="src\ddraw\dd_ddraw.cpp" />
     <ClCompile Include="src\ddraw\dd_palette.cpp" />
     <ClCompile Include="src\ddraw\dd_surface.cpp" />
-    <ClCompile Include="src\dir.cpp" />
-    <ClCompile Include="src\hooks.cpp" />
-    <ClCompile Include="src\logger.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\common.h" />
+    <ClInclude Include="src\common\common.h" />
+    <ClInclude Include="src\common\d3d7.h" />
+    <ClInclude Include="src\common\d3d9.h" />
+    <ClInclude Include="src\common\dir.h" />
+    <ClInclude Include="src\common\frect.h" />
+    <ClInclude Include="src\common\logger.h" />
+    <ClInclude Include="src\common\m3x4.h" />
+    <ClInclude Include="src\common\utils.h" />
     <ClInclude Include="src\d2gi\d2gi.h" />
     <ClInclude Include="src\d2gi\d2gi_backbuf_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_buffer_container.h" />
@@ -199,6 +206,7 @@
     <ClInclude Include="src\d2gi\d2gi_device.h" />
     <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
     <ClInclude Include="src\d2gi\d2gi_enums.h" />
+    <ClInclude Include="src\d2gi\d2gi_hooks.h" />
     <ClInclude Include="src\d2gi\d2gi_ib_container.h" />
     <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_palette.h" />
@@ -212,19 +220,11 @@
     <ClInclude Include="src\d2gi\d2gi_texture.h" />
     <ClInclude Include="src\d2gi\d2gi_vb_container.h" />
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h" />
-    <ClInclude Include="src\d3d7.h" />
-    <ClInclude Include="src\d3d9.h" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />
     <ClInclude Include="src\d3d\d3d_device.h" />
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
     <ClInclude Include="src\ddraw\dd_palette.h" />
     <ClInclude Include="src\ddraw\dd_surface.h" />
-    <ClInclude Include="src\dir.h" />
-    <ClInclude Include="src\frect.h" />
-    <ClInclude Include="src\hooks.h" />
-    <ClInclude Include="src\logger.h" />
-    <ClInclude Include="src\m3x4.h" />
-    <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -62,7 +62,7 @@ VOID Logger::Warning(TCHAR* pszFmt, ...)
 	va_list args;
 
 	va_start(args, pszFmt);
-	_tcscpy(szMessage, TEXT("!WARNING! "));
+	_tcscpy(szMessage, TEXT("!!!WARNING!!! "));
 	_vstprintf(szMessage + _tcslen(szMessage), pszFmt, args);
 	va_end(args);
 

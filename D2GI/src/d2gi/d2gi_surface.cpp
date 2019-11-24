@@ -1,6 +1,6 @@
 
 
-#include "../common.h"
+#include "../common/common.h"
 
 #include "d2gi_surface.h"
 

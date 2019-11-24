@@ -1,7 +1,7 @@
 
-#include "../common.h"
-#include "../frect.h"
-#include "../logger.h"
+#include "../common/common.h"
+#include "../common/frect.h"
+#include "../common/logger.h"
 
 #include "d2gi.h"
 #include "d2gi_blitter.h"

@@ -1,5 +1,5 @@
 
-#include "../logger.h"
+#include "../common/logger.h"
 
 #include "d2gi.h"
 #include "d2gi_prim_flip_surf.h"

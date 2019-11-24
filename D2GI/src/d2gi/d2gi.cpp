@@ -1,11 +1,10 @@
 
-#include "../common.h"
-#include "../utils.h"
-#include "../hooks.h"
-#include "../m3x4.h"
-#include "../frect.h"
-#include "../logger.h"
-#include "../dir.h"
+#include "../common/common.h"
+#include "../common/utils.h"
+#include "../common/m3x4.h"
+#include "../common/frect.h"
+#include "../common/logger.h"
+#include "../common/dir.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
@@ -153,7 +152,7 @@ VOID D2GI::ResetD3D9Device()
 
 	if (m_pDev == NULL)
 	{
-		if (FAILED(m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd,
+		if (FAILED(m_pD3D9->CreateDevice(D3DADAPTER_DEFAULT, D3D9::D3DDEVTYPE_HAL, m_hWnd,
 			D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
 			&sParams, &m_pDev)))
 			Logger::Error(TEXT("Failed to create D3D9 device"));
@@ -204,15 +203,10 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 
 VOID D2GI::OnBackBufferLock(BOOL bRead)
 {
-	if (!bRead)
-	{
-		m_eRenderState = RS_BACKBUFFER_STREAMING;
-	}
-	else
+	if(bRead)
 	{
 		D3D9::IDirect3DSurface9* pRT;
 		D2GIBackBufferSurface* pBackBuf;
-
 
 		if (!m_bSceneBegun)
 			m_pDev->BeginScene();
@@ -226,7 +220,8 @@ VOID D2GI::OnBackBufferLock(BOOL bRead)
 
 		if (!m_bSceneBegun)
 			m_pDev->EndScene();
-	}
+	}else
+		m_eRenderState = RS_BACKBUFFER_STREAMING;
 }
 
 
@@ -240,14 +235,12 @@ VOID D2GI::OnFlip()
 
 		m_pDev->GetRenderTarget(0, &pRT);
 		m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_LINEAR);
-		Present();
-
 		pRT->Release();
+
+		Present();
 	}
 	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
-	{
 		Present();
-	}
 }
 
 
@@ -257,7 +250,7 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 	m_eRenderState = RS_PRIMARY_SURFACE_BLITTING;
 
-	if (m_dwOriginalBPP == 8)
+	if (pDst->GetBPP() == 8)
 	{
 		RECT sScaledRect;
 
@@ -306,8 +299,6 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
 
-
-	//BeginScene();
 	m_pDev->GetRenderTarget(0, &pRT);
 	if(!m_bSceneBegun)
 		m_pDev->BeginScene();
@@ -325,8 +316,6 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 	else
 		frtDst = FRECT(0, 0, sDstDesc.Width, sDstDesc.Height);
 
-	
-
 	ScaleFRect(&frtDst, &frtScaledDst);
 	m_pBlitter->Blit(pRT, &frtScaledDst,
 		pSrc->GetD3D9Texture(), &frtSrc, pSrc->HasColorKeyConversion());
@@ -335,8 +324,6 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 		m_pDev->EndScene();
 
 	pRT->Release();
-	//EndScene();
-
 }
 
 
@@ -626,32 +613,6 @@ VOID D2GI::OnMaterialSet(D3D7::LPD3DMATERIAL7 pMaterial)
 
 VOID D2GI::OnClipStatusSet(D3D7::LPD3DCLIPSTATUS pStatus)
 {
-	D3D9::D3DCLIPSTATUS9 sStatus9;
-
-	return;
-
-	if (pStatus->dwFlags != D3DCLIPSTATUS_STATUS)
-		return;
-
-	if (pStatus->dwStatus &
-		~(D3DSTATUS_CLIPUNIONBACK | D3DSTATUS_CLIPUNIONLEFT | D3DSTATUS_CLIPUNIONRIGHT
-			| D3DSTATUS_CLIPUNIONBOTTOM | D3DSTATUS_CLIPUNIONTOP))
-		return;
-
-	ZeroMemory(&sStatus9, sizeof(sStatus9));
-	sStatus9.ClipUnion = 0;
-	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONBACK)
-		sStatus9.ClipUnion |= D3DCS_BACK;
-	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONLEFT)
-		sStatus9.ClipUnion |= D3DCS_LEFT;
-	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONRIGHT)
-		sStatus9.ClipUnion |= D3DCS_RIGHT;
-	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONBOTTOM)
-		sStatus9.ClipUnion |= D3DCS_BOTTOM;
-	if (pStatus->dwStatus & D3DSTATUS_CLIPUNIONTOP)
-		sStatus9.ClipUnion |= D3DCS_TOP;
-
-	m_pDev->SetClipStatus(&sStatus9);
 }
 
 
@@ -725,7 +686,6 @@ BOOL D2GI::OnRenderStateGet(D3D7::D3DRENDERSTATETYPE eState, DWORD* pValue)
 VOID D2GI::OnColorFillOnBackBuffer(DWORD dwColor, RECT* pRect)
 {
 	D3D9::D3DVIEWPORT9 sOriginalViewport, sFillingViewport;
-
 
 	m_pDev->GetViewport(&sOriginalViewport);
 	sFillingViewport.X = pRect->left;

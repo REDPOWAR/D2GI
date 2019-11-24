@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../common.h"
-
-#include "../d3d7.h"
+#include "../common/common.h"
+#include "../common/d3d7.h"
 
 
 class SurfaceProxy : public D3D7::IDirectDrawSurface7, public Unknown

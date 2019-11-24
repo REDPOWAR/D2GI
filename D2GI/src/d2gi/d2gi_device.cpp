@@ -1,6 +1,6 @@
 
-#include "../common.h"
-#include "../logger.h"
+#include "../common/common.h"
+#include "../common/logger.h"
 
 #include "d2gi_device.h"
 #include "d2gi_surface.h"

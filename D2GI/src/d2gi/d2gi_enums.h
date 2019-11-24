@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../d3d7.h"
-#include "../d3d9.h"
+#include "../common/d3d7.h"
+
+#include "d2gi_common.h"
 
 
 enum D2GIPIXELFORMAT

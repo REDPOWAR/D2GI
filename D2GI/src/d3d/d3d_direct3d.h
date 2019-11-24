@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../common.h"
-
-#include "../d3d7.h"
+#include "../common/common.h"
+#include "../common/d3d7.h"
 
 
 class D3DProxy : public D3D7::IDirect3D7, public Unknown

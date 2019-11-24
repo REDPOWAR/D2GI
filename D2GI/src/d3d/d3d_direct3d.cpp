@@ -1,5 +1,5 @@
 
-#include "../common.h"
+#include "../common/common.h"
 
 #include "d3d_direct3d.h"
 

@@ -1,6 +1,6 @@
 
-#include "../utils.h"
-#include "../logger.h"
+#include "../common/utils.h"
+#include "../common/logger.h"
 
 #include "d2gi_strided_renderer.h"
 #include "d2gi_vb_container.h"
@@ -58,6 +58,7 @@ VOID D2GIStridedPrimitiveRenderer::DrawIndexedPrimitiveStrided(
 
 	if ((pIBData = m_pIBContainer->LockStreamingSpace(sizeof(UINT16) * dwIdxCount)) == NULL)
 		Logger::Error(TEXT("Failed to continue index streaming"));
+
 	CopyMemory(pIBData, pIdx, sizeof(UINT16) * dwIdxCount);
 	m_pIBContainer->UnlockStreamingSpace();
 
@@ -79,7 +80,6 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 
 	if (dwFVF & ~(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 | D3DFVF_TEX2 | D3DFVF_DIFFUSE))
 		return;
-
 
 	VOID* pVBData;
 	INT i, j;

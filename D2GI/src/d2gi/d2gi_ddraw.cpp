@@ -1,11 +1,11 @@
 
 #define INITGUID
-#include "../common.h"
-#include "../utils.h"
-#include "../logger.h"
+#include "../common/common.h"
+#include "../common/utils.h"
+#include "../common/logger.h"
 
-#include "../d3d7.h"
-#include "../d3d9.h"
+#include "../common/d3d7.h"
+#include "../common/d3d9.h"
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
@@ -145,10 +145,10 @@ HRESULT D2GIDirectDraw::EnumDisplayModes(DWORD dwFlags, D3D7::LPDDSURFACEDESC2 l
 
 HRESULT D2GIDirectDraw::GetDeviceIdentifier(D3D7::LPDDDEVICEIDENTIFIER2 lpDID, DWORD)
 {
-	D3D9::_D3DADAPTER_IDENTIFIER9 sAdapterID;
-	D3D9::IDirect3D9* pD3D9 = GetD3D9();
+	D3D9::D3DADAPTER_IDENTIFIER9 sAdapterID;
+	D3D9::IDirect3D9*            pD3D9 = GetD3D9();
 
-	pD3D9->GetAdapterIdentifier(0, 0, &sAdapterID);
+	pD3D9->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &sAdapterID);
 	
 	strcpy(lpDID->szDescription, sAdapterID.Description);
 	strcpy(lpDID->szDriver, sAdapterID.Driver);

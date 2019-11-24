@@ -1,6 +1,6 @@
 
-#include "../utils.h"
-#include "../logger.h"
+#include "../common/utils.h"
+#include "../common/logger.h"
 
 #include "d2gi_texture.h"
 #include "d2gi_enums.h"
@@ -212,4 +212,6 @@ BOOL D2GITexture::CopyFrom(D2GITexture* pSrc)
 			pSrc->m_lpMipMapLevels[0]->GetDataPitch());
 
 	m_lpMipMapLevels[0]->GetD3D9Surface()->UnlockRect();
+
+	return TRUE;
 }

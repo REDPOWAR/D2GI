@@ -3,8 +3,7 @@
 #include <vector>
 #include <windows.h>
 
-#include "../d3d9.h"
-
+#include "d2gi_common.h"
 #include "d2gi_ddraw.h"
 
 

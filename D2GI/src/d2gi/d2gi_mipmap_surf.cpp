@@ -1,5 +1,5 @@
 
-#include  "../logger.h"
+#include  "../common/logger.h"
 
 #include "d2gi_texture.h"
 #include "d2gi_mipmap_surf.h"

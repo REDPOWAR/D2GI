@@ -1,7 +1,8 @@
 
-#include "hooks.h"
-#include "logger.h"
+#include "common/logger.h"
+
 #include "d2gi/d2gi.h"
+#include "d2gi/d2gi_hooks.h"
 
 
 #define EXPORT extern "C"
@@ -167,7 +168,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		Logger::Log(TEXT("D2GI %s module loaded"), D2GI_VERSION);
-		HookInjector::InjectHooks();
+		D2GIHookInjector::InjectHooks();
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
 		Logger::Log(TEXT("D2GI module unloaded\n"));

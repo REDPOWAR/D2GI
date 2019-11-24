@@ -1,5 +1,5 @@
 
-#include "../logger.h"
+#include "../common/logger.h"
 
 #include "d2gi_backbuf_surf.h"
 #include "d2gi.h"

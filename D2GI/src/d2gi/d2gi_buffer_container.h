@@ -2,8 +2,7 @@
 
 #include <vector>
 
-#include "../common.h"
-#include "../d3d9.h"
+#include "../common/common.h"
 
 #include "d2gi_common.h"
 

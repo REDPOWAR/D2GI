@@ -1,13 +1,12 @@
 #pragma once
 
-#include "common.h"
-#include "m3x4.h"
+#include "../common/common.h"
+#include "../common/m3x4.h"
+
+#include "d2gi_common.h"
 
 
-class D2GI;
-
-
-class HookInjector
+class D2GIHookInjector
 {
 	enum D2VERSION
 	{

@@ -1,21 +1,21 @@
 
-#include "common.h"
-#include "hooks.h"
-#include "logger.h"
-#include "dir.h"
+#include "../common/common.h"
+#include "../common/logger.h"
+#include "../common/dir.h"
 
-#include "d2gi/d2gi.h"
-#include "d2gi/d2gi_device.h"
+#include "d2gi.h"
+#include "d2gi_device.h"
+#include "d2gi_hooks.h"
 
 
 #define CALL_INSTRUCTION_SIZE 5
 #define OPCODE_SIZE           1
 
 
-HookInjector::D2VERSION HookInjector::s_eCurrentD2Version;
+D2GIHookInjector::D2VERSION D2GIHookInjector::s_eCurrentD2Version;
 
 
-D2GI* HookInjector::ObtainD2GI()
+D2GI* D2GIHookInjector::ObtainD2GI()
 {
 	static DWORD c_adwDeviceAddresses[] =
 	{
@@ -32,7 +32,7 @@ D2GI* HookInjector::ObtainD2GI()
 }
 
 
-INT HookInjector::SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+INT D2GIHookInjector::SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 {
 	D2GI* pD2GI = ObtainD2GI();
 	MAT3X4 mPatchedView = *pmView, mPatchedProj = *pmProj;
@@ -53,13 +53,13 @@ __declspec(naked) VOID SetupTransformsHook()
 		mov eax, [esp + 8];
 		push eax;
 		push ecx;
-		call HookInjector::SetupTransforms;
+		call D2GIHookInjector::SetupTransforms;
 		ret 8;
 	};
 }
 
 
-INT HookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+INT D2GIHookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 {
 	static DWORD c_adwSetupTransformsAddresses[] =
 	{
@@ -87,7 +87,7 @@ INT HookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X
 }
 
 
-HookInjector::D2VERSION HookInjector::DetectD2Version()
+D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 {
 	static DWORD c_adwTimestamps[] =
 	{
@@ -113,7 +113,7 @@ HookInjector::D2VERSION HookInjector::DetectD2Version()
 }
 
 
-BOOL HookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallAddress)
+BOOL D2GIHookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallAddress)
 {
 	INT nCallOffset;
 
@@ -125,7 +125,7 @@ BOOL HookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallA
 }
 
 
-VOID HookInjector::InjectHooks()
+VOID D2GIHookInjector::InjectHooks()
 {
 	static DWORD c_adwSetupTransformsCalls[] =
 	{

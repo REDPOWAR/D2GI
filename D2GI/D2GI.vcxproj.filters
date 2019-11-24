@@ -37,11 +37,11 @@
     <Filter Include="Файлы заголовков\d2gi\surfaces">
       <UniqueIdentifier>{0ee434d0-487f-4979-8df3-435bd80533e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Файлы заголовков\utils">
-      <UniqueIdentifier>{e6ca96cc-28b6-40e5-a7e6-015cb3b08764}</UniqueIdentifier>
+    <Filter Include="Исходные файлы\common">
+      <UniqueIdentifier>{58f671c2-31ab-4b74-8aec-5f4909d01d0b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Исходные файлы\utils">
-      <UniqueIdentifier>{b8502aa4-9cff-4a85-9567-b4ef0393be72}</UniqueIdentifier>
+    <Filter Include="Файлы заголовков\common">
+      <UniqueIdentifier>{42d854fc-89f3-44f7-9a17-92de53608636}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -51,9 +51,6 @@
     <None Include="defs.props" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
@@ -135,25 +132,25 @@
     <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp">
       <Filter>Исходные файлы\d2gi\surfaces</Filter>
     </ClCompile>
-    <ClCompile Include="src\hooks.cpp">
+    <ClCompile Include="src\common\dir.cpp">
+      <Filter>Исходные файлы\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\logger.cpp">
+      <Filter>Исходные файлы\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\utils.cpp">
+      <Filter>Исходные файлы\common</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils.cpp">
-      <Filter>Исходные файлы\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\dir.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="src\logger.cpp">
-      <Filter>Исходные файлы</Filter>
+    <ClCompile Include="src\d2gi\d2gi_hooks.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
       <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\common.h">
-      <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\d3d\d3d_device.h">
       <Filter>Файлы заголовков\d3d</Filter>
@@ -181,12 +178,6 @@
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_enums.h">
       <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d3d9.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d3d7.h">
-      <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_container.h">
       <Filter>Файлы заголовков\d2gi</Filter>
@@ -239,23 +230,32 @@
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h">
       <Filter>Файлы заголовков\d2gi\surfaces</Filter>
     </ClInclude>
-    <ClInclude Include="src\hooks.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="src\common\common.h">
+      <Filter>Файлы заголовков\common</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils.h">
-      <Filter>Файлы заголовков\utils</Filter>
+    <ClInclude Include="src\common\d3d7.h">
+      <Filter>Файлы заголовков\common</Filter>
     </ClInclude>
-    <ClInclude Include="src\m3x4.h">
-      <Filter>Файлы заголовков\utils</Filter>
+    <ClInclude Include="src\common\d3d9.h">
+      <Filter>Файлы заголовков\common</Filter>
     </ClInclude>
-    <ClInclude Include="src\frect.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="src\common\dir.h">
+      <Filter>Файлы заголовков\common</Filter>
     </ClInclude>
-    <ClInclude Include="src\logger.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="src\common\frect.h">
+      <Filter>Файлы заголовков\common</Filter>
     </ClInclude>
-    <ClInclude Include="src\dir.h">
-      <Filter>Файлы заголовков</Filter>
+    <ClInclude Include="src\common\logger.h">
+      <Filter>Файлы заголовков\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\m3x4.h">
+      <Filter>Файлы заголовков\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\utils.h">
+      <Filter>Файлы заголовков\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_hooks.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

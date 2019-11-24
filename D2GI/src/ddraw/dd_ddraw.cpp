@@ -1,5 +1,5 @@
 
-#include "../common.h"
+#include "../common/common.h"
 
 #include "dd_ddraw.h"
 

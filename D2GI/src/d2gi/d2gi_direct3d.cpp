@@ -1,5 +1,5 @@
 
-#include "../common.h"
+#include "../common/common.h"
 
 #include "d2gi_direct3d.h"
 #include "d2gi_surface.h"
