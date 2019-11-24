@@ -75,6 +75,7 @@ class D2GI
 	VOID AttachWndProc();
 	VOID DetachWndProc();
 	VOID ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
+	VOID SetupWindow();
 public:
 	D2GI();
 	~D2GI();

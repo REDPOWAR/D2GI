@@ -160,6 +160,7 @@
     <ClCompile Include="src\d2gi\d2gi_blitter.cpp" />
     <ClCompile Include="src\d2gi\d2gi_buffer_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_common.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_config.cpp" />
     <ClCompile Include="src\d2gi\d2gi_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp" />
     <ClCompile Include="src\d2gi\d2gi_device.cpp">
@@ -201,6 +202,7 @@
     <ClInclude Include="src\d2gi\d2gi_backbuf_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_buffer_container.h" />
     <ClInclude Include="src\d2gi\d2gi_common.h" />
+    <ClInclude Include="src\d2gi\d2gi_config.h" />
     <ClInclude Include="src\d2gi\d2gi_container.h" />
     <ClInclude Include="src\d2gi\d2gi_ddraw.h" />
     <ClInclude Include="src\d2gi\d2gi_device.h" />

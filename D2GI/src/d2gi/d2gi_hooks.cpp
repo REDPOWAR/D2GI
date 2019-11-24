@@ -100,6 +100,13 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 	INT i;
 
 	pFile = _tfopen(Directory::GetEXEPath(), TEXT("rb"));
+	if (pFile == NULL)
+	{
+		Logger::Warning(
+			TEXT("Failed to open D2 EXE file to detect version (%s)", Directory::GetEXEPath()));
+		return D2V_UNKNOWN;
+	}
+
 	fread(&sDOSHeader, sizeof(sDOSHeader), 1, pFile);
 	fseek(pFile, sDOSHeader.e_lfanew + 4, SEEK_SET);
 	fread(&sImageHeader, sizeof(sImageHeader), 1, pFile);

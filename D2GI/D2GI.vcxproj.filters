@@ -43,6 +43,12 @@
     <Filter Include="Файлы заголовков\common">
       <UniqueIdentifier>{42d854fc-89f3-44f7-9a17-92de53608636}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\d2gi\g-streaming">
+      <UniqueIdentifier>{9369cae6-08cd-4e67-9b15-b80bc184b70c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\d2gi\g-streaming">
+      <UniqueIdentifier>{8a3b8274-abc7-40e3-8c0e-ce04aac64cd0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
@@ -93,15 +99,6 @@
     <ClCompile Include="src\d2gi\d2gi_palette.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_buffer_container.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_vb_container.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_ib_container.cpp">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_strided_renderer.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
@@ -145,6 +142,18 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_hooks.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_buffer_container.cpp">
+      <Filter>Исходные файлы\d2gi\g-streaming</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_ib_container.cpp">
+      <Filter>Исходные файлы\d2gi\g-streaming</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_vb_container.cpp">
+      <Filter>Исходные файлы\d2gi\g-streaming</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_config.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
   </ItemGroup>
@@ -192,15 +201,6 @@
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_strided_renderer.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_buffer_container.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_vb_container.h">
-      <Filter>Файлы заголовков\d2gi</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\d2gi_ib_container.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_blitter.h">
@@ -255,6 +255,18 @@
       <Filter>Файлы заголовков\common</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_hooks.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_buffer_container.h">
+      <Filter>Файлы заголовков\d2gi\g-streaming</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_ib_container.h">
+      <Filter>Файлы заголовков\d2gi\g-streaming</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_vb_container.h">
+      <Filter>Файлы заголовков\d2gi\g-streaming</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_config.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
   </ItemGroup>

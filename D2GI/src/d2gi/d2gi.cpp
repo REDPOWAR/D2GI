@@ -15,6 +15,7 @@
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_texture.h"
 #include "d2gi_strided_renderer.h"
+#include "d2gi_config.h"
 
 
 D2GI::D2GI()
@@ -30,8 +31,8 @@ D2GI::D2GI()
 	m_bSceneBegun = FALSE;
 	m_bColorKeyEnabled = FALSE;
 
-	m_dwForcedWidth = 1366;
-	m_dwForcedHeight = 768;
+	/*m_dwForcedWidth = 1366;
+	m_dwForcedHeight = 768;*/
 
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
@@ -48,10 +49,15 @@ D2GI::D2GI()
 
 D2GI::~D2GI()
 {
+	ReleaseResources();
+
 	DetachWndProc();
 	DEL(m_pStridedRenderer);
 	DEL(m_pBlitter);
 	DEL(m_pClearRects);
+
+	RELEASE(m_pBackBufferCopySurf);
+	RELEASE(m_pBackBufferCopy);
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
@@ -91,8 +97,10 @@ VOID D2GI::LoadD3D9Library()
 VOID D2GI::OnCooperativeLevelSet(HWND hWnd, DWORD dwFlags)
 {
 	m_hWnd = hWnd;
+
 	Logger::SetHWND(hWnd);
 	AttachWndProc();
+	SetupWindow();
 }
 
 
@@ -102,12 +110,12 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 	m_dwOriginalHeight = dwHeight;
 	m_dwOriginalBPP = dwBPP;
 
+	ResetD3D9Device();
+
 	m_fWidthScale = (FLOAT)m_dwForcedWidth / (FLOAT)m_dwOriginalWidth;
 	m_fHeightScale = (FLOAT)m_dwForcedHeight / (FLOAT)m_dwOriginalHeight;
 	m_fAspectRatioScale = ((FLOAT)m_dwForcedWidth / (FLOAT)m_dwForcedHeight);
 	m_fAspectRatioScale /= ((FLOAT)m_dwOriginalWidth / (FLOAT)m_dwOriginalHeight);
-
-	ResetD3D9Device();
 }
 
 
@@ -135,20 +143,44 @@ VOID D2GI::ResetD3D9Device()
 	RELEASE(m_pBackBufferCopySurf);
 	RELEASE(m_pBackBufferCopy);
 
-	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
-	SetWindowPos(m_hWnd, HWND_TOP, 0, 0, m_dwForcedWidth, m_dwForcedHeight, SWP_DRAWFRAME);
-
 	ZeroMemory(&sParams, sizeof(sParams));
 	sParams.AutoDepthStencilFormat = D3D9::D3DFMT_D24X8;
 	sParams.EnableAutoDepthStencil = TRUE;
 	sParams.BackBufferCount = 1;
 	sParams.BackBufferWidth = m_dwForcedWidth;
 	sParams.BackBufferHeight = m_dwForcedHeight;
-	sParams.BackBufferFormat = D3D9::D3DFMT_A8R8G8B8;
+	sParams.BackBufferFormat = D3D9::D3DFMT_X8R8G8B8;
 	sParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_FLIP;
 	sParams.Windowed = TRUE;
+	if (D2GIConfig::GetWindowMode() == WMODE_FULLSCREEN)
+	{
+		D3D9::D3DDISPLAYMODE sDisplayMode;
+		UINT uModeID, uModeCount; 
+
+		uModeCount = m_pD3D9->GetAdapterModeCount(D3DADAPTER_DEFAULT, sParams.BackBufferFormat);
+		for (uModeID = 0; uModeID < uModeCount; uModeID++)
+		{
+			if (SUCCEEDED(m_pD3D9->EnumAdapterModes(
+				D3DADAPTER_DEFAULT, sParams.BackBufferFormat, uModeID, &sDisplayMode)))
+			{
+				if (sDisplayMode.Width == m_dwForcedWidth
+					&& sDisplayMode.Height == m_dwForcedHeight)
+				{
+					sParams.Windowed = FALSE;
+					sParams.FullScreen_RefreshRateInHz = sDisplayMode.RefreshRate;
+					break;
+				}
+			}
+		}
+
+		if (sParams.Windowed)
+		{
+			Logger::Warning(
+				TEXT("Can't set fullscreen mode %ix%i, display mode not found"), 
+				m_dwForcedWidth, m_dwForcedHeight);
+		}
+	}
 
 	if (m_pDev == NULL)
 	{
@@ -162,6 +194,11 @@ VOID D2GI::ResetD3D9Device()
 		if (FAILED(m_pDev->Reset(&sParams)))
 			Logger::Error(TEXT("Failed to reset D3D9 device"));
 	}
+
+	Logger::Log(
+		TEXT("Working on %ix%i mode (fullscreen: %s)"),
+		sParams.BackBufferWidth, sParams.BackBufferHeight,
+		sParams.Windowed ? TEXT("off") : TEXT("on"));
 
 	if (FAILED(m_pDev->CreateTexture(m_dwForcedWidth, m_dwOriginalHeight, 1, D3DUSAGE_RENDERTARGET,
 		D3D9::D3DFMT_A8R8G8B8, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL)))
@@ -853,6 +890,9 @@ LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			lParam = MAKELPARAM(x, y);
 			break;
+		case WM_GETMINMAXINFO:
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+			break;
 	}
 
 	return CallWindowProc(m_pfnOriginalWndProc, hWnd, uMsg, wParam, lParam);
@@ -879,4 +919,36 @@ VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
 VOID D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 {
 	pmProj->_11 /= m_fAspectRatioScale;
+}
+
+
+VOID D2GI::SetupWindow()
+{
+	static DWORD c_adwWinModeToWinStyle[] =
+	{
+		WS_VISIBLE | WS_CAPTION | WS_SYSMENU,
+		WS_VISIBLE | WS_POPUP,
+		WS_VISIBLE | WS_POPUP,
+	};
+
+	DWORD                       dwWinStyle;
+	INT                         nDisplayWidth, nDisplayHeight;
+	INT                         nWinX, nWinY, nWinWidth, nWinHeight;
+	RECT                        rtClientRect;
+
+	dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
+	nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
+	nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
+	nWinWidth = min(nDisplayWidth, D2GIConfig::GetVideoWidth());
+	nWinHeight = min(nDisplayHeight, D2GIConfig::GetVideoHeight());
+	nWinX = (nDisplayWidth - nWinWidth) / 2;
+	nWinY = (nDisplayHeight - nWinHeight) / 2;
+
+	SetWindowLong(m_hWnd, GWL_STYLE, dwWinStyle);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
+	SetWindowPos(m_hWnd, HWND_TOP, nWinX, nWinY, nWinWidth, nWinHeight, SWP_DRAWFRAME);
+	GetClientRect(m_hWnd, &rtClientRect);
+
+	m_dwForcedWidth = rtClientRect.right - rtClientRect.left;
+	m_dwForcedHeight = rtClientRect.bottom - rtClientRect.top;
 }

@@ -27,8 +27,8 @@ D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
 
 D2GIDirectDraw::~D2GIDirectDraw()
 {
-	DEL(m_pResourceContainer);
 	m_pD2GI->OnDirectDrawReleased();
+	DEL(m_pResourceContainer);
 }
 
 

@@ -2,6 +2,7 @@
 #include "common/logger.h"
 
 #include "d2gi/d2gi.h"
+#include "d2gi/d2gi_config.h"
 #include "d2gi/d2gi_hooks.h"
 
 
@@ -168,6 +169,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		Logger::Log(TEXT("D2GI %s module loaded"), D2GI_VERSION);
+		D2GIConfig::ReadFromFile();
 		D2GIHookInjector::InjectHooks();
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
