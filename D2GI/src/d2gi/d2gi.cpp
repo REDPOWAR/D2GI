@@ -135,7 +135,6 @@ VOID D2GI::ResetD3D9Device()
 	ReleaseResources();
 	RELEASE(m_pBackBufferCopySurf);
 	RELEASE(m_pBackBufferCopy);
-	RELEASE(m_pDev);
 
 	SetWindowLong(m_hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
@@ -151,12 +150,19 @@ VOID D2GI::ResetD3D9Device()
 	sParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_FLIP;
 	sParams.Windowed = TRUE;
-	//sParams.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
-	if (FAILED(m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd,
-		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
-		&sParams, &m_pDev)))
-		Logger::Error(TEXT("Failed to create D3D9 device"));
+	if (m_pDev == NULL)
+	{
+		if (FAILED(m_pD3D9->CreateDevice(0, D3D9::D3DDEVTYPE_HAL, m_hWnd,
+			D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
+			&sParams, &m_pDev)))
+			Logger::Error(TEXT("Failed to create D3D9 device"));
+	}
+	else
+	{
+		if (FAILED(m_pDev->Reset(&sParams)))
+			Logger::Error(TEXT("Failed to reset D3D9 device"));
+	}
 
 	if (FAILED(m_pDev->CreateTexture(m_dwForcedWidth, m_dwOriginalHeight, 1, D3DUSAGE_RENDERTARGET,
 		D3D9::D3DFMT_A8R8G8B8, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL)))
