@@ -4,18 +4,23 @@
 #include "d2gi_texture.h"
 #include "d2gi_mipmap_surf.h"
 #include "d2gi_enums.h"
+#include "d2gi_palette.h"
 
 
 D2GIMipMapSurface::D2GIMipMapSurface(D2GITexture* pParent, UINT uLevelID, D2GIMipMapSurface* pNextSurf,
 	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
-	: D2GISurface(pParent->GetD2GI(), dwWidth, dwHeight, eFormat), m_pSurface(NULL), m_pNextLevel(pNextSurf)
+	: D2GISurface(pParent->GetD2GI(), dwWidth, dwHeight, eFormat)
 {
+	m_pSurface = NULL;
+	m_pNextLevel = pNextSurf;
+
 	m_pParent = pParent;
 	m_pNextLevel = pNextSurf;
 	m_uLevelID = uLevelID;
 
 	m_pSurface = NULL;
-	m_uDataSize = sizeof(UINT16) * m_dwWidth * m_dwHeight;
+	m_uDataPitch = (m_dwBPP / 8) * m_dwWidth;
+	m_uDataSize = m_uDataPitch * m_dwHeight;
 	m_pData = new BYTE[m_uDataSize];
 }
 
@@ -58,7 +63,7 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 		pDesc->dwHeight = m_dwHeight;
 		pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 		pDesc->lpSurface = m_pData;
-		pDesc->lPitch = sizeof(UINT16) * m_dwWidth;
+		pDesc->lPitch = m_uDataPitch;
 
 		return DD_OK;
 	}
@@ -77,12 +82,12 @@ HRESULT D2GIMipMapSurface::Unlock(LPRECT)
 VOID D2GIMipMapSurface::UpdateSurface()
 {
 	D3D9::D3DLOCKED_RECT sRect;
-	UINT uPitch;
+
+	if (m_dwBPP != 16)
+		return;
 
 	if (FAILED(m_pSurface->LockRect(&sRect, NULL, 0)))
 		Logger::Error(TEXT("Failed to lock mip map surface"));
-
-	uPitch = sizeof(UINT16) * m_dwWidth;
 
 	if (m_pParent->HasColorKeyConversion())
 	{
@@ -112,7 +117,7 @@ VOID D2GIMipMapSurface::UpdateSurface()
 		INT i;
 
 		for (i = 0; i < m_dwHeight; i++)
-			CopyMemory((BYTE*)sRect.pBits + i * sRect.Pitch, (BYTE*)m_pData + i * uPitch, uPitch);
+			CopyMemory((BYTE*)sRect.pBits + i * sRect.Pitch, (BYTE*)m_pData + i * m_uDataPitch, m_uDataPitch);
 	}
 
 	m_pSurface->UnlockRect();
@@ -130,4 +135,21 @@ HRESULT D2GIMipMapSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDI
 
 	Logger::Warning(TEXT("Requested unknown attached surface to mipmap"));
 	return DDERR_NOTFOUND;
+}
+
+
+VOID D2GIMipMapSurface::UpdateWithPalette(D2GIPalette* pPal)
+{
+	D3D9::D3DLOCKED_RECT sLockedRect;
+	UINT16* pPalette16 = pPal->GetEntries16();
+	INT i, j;
+
+	if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))
+		Logger::Error(TEXT("Failed to lock mipmap surface to update with palette"));
+
+	for (i = 0; i < m_dwHeight; i++)
+		for (j = 0; j < m_dwWidth; j++)
+			((UINT16*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = pPalette16[((BYTE*)m_pData)[i * m_dwWidth + j]];
+
+	m_pSurface->UnlockRect();
 }

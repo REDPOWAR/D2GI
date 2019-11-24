@@ -336,24 +336,8 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 
 VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GITexture* pDst, RECT* pDstRT)
 {
-	D3D9::IDirect3DSurface9* pRT;
-
 	// MULTITHREADED_ACCESS
-
-	if (pDst->GetWidth() != pSrc->GetWidth() || pDst->GetHeight() != pSrc->GetHeight())
-		return;
-
-	VOID* pData;
-	D3D9::D3DLOCKED_RECT rt;
-	INT i, j;
-
-	pDst->GetD3D9Texture()->LockRect(0, &rt, NULL, D3DLOCK_DISCARD);
-
-	for (i = 0; i < (INT)pDst->GetHeight(); i++)
-		CopyMemory((BYTE*)rt.pBits + i * rt.Pitch, 
-		(BYTE*)pSrc->GetData() + i * pSrc->GetDataPitch(), pSrc->GetDataPitch());
-
-	pDst->GetD3D9Texture()->UnlockRect(0);
+	pDst->CopyFrom((D2GITexture*)pSrc);
 }
 
 

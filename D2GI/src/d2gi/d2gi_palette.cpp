@@ -30,10 +30,10 @@ VOID D2GIPalette::UpdateEntries16(DWORD dwIdx, DWORD dwCount)
 
 	for (i = dwIdx; i < dwIdx + dwCount; i++)
 	{
-		BYTE bR = (BYTE)((INT)m_asEntries[i].peRed * (1 << 5) / 256);
-		BYTE bG = (BYTE)((INT)m_asEntries[i].peGreen * (1 << 5) / 256);
-		BYTE bB = (BYTE)((INT)m_asEntries[i].peBlue * (1 << 5) / 256);
+		BYTE bR = (BYTE)((INT)m_asEntries[i].peRed * (1 << 5) / 255);
+		BYTE bG = (BYTE)((INT)m_asEntries[i].peGreen * (1 << 6) / 255);
+		BYTE bB = (BYTE)((INT)m_asEntries[i].peBlue * (1 << 5) / 255);
 
-		m_auEntries16[i] = (UINT16)((bR << 10) | (bG << 5) | (bB));
+		m_auEntries16[i] = (UINT16)((bR << 11) | (bG << 5) | (bB));
 	}
 }

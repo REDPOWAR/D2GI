@@ -4,8 +4,12 @@
 #include "d2gi_mipmap_surf.h"
 
 
+class D2GIPalette;
+
+
 class D2GITexture : public D2GISurface
 {
+protected:
 	DWORD m_dwMipMapCount;
 	D2GIMipMapSurface** m_lpMipMapLevels;
 
@@ -32,7 +36,8 @@ public:
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
-	DWORD GetColorKeyValue();
 	DWORD GetOriginalColorKeyValue();
 	BOOL HasColorKeyConversion();
+	VOID UpdateWithPalette(D2GIPalette*);
+	BOOL CopyFrom(D2GITexture*);
 };

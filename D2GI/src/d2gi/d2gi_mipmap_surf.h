@@ -4,6 +4,7 @@
 
 
 class D2GITexture;
+class D2GIPalette;
 
 
 class D2GIMipMapSurface : public D2GISurface
@@ -14,7 +15,7 @@ class D2GIMipMapSurface : public D2GISurface
 
 	D3D9::IDirect3DSurface9* m_pSurface;
 	VOID* m_pData;
-	UINT m_uDataSize;
+	UINT m_uDataSize, m_uDataPitch;
 
 public:
 	D2GIMipMapSurface(D2GITexture*, UINT, D2GIMipMapSurface*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
@@ -31,4 +32,7 @@ public:
 	STDMETHOD(Unlock)(LPRECT);
 	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
 	VOID UpdateSurface();
+	VOID UpdateWithPalette(D2GIPalette*);
+	VOID* GetData() { return m_pData; }
+	UINT GetDataPitch() { return m_uDataPitch; }
 };

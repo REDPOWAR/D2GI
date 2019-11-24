@@ -58,6 +58,8 @@ VOID D2GITexture::LoadResource()
 
 	if (HasColorKeyConversion())
 		eFormat = D3D9::D3DFMT_A8R8G8B8;
+	if (m_dwBPP == 8)
+		eFormat = D3D9::D3DFMT_R5G6B5;
 
 	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight,
 		m_dwMipMapCount, D3DUSAGE_DYNAMIC,
@@ -152,15 +154,7 @@ D3D9::IDirect3DSurface9* D2GITexture::GetD3D9Surface()
 
 HRESULT D2GITexture::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf)
 {
-	if ((pCaps->dwCaps & DDSCAPS_MIPMAP) && m_dwMipMapCount > 1)
-	{
-		m_lpMipMapLevels[1]->AddRef();
-		*lpSurf = (D3D7::IDirectDrawSurface7*)m_lpMipMapLevels[1];
-		return DD_OK;
-	}
-
-	Logger::Warning(TEXT("Requested unknown attached surface to texture"));
-	return DDERR_NOTFOUND;
+	return m_lpMipMapLevels[0]->GetAttachedSurface(pCaps, lpSurf);
 }
 
 
@@ -168,7 +162,7 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 {
 	ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
 	pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
-	pDesc->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT | DDSD_MIPMAPCOUNT;
+	pDesc->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT;
 	pDesc->dwMipMapCount = m_dwMipMapCount;
 	pDesc->dwWidth = m_dwWidth;
 	pDesc->dwHeight = m_dwHeight;
@@ -185,20 +179,37 @@ BOOL D2GITexture::HasColorKeyConversion()
 }
 
 
-DWORD D2GITexture::GetColorKeyValue()
-{
-	BYTE r, g, b, a;
-
-	r = ((m_sColorKey.dwColorSpaceLowValue >> 10) & 0x1F) * 255 / 32;
-	g = ((m_sColorKey.dwColorSpaceLowValue >> 5) & 0x1F) * 255 / 32;
-	b = ((m_sColorKey.dwColorSpaceLowValue) & 0x1F) * 255 / 32;
-	a = ((m_sColorKey.dwColorSpaceLowValue >> 15) & 0x1) * 255;
-
-	return (r << 24) | (g << 16) | (b << 8) | a;
-}
-
-
 DWORD D2GITexture::GetOriginalColorKeyValue()
 {
 	return m_sColorKey.dwColorSpaceLowValue;
+}
+
+
+VOID D2GITexture::UpdateWithPalette(D2GIPalette* pPal)
+{
+	INT i;
+
+	for (i = 0; i < m_dwMipMapCount; i++)
+		m_lpMipMapLevels[i]->UpdateWithPalette(pPal);
+}
+
+
+BOOL D2GITexture::CopyFrom(D2GITexture* pSrc)
+{
+	if (m_dwWidth != pSrc->GetWidth() || m_dwHeight != pSrc->GetHeight())
+		return FALSE;
+
+	VOID*                pData;
+	D3D9::D3DLOCKED_RECT rt;
+	INT                  i, j;
+
+	m_lpMipMapLevels[0]->GetD3D9Surface()->LockRect(&rt, NULL, D3DLOCK_DISCARD);
+
+	for (i = 0; i < m_dwHeight; i++)
+		CopyMemory(
+			(BYTE*)rt.pBits + i * rt.Pitch,
+			(BYTE*)pSrc->m_lpMipMapLevels[0]->GetData() + i * pSrc->m_lpMipMapLevels[0]->GetDataPitch(),
+			pSrc->m_lpMipMapLevels[0]->GetDataPitch());
+
+	m_lpMipMapLevels[0]->GetD3D9Surface()->UnlockRect();
 }
