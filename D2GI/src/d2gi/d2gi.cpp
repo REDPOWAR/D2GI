@@ -239,7 +239,7 @@ VOID D2GI::OnFlip()
 		D3D9::IDirect3DSurface9* pRT;
 
 		m_pDev->GetRenderTarget(0, &pRT);
-		m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_POINT);
+		m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_LINEAR);
 		Present();
 
 		pRT->Release();
