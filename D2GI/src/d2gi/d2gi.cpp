@@ -31,9 +31,6 @@ D2GI::D2GI()
 	m_bSceneBegun = FALSE;
 	m_bColorKeyEnabled = FALSE;
 
-	/*m_dwForcedWidth = 1366;
-	m_dwForcedHeight = 768;*/
-
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pClearRects = new D3D9RECTVector();

@@ -6,6 +6,7 @@
 #include "d2gi.h"
 #include "d2gi_device.h"
 #include "d2gi_hooks.h"
+#include "d2gi_config.h"
 
 
 #define CALL_INSTRUCTION_SIZE 5
@@ -144,6 +145,12 @@ VOID D2GIHookInjector::InjectHooks()
 		TEXT("8.1B")
 	};
 
+
+	if (!D2GIConfig::HooksEnabled())
+	{
+		Logger::Log(TEXT("Hook injection is not enabled."));
+		return;
+	}
 
 	Logger::Log(TEXT("Trying to inject hooks..."));
 

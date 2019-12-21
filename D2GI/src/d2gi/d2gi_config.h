@@ -16,10 +16,12 @@ class D2GIConfig
 {
 	static WINDOWMODE s_eWindowMode;
 	static DWORD      s_dwVideoWidth, s_dwVideoHeight;
+	static BOOL       s_bEnableHooks;
 public:
 	static VOID ReadFromFile();
 
 	static WINDOWMODE GetWindowMode() { return s_eWindowMode; };
 	static DWORD GetVideoWidth();
 	static DWORD GetVideoHeight();
+	static BOOL HooksEnabled() { return s_bEnableHooks; };
 };
