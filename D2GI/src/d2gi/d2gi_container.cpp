@@ -36,7 +36,7 @@ VOID D2GIResourceContainer::Remove(D2GIResource* pRes)
 
 	EnterCriticalSection(&m_sCriticalSection);
 
-	for (i = 0; i < size(); i++)
+	for (i = 0; i < (INT)size(); i++)
 	{
 		if ((*this)[i] == pRes)
 		{
@@ -56,7 +56,7 @@ VOID D2GIResourceContainer::ReleaseResources()
 	INT i;
 
 	EnterCriticalSection(&m_sCriticalSection);
-	for (i = 0; i < size(); i++)
+	for (i = 0; i < (INT)size(); i++)
 		(*this)[i]->ReleaseResource();
 	LeaveCriticalSection(&m_sCriticalSection);
 }
@@ -67,7 +67,7 @@ VOID D2GIResourceContainer::LoadResources()
 	INT i;
 
 	EnterCriticalSection(&m_sCriticalSection);
-	for (i = 0; i < size(); i++)
+	for (i = 0; i < (INT)size(); i++)
 		(*this)[i]->LoadResource();
 	LeaveCriticalSection(&m_sCriticalSection);
 }

@@ -225,14 +225,16 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 	D3D9::D3DVIEWPORT9 sD3D9Viewport;
 	FRECT frtVP, frtScaledVP;
 
-	frtVP = FRECT(pVP->dwX, pVP->dwY, pVP->dwX + pVP->dwWidth, pVP->dwY + pVP->dwHeight);
+	frtVP = FRECT((FLOAT)pVP->dwX, (FLOAT)pVP->dwY,
+		(FLOAT)(pVP->dwX + pVP->dwWidth), (FLOAT)(pVP->dwY + pVP->dwHeight));
 	ScaleFRect(&frtVP, &frtScaledVP);
 
+	// ugly piece of shit
 	if (pVP->dwX != 0 && pVP->dwY != 0 
 		&& pVP->dwWidth != m_dwOriginalWidth && pVP->dwHeight != m_dwOriginalHeight)
 	{
-		frtScaledVP.fLeft = max(0.0, floorf(frtScaledVP.fLeft - 0.5f));
-		frtScaledVP.fTop = max(0.0, floorf(frtScaledVP.fTop - 0.5f));
+		frtScaledVP.fLeft = max(0.0f, floorf(frtScaledVP.fLeft - 0.5f));
+		frtScaledVP.fTop = max(0.0f, floorf(frtScaledVP.fTop - 0.5f));
 		frtScaledVP.fRight = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fRight + 0.5f));
 		frtScaledVP.fBottom = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fBottom + 0.5f));
 	}
@@ -318,7 +320,7 @@ VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT pRects, DWORD dwFlags, D3D7::D
 
 	m_pClearRects->clear();
 
-	for (i = 0; i < dwCount; i++)
+	for (i = 0; i < (INT)dwCount; i++)
 	{
 		D3D9::D3DRECT sRect;
 
@@ -355,12 +357,12 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 	if (pSrcRT != NULL)
 		frtSrc = FRECT(*pSrcRT);
 	else
-		frtSrc = FRECT(0, 0, sSrcDesc.Width, sSrcDesc.Height);
+		frtSrc = FRECT(0, 0, (FLOAT)sSrcDesc.Width, (FLOAT)sSrcDesc.Height);
 
 	if (pDstRT != NULL)
 		frtDst = FRECT(*pDstRT);
 	else
-		frtDst = FRECT(0, 0, sDstDesc.Width, sDstDesc.Height);
+		frtDst = FRECT(0, 0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
 	ScaleFRect(&frtDst, &frtScaledDst);
 	m_pBlitter->Blit(pRT, &frtScaledDst,
@@ -699,7 +701,7 @@ VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts
 
 		m_p2DBuffer->clear();
 		m_p2DBuffer->insert(m_p2DBuffer->begin(), (BYTE*)pVerts, (BYTE*)pVerts + uSize);
-		for (i = 0; i < dwVertCount; i++)
+		for (i = 0; i < (INT)dwVertCount; i++)
 		{
 			FLOAT* pV = (FLOAT*)(m_p2DBuffer->data() + i * uStride);
 			
@@ -821,8 +823,8 @@ VOID D2GI::ScaleFRect(FRECT* pSrc, FRECT* pOut)
 	if (pSrc == NULL)
 	{
 		pOut->fLeft = pOut->fTop = 0;
-		pOut->fRight = m_dwForcedWidth;
-		pOut->fBottom = m_dwForcedHeight;
+		pOut->fRight = (FLOAT)m_dwForcedWidth;
+		pOut->fBottom = (FLOAT)m_dwForcedHeight;
 		return;
 	}
 
@@ -951,8 +953,8 @@ VOID D2GI::SetupWindow()
 	dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
 	nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
 	nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
-	nWinWidth = min(nDisplayWidth, D2GIConfig::GetVideoWidth());
-	nWinHeight = min(nDisplayHeight, D2GIConfig::GetVideoHeight());
+	nWinWidth = min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
+	nWinHeight = min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
 	nWinX = (nDisplayWidth - nWinWidth) / 2;
 	nWinY = (nDisplayHeight - nWinHeight) / 2;
 
@@ -971,7 +973,7 @@ VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback
 {
 	typedef std::vector<D3D7::DDSURFACEDESC2> DModeContainer;
 
-	INT                  i, j, nNum;
+	INT                  i, nNum;
 	DModeContainer       descs(g_asStdDisplayModes, g_asStdDisplayModes + g_uStdDisplayModesCount);
 	D3D9::IDirect3D9*    pD3D9 = GetD3D9();
 
@@ -1004,7 +1006,7 @@ VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback
 		}
 	}
 
-	for (i = 0; i < descs.size(); i++)
+	for (i = 0; i < (INT)descs.size(); i++)
 		if (!pCallback(descs.data() + i, pArg))
 			return;
 }

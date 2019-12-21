@@ -23,7 +23,7 @@ D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight,
 	for (i = (INT)m_dwMipMapCount - 1; i >= 0; i--)
 	{
 		DWORD dwMipMapWidth, dwMipMapHeight;
-		D2GIMipMapSurface* pNextMipMap = (i < m_dwMipMapCount - 1) ? m_lpMipMapLevels[i + 1] : NULL;
+		D2GIMipMapSurface* pNextMipMap = (i < (INT)m_dwMipMapCount - 1) ? m_lpMipMapLevels[i + 1] : NULL;
 
 		CalcMipMapLevelSize(m_dwWidth, m_dwHeight, i, &dwMipMapWidth, &dwMipMapHeight);
 		m_lpMipMapLevels[i] = new D2GIMipMapSurface(this, i, pNextMipMap, 
@@ -51,7 +51,6 @@ VOID D2GITexture::LoadResource()
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 	D3D9::D3DFORMAT eFormat;
-	DWORD dwUsage;
 	DWORD i;
 
 	eFormat = g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat];
@@ -81,7 +80,7 @@ VOID D2GITexture::ReleaseResource()
 {
 	INT i;
 
-	for (i = 0; i < m_dwMipMapCount; i++)
+	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		m_lpMipMapLevels[i]->SetD3D9Surface(NULL);
 
 	RELEASE(m_pTexture);
@@ -108,7 +107,7 @@ HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 
 	ReleaseResource();
 	LoadResource();
-	for (i = 0; i < m_dwMipMapCount; i++)
+	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		m_lpMipMapLevels[i]->UpdateSurface();
 
 	return DD_OK;
@@ -189,7 +188,7 @@ VOID D2GITexture::UpdateWithPalette(D2GIPalette* pPal)
 {
 	INT i;
 
-	for (i = 0; i < m_dwMipMapCount; i++)
+	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		m_lpMipMapLevels[i]->UpdateWithPalette(pPal);
 }
 
@@ -199,13 +198,12 @@ BOOL D2GITexture::CopyFrom(D2GITexture* pSrc)
 	if (m_dwWidth != pSrc->GetWidth() || m_dwHeight != pSrc->GetHeight())
 		return FALSE;
 
-	VOID*                pData;
 	D3D9::D3DLOCKED_RECT rt;
-	INT                  i, j;
+	INT                  i;
 
 	m_lpMipMapLevels[0]->GetD3D9Surface()->LockRect(&rt, NULL, D3DLOCK_DISCARD);
 
-	for (i = 0; i < m_dwHeight; i++)
+	for (i = 0; i < (INT)m_dwHeight; i++)
 		CopyMemory(
 			(BYTE*)rt.pBits + i * rt.Pitch,
 			(BYTE*)pSrc->m_lpMipMapLevels[0]->GetData() + i * pSrc->m_lpMipMapLevels[0]->GetDataPitch(),

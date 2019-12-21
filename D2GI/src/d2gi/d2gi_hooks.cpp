@@ -104,7 +104,7 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 	if (pFile == NULL)
 	{
 		Logger::Warning(
-			TEXT("Failed to open D2 EXE file to detect version (%s)", Directory::GetEXEPath()));
+			TEXT("Failed to open D2 EXE file to detect version (%s)"), Directory::GetEXEPath());
 		return D2V_UNKNOWN;
 	}
 

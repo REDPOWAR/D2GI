@@ -97,9 +97,9 @@ VOID D2GIMipMapSurface::UpdateSurface()
 	{
 		INT i, j;
 
-		for (i = 0; i < m_dwHeight; i++)
+		for (i = 0; i < (INT)m_dwHeight; i++)
 		{
-			for (j = 0; j < m_dwWidth; j++)
+			for (j = 0; j < (INT)m_dwWidth; j++)
 			{
 				UINT16 uSrcColor = *((UINT16*)m_pData + i * m_dwWidth + j);
 				UINT32 uDstColor;
@@ -120,7 +120,7 @@ VOID D2GIMipMapSurface::UpdateSurface()
 	{
 		INT i;
 
-		for (i = 0; i < m_dwHeight; i++)
+		for (i = 0; i < (INT)m_dwHeight; i++)
 			CopyMemory((BYTE*)sRect.pBits + i * sRect.Pitch, (BYTE*)m_pData + i * m_uDataPitch, m_uDataPitch);
 	}
 
@@ -151,8 +151,8 @@ VOID D2GIMipMapSurface::UpdateWithPalette(D2GIPalette* pPal)
 	if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))
 		Logger::Error(TEXT("Failed to lock mipmap surface to update with palette"));
 
-	for (i = 0; i < m_dwHeight; i++)
-		for (j = 0; j < m_dwWidth; j++)
+	for (i = 0; i < (INT)m_dwHeight; i++)
+		for (j = 0; j < (INT)m_dwWidth; j++)
 			((UINT16*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = pPalette16[((BYTE*)m_pData)[i * m_dwWidth + j]];
 
 	m_pSurface->UnlockRect();

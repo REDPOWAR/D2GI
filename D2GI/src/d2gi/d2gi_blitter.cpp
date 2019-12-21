@@ -158,12 +158,12 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 	if (pSrcRT != NULL)
 		rtSrc = *pSrcRT;
 	else
-		rtSrc = FRECT(0.0, 0.0, sSrcDesc.Width, sSrcDesc.Height);
+		rtSrc = FRECT(0.0, 0.0, (FLOAT)sSrcDesc.Width, (FLOAT)sSrcDesc.Height);
 
 	if (pDstRT != NULL)
 		rtDst = *pDstRT;
 	else
-		rtDst = FRECT(0.0, 0.0, sDstDesc.Width, sDstDesc.Height);
+		rtDst = FRECT(0.0, 0.0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
 	pDev->GetRenderTarget(0, &pOriginalRT);
 	pDev->GetDepthStencilSurface(&pOriginalDS);

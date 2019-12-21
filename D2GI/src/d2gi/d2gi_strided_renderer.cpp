@@ -91,7 +91,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 
 	if (dwFVF & D3DFVF_XYZ)
 	{
-		for (i = 0; i < dwCount; i++)
+		for (i = 0; i < (INT)dwCount; i++)
 		{
 			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->position.lpvData + i * pData->position.dwStride, sizeof(FLOAT) * 3);
@@ -102,7 +102,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 
 	if (dwFVF & D3DFVF_NORMAL)
 	{
-		for (i = 0; i < dwCount; i++)
+		for (i = 0; i < (INT)dwCount; i++)
 		{
 			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->normal.lpvData + i * pData->normal.dwStride, sizeof(FLOAT) * 3);
@@ -113,7 +113,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 
 	if (dwFVF & D3DFVF_DIFFUSE)
 	{
-		for (i = 0; i < dwCount; i++)
+		for (i = 0; i < (INT)dwCount; i++)
 		{
 			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->diffuse.lpvData + i * pData->diffuse.dwStride, sizeof(DWORD));
@@ -124,7 +124,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 
 	for(i = 0; i < (INT)uTextureCount; i++)
 	{
-		for (j = 0; j < dwCount; j++)
+		for (j = 0; j < (INT)dwCount; j++)
 		{
 			CopyMemory((BYTE*)pVBData + j * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->textureCoords[i].lpvData + j * pData->textureCoords[i].dwStride, sizeof(FLOAT) * 2);

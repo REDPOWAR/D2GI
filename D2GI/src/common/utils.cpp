@@ -71,7 +71,7 @@ VOID CalcMipMapLevelSize(DWORD dwTextureW, DWORD dwTextureH, UINT uLevel, DWORD*
 	*pMipMapW = dwTextureW;
 	*pMipMapH = dwTextureH;
 
-	for (i = 0; i < uLevel && !(*pMipMapW == 1 && *pMipMapH == 1); i++)
+	for (i = 0; i < (INT)uLevel && !(*pMipMapW == 1 && *pMipMapH == 1); i++)
 	{
 		*pMipMapW = max(*pMipMapW / 2, 1);
 		*pMipMapH = max(*pMipMapH / 2, 1);
