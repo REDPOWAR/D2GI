@@ -39,6 +39,7 @@ VOID D2GIMipMapSurface::SetD3D9Surface(D3D9::IDirect3DSurface9* pSurf)
 
 	RELEASE(m_pSurface);
 	m_pSurface = pSurf;
+	UpdateSurface();
 }
 
 
@@ -82,6 +83,9 @@ HRESULT D2GIMipMapSurface::Unlock(LPRECT)
 VOID D2GIMipMapSurface::UpdateSurface()
 {
 	D3D9::D3DLOCKED_RECT sRect;
+
+	if (m_pSurface == NULL)
+		return;
 
 	if (m_dwBPP != 16)
 		return;

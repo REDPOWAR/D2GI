@@ -136,6 +136,12 @@ VOID D2GI::ResetD3D9Device()
 {
 	D3D9::D3DPRESENT_PARAMETERS sParams;
 
+	if (m_pDev != NULL)
+	{
+		while (m_pDev->TestCooperativeLevel() == D3DERR_DEVICELOST)
+			Sleep(50);
+	}
+
 	ReleaseResources();
 	RELEASE(m_pBackBufferCopySurf);
 	RELEASE(m_pBackBufferCopy);
@@ -153,7 +159,7 @@ VOID D2GI::ResetD3D9Device()
 	if (D2GIConfig::GetWindowMode() == WMODE_FULLSCREEN)
 	{
 		D3D9::D3DDISPLAYMODE sDisplayMode;
-		UINT uModeID, uModeCount; 
+		UINT uModeID, uModeCount;
 
 		uModeCount = m_pD3D9->GetAdapterModeCount(D3DADAPTER_DEFAULT, sParams.BackBufferFormat);
 		for (uModeID = 0; uModeID < uModeCount; uModeID++)
@@ -174,10 +180,11 @@ VOID D2GI::ResetD3D9Device()
 		if (sParams.Windowed)
 		{
 			Logger::Warning(
-				TEXT("Can't set fullscreen mode %ix%i, display mode not found"), 
+				TEXT("Can't set fullscreen mode %ix%i, display mode not found"),
 				m_dwForcedWidth, m_dwForcedHeight);
 		}
 	}
+
 
 	if (m_pDev == NULL)
 	{
@@ -188,7 +195,12 @@ VOID D2GI::ResetD3D9Device()
 	}
 	else
 	{
-		if (FAILED(m_pDev->Reset(&sParams)))
+		HRESULT hResetResult;
+
+		while ((hResetResult = m_pDev->Reset(&sParams)) == D3DERR_DEVICELOST)
+			Sleep(50);
+
+		if (FAILED(hResetResult))
 			Logger::Error(TEXT("Failed to reset D3D9 device"));
 	}
 
@@ -293,9 +305,9 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 		pSrc->UpdateWithPalette(pDst->GetPalette());
 		m_pDev->GetRenderTarget(0, &pRT);
 		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, &sScaledRect, D3D9::D3DTEXF_LINEAR);
-		Present();
-
 		pRT->Release();
+
+		Present();
 	}
 }
 
@@ -654,6 +666,9 @@ VOID D2GI::Present()
 {
 	m_pDev->Present(NULL, NULL, NULL, NULL);
 	m_pStridedRenderer->OnPresentationFinished();
+
+	if (FAILED(m_pDev->TestCooperativeLevel()))
+		ResetD3D9Device();
 }
 
 
