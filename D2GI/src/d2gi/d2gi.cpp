@@ -952,3 +952,47 @@ VOID D2GI::SetupWindow()
 	m_dwForcedWidth = rtClientRect.right - rtClientRect.left;
 	m_dwForcedHeight = rtClientRect.bottom - rtClientRect.top;
 }
+
+
+
+VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback)
+{
+	typedef std::vector<D3D7::DDSURFACEDESC2> DModeContainer;
+
+	INT                  i, j, nNum;
+	DModeContainer       descs(g_asStdDisplayModes, g_asStdDisplayModes + g_uStdDisplayModesCount);
+	D3D9::IDirect3D9*    pD3D9 = GetD3D9();
+
+	nNum = pD3D9->GetAdapterModeCount(D3DADAPTER_DEFAULT, D3D9::D3DFMT_X8R8G8B8);
+	
+	for (i = 0; i < nNum; i++)
+	{
+		D3D9::D3DDISPLAYMODE sDMode;
+		D3D7::DDSURFACEDESC2 sDMDesc;
+
+		if (SUCCEEDED(pD3D9->EnumAdapterModes(D3DADAPTER_DEFAULT, D3D9::D3DFMT_X8R8G8B8, i, &sDMode)))
+		{
+			if (IsStdDisplayMode(sDMode.Width, sDMode.Height))
+				continue;
+
+			ZeroMemory(&sDMDesc, sizeof(sDMDesc));
+			sDMDesc.dwSize = sizeof(sDMDesc);
+			sDMDesc.dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_REFRESHRATE | DDSD_PITCH | DDSD_PIXELFORMAT;
+			sDMDesc.dwWidth = sDMode.Width;
+			sDMDesc.dwHeight = sDMode.Height;
+			sDMDesc.lPitch = sDMode.Width;
+			sDMDesc.ddpfPixelFormat = g_pf8_Pal;
+
+			descs.push_back(sDMDesc);
+
+			sDMDesc.lPitch = sDMode.Width * sizeof(UINT16);
+			sDMDesc.ddpfPixelFormat = g_pf16_565;
+
+			descs.push_back(sDMDesc);
+		}
+	}
+
+	for (i = 0; i < descs.size(); i++)
+		if (!pCallback(descs.data() + i, pArg))
+			return;
+}

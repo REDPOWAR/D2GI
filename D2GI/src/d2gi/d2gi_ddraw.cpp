@@ -129,16 +129,9 @@ HRESULT D2GIDirectDraw::SetDisplayMode(DWORD dwWidth, DWORD dwHeight, DWORD dwBP
 }
 
 
-HRESULT D2GIDirectDraw::EnumDisplayModes(DWORD dwFlags, D3D7::LPDDSURFACEDESC2 lpSurfDesc, LPVOID lpArg, D3D7::LPDDENUMMODESCALLBACK2 lpCallback)
+HRESULT D2GIDirectDraw::EnumDisplayModes(DWORD dwFlags, D3D7::LPDDSURFACEDESC2 lpSurfDesc, LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback)
 {
-	INT i;
-
-	for (i = 0; i < (INT)g_uAvailableDisplayModesCount; i++)
-	{
-		if (!lpCallback(g_asAvailableDisplayModes + i, lpArg))
-			break;
-	}
-
+	m_pD2GI->OnDisplayModeEnum(pArg, pCallback);
 	return DD_OK;
 }
 

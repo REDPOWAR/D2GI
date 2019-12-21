@@ -48,7 +48,7 @@ DDPIXELFORMAT g_pf16_depth =
 };
 
 
-DDSURFACEDESC2 g_asAvailableDisplayModes[] =
+DDSURFACEDESC2 g_asStdDisplayModes[] =
 {
 	// 640x480x8
 	{
@@ -92,7 +92,7 @@ DDSURFACEDESC2 g_asAvailableDisplayModes[] =
 	},
 };
 
-UINT g_uAvailableDisplayModesCount = ARRAYSIZE(g_asAvailableDisplayModes);
+UINT g_uStdDisplayModesCount = ARRAYSIZE(g_asStdDisplayModes);
 
 
 DDCAPS g_sHALCaps = 
@@ -274,4 +274,20 @@ D2GIPIXELFORMAT DD7PF_To_D2GIPF(D3D7::DDPIXELFORMAT* ppf)
 		return D2GIPF_16_555;
 	
 	return D2GIPF_UNKNOWN;
+}
+
+
+BOOL IsStdDisplayMode(DWORD dwWidth, DWORD dwHeight)
+{
+	INT i;
+
+	for (i = 0; i < (INT)g_uStdDisplayModesCount; i++)
+	{
+		DDSURFACEDESC2* pDesc = g_asStdDisplayModes + i;
+
+		if (pDesc->dwWidth == dwWidth && pDesc->dwHeight == dwHeight)
+			return TRUE;
+	}
+
+	return FALSE;
 }

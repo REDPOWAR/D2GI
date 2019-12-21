@@ -18,8 +18,8 @@ enum D2GIPIXELFORMAT
 };
 
 
-extern D3D7::DDSURFACEDESC2 g_asAvailableDisplayModes[];
-extern UINT g_uAvailableDisplayModesCount;
+extern D3D7::DDSURFACEDESC2 g_asStdDisplayModes[];
+extern UINT g_uStdDisplayModesCount;
 
 extern D3D7::DDCAPS g_sHALCaps;
 extern D3D7::DDCAPS g_sHELCaps;
@@ -45,3 +45,4 @@ extern D3D7::DDPIXELFORMAT g_asD2GIPF_To_DD7PF[];
 extern D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[];
 
 D2GIPIXELFORMAT DD7PF_To_D2GIPF(D3D7::DDPIXELFORMAT*);
+BOOL IsStdDisplayMode(DWORD dwWidth, DWORD dwHeight);
