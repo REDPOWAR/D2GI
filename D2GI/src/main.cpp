@@ -27,65 +27,10 @@ EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateA(D3D7::LPDDENUMCA
 }
 
 
-EXPORT VOID WINAPI AcquireDDThreadLock()
-{
-
-}
-
-
-EXPORT VOID WINAPI ReleaseDDThreadLock()
-{
-
-}
-
-
-EXPORT VOID WINAPI CompleteCreateSysmemSurface()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI D3DParseUnknownCommand()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI DDGetAttachedSurfaceLcl()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI DDInternalLock()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI DDInternalUnlock()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI DSoundHelp()
-{
-
-}
-
-
-
 EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreate(GUID FAR* lpGUID, D3D7::LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter)
 {
 	return DDERR_GENERIC;
 }
-
 
 
 EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreateClipper(DWORD dwFlags, D3D7::LPDIRECTDRAWCLIPPER FAR* lplpDDClipper, IUnknown FAR* pUnkOuter)
@@ -94,12 +39,10 @@ EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreateClipper(DWORD dwFlags
 }
 
 
-
 EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateExA(D3D7::LPDDENUMCALLBACKEXA lpCallback, LPVOID lpContext, DWORD dwFlags)
 {
 	return DDERR_GENERIC;
 }
-
 
 
 EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateExW(D3D7::LPDDENUMCALLBACKEXW lpCallback, LPVOID lpContext, DWORD dwFlags)
@@ -108,59 +51,9 @@ EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateExW(D3D7::LPDDENUMCALLBACKEXW lpC
 }
 
 
-
 EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateW(D3D7::LPDDENUMCALLBACKW lpCallback, LPVOID lpContext)
 {
 	return DDERR_GENERIC;
-}
-
-
-
-STDAPI DllCanUnloadNow()
-{
-	return S_FALSE;
-}
-
-
-
-STDAPI DllGetClassObject(_In_ REFCLSID rclsid, _In_ REFIID riid, _Outptr_ LPVOID FAR* ppv)
-{
-	return S_FALSE;
-}
-
-
-
-EXPORT VOID WINAPI GetDDSurfaceLocal()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI GetOLEThunkData()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI GetSurfaceFromDC()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI RegisterSpecialCase()
-{
-
-}
-
-
-
-EXPORT VOID WINAPI SetAppCompatData()
-{
-
 }
 
 
