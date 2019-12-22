@@ -8,6 +8,7 @@
 WINDOWMODE D2GIConfig::s_eWindowMode  = WMODE_BORDERLESS;
 DWORD      D2GIConfig::s_dwVideoWidth = 0, D2GIConfig::s_dwVideoHeight = 0;
 BOOL       D2GIConfig::s_bEnableHooks = TRUE;
+BOOL       D2GIConfig::s_bEnableVSync = FALSE;
 
 DWORD D2GIConfig::GetVideoWidth()
 {
@@ -52,5 +53,6 @@ VOID D2GIConfig::ReadFromFile()
 
 	s_dwVideoWidth = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Width"), 0, szConfigFile);
 	s_dwVideoHeight = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Height"), 0, szConfigFile);
+	s_bEnableVSync = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("EnableVSync"), TRUE, szConfigFile);
 	s_bEnableHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableHooks"), TRUE, szConfigFile);
 }

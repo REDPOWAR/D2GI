@@ -147,15 +147,18 @@ VOID D2GI::ResetD3D9Device()
 	RELEASE(m_pBackBufferCopy);
 
 	ZeroMemory(&sParams, sizeof(sParams));
-	sParams.AutoDepthStencilFormat = D3D9::D3DFMT_D24X8;
-	sParams.EnableAutoDepthStencil = TRUE;
-	sParams.BackBufferCount = 1;
-	sParams.BackBufferWidth = m_dwForcedWidth;
-	sParams.BackBufferHeight = m_dwForcedHeight;
-	sParams.BackBufferFormat = D3D9::D3DFMT_X8R8G8B8;
-	sParams.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-	sParams.SwapEffect = D3D9::D3DSWAPEFFECT_FLIP;
-	sParams.Windowed = TRUE;
+	sParams.AutoDepthStencilFormat     = D3D9::D3DFMT_D24X8;
+	sParams.EnableAutoDepthStencil     = TRUE;
+	sParams.BackBufferCount            = 1;
+	sParams.BackBufferWidth            = m_dwForcedWidth;
+	sParams.BackBufferHeight           = m_dwForcedHeight;
+	sParams.BackBufferFormat           = D3D9::D3DFMT_X8R8G8B8;
+	sParams.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
+	sParams.SwapEffect                 = D3D9::D3DSWAPEFFECT_FLIP;
+	sParams.Windowed                   = TRUE;
+	sParams.PresentationInterval       =
+		D2GIConfig::VSyncEnabled() ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+
 	if (D2GIConfig::GetWindowMode() == WMODE_FULLSCREEN)
 	{
 		D3D9::D3DDISPLAYMODE sDisplayMode;
