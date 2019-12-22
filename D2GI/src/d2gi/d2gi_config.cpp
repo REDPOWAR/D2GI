@@ -53,6 +53,6 @@ VOID D2GIConfig::ReadFromFile()
 
 	s_dwVideoWidth = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Width"), 0, szConfigFile);
 	s_dwVideoHeight = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Height"), 0, szConfigFile);
-	s_bEnableVSync = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("EnableVSync"), TRUE, szConfigFile);
+	s_bEnableVSync = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("EnableVSync"), FALSE, szConfigFile);
 	s_bEnableHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableHooks"), TRUE, szConfigFile);
 }
