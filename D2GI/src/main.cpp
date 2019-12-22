@@ -19,7 +19,7 @@ EXPORT HRESULT WINAPI D3D7::DirectDrawCreateEx(GUID* pGUID, LPVOID* lpDD, REFIID
 }
 
 
-EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateA(D3D7::LPDDENUMCALLBACKA pCallback, LPVOID pContext)
+EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateA(D3D7::LPDDENUMCALLBACKA pCallback, LPVOID pContext)
 {
 	pCallback(NULL, "Primary Video Driver", "display", pContext);
 
@@ -27,13 +27,13 @@ EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateA(D3D7::LPDDENUMCA
 }
 
 
-EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreate(GUID FAR* lpGUID, D3D7::LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter)
+EXPORT HRESULT WINAPI D3D7::DirectDrawCreate(GUID FAR* lpGUID, D3D7::LPDIRECTDRAW FAR* lplpDD, IUnknown FAR* pUnkOuter)
 {
 	return DDERR_GENERIC;
 }
 
 
-EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawCreateClipper(DWORD dwFlags, D3D7::LPDIRECTDRAWCLIPPER FAR* lplpDDClipper, IUnknown FAR* pUnkOuter)
+EXPORT HRESULT WINAPI D3D7::DirectDrawCreateClipper(DWORD dwFlags, D3D7::LPDIRECTDRAWCLIPPER FAR* lplpDDClipper, IUnknown FAR* pUnkOuter)
 {
 	return DDERR_GENERIC;
 }
@@ -51,7 +51,7 @@ EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateExW(D3D7::LPDDENUMCALLBACKEXW lpC
 }
 
 
-EXPORT _Check_return_ HRESULT WINAPI D3D7::DirectDrawEnumerateW(D3D7::LPDDENUMCALLBACKW lpCallback, LPVOID lpContext)
+EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateW(D3D7::LPDDENUMCALLBACKW lpCallback, LPVOID lpContext)
 {
 	return DDERR_GENERIC;
 }
