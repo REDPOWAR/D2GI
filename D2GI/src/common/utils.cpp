@@ -66,14 +66,8 @@ UINT CalcFVFTextureCount(DWORD dwFVF)
 
 VOID CalcMipMapLevelSize(DWORD dwTextureW, DWORD dwTextureH, UINT uLevel, DWORD* pMipMapW, DWORD* pMipMapH)
 {
-	INT i;
+	UINT uPow = 1 << uLevel;
 
-	*pMipMapW = dwTextureW;
-	*pMipMapH = dwTextureH;
-
-	for (i = 0; i < (INT)uLevel && !(*pMipMapW == 1 && *pMipMapH == 1); i++)
-	{
-		*pMipMapW = max(*pMipMapW / 2, 1);
-		*pMipMapH = max(*pMipMapH / 2, 1);
-	}
+	*pMipMapW = max(dwTextureW / uPow, 1);
+	*pMipMapH = max(dwTextureH / uPow, 1);
 }
