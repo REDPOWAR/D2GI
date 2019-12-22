@@ -6,45 +6,11 @@
 #include "d2gi.h"
 #include "d2gi_blitter.h"
 
+#include "d2gi_blitter_vs.h"
+#include "d2gi_blitter_ps.h"
+
 
 using namespace D3D9;
-
-
-static CHAR* g_szVS =
-	"float4 g_vRect: register(c0);\n"
-	"float4 g_vTexRect: register(c1);\n"
-
-	"struct VS_OUT\n"
-	"{\n"
-	"	float4 vPos: POSITION;\n"
-	"	float2 vTexCoord: TEXCOORD0;\n"
-	"};\n"
-
-	"VS_OUT main(float4 vPos: POSITION, float2 vTC: TEXCOORD0)\n"
-	"{\n"
-	"	VS_OUT sOut;\n"
-	
-	"	sOut.vPos = float4(vPos.xy * g_vRect.xy + g_vRect.zw, 0.0, 1.0f);\n"
-	"	sOut.vTexCoord = (vTC * g_vTexRect.xy) + g_vTexRect.zw;\n"
-
-	"	return sOut;\n"
-	"}\n"
-
-	"";
-
-
-static CHAR* g_szPS =
-	"sampler g_txSourceTexture : register(s0);\n"
-
-	"float4 g_vBorder:register(c0);"
-
-	"float4 main(float2 vTC : TEXCOORD0) : COLOR0\n"
-	"{\n"
-	"	vTC = clamp(vTC, g_vBorder.xy, g_vBorder.zw);\n"
-	"	return tex2D(g_txSourceTexture, vTC);\n"
-	"}\n"
-
-	"";
 
 
 D2GIBlitter::D2GIBlitter(D2GI* pD2GI)
@@ -103,35 +69,12 @@ VOID D2GIBlitter::LoadResource()
 	CopyMemory(pData, afVerts, sizeof(afVerts));
 	m_pVB->Unlock();
 
-	ID3DXBuffer* pCodeBuf = NULL, *pErrBuf = NULL;
 
-	if (FAILED(D3DXCompileShader(g_szVS, strlen(g_szVS), NULL, NULL,
-		"main", "vs_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pCodeBuf, &pErrBuf, NULL)))
-	{
-		Logger::Error(
-			TEXT("Blitter vertex shader compilation failed with error:\n") ASCII_STR,
-				pErrBuf->GetBufferPointer());
-	}
-
-	if (FAILED(pDev->CreateVertexShader((DWORD*)pCodeBuf->GetBufferPointer(), &m_pVS)))
+	if (FAILED(pDev->CreateVertexShader((DWORD*)g_pBlitterVS, &m_pVS)))
 		Logger::Error(TEXT("Failed to create blitter vertex shader"));
 
-	RELEASE(pCodeBuf);
-	RELEASE(pErrBuf);
-
-	if (FAILED(D3DXCompileShader(g_szPS, strlen(g_szPS), NULL, NULL,
-		"main", "ps_3_0", D3DXSHADER_OPTIMIZATION_LEVEL0, &pCodeBuf, &pErrBuf, NULL)))
-	{
-		Logger::Error(
-			TEXT("Blitter pixel shader compilation failed with error:\n") ASCII_STR,
-				pErrBuf->GetBufferPointer());
-	}
-
-	if (FAILED(pDev->CreatePixelShader((DWORD*)pCodeBuf->GetBufferPointer(), &m_pPS)))
+	if (FAILED(pDev->CreatePixelShader((DWORD*)g_pBlitterPS, &m_pPS)))
 		Logger::Error(TEXT("Failed to create blitter pixel shader"));
-
-	RELEASE(pCodeBuf);
-	RELEASE(pErrBuf);
 }
 
 

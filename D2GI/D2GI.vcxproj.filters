@@ -55,6 +55,9 @@
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="defs.props" />
+    <None Include="src\d2gi\d2gi_enums_a.asm">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp">
@@ -269,5 +272,19 @@
     <ClInclude Include="src\d2gi\d2gi_config.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_blitter_ps.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_blitter_vs.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="src\d2gi\d2gi_blitter_vs.hlsl">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </FxCompile>
+    <FxCompile Include="src\d2gi\d2gi_blitter_ps.hlsl">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
