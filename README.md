@@ -37,3 +37,11 @@
 
 Секция `HOOKS`:  
 * `EnableHooks` - включить перехват функций игры (нужно для коррекции матрицы проекции при произвольном соотношении сторон) 
+
+### Демо  
+
+Бенчмарк чистой версии 8.1 на Intel HD Graphics 4000:  
+[![video](http://img.youtube.com/vi/cP87WtU5F9I/0.jpg)](https://www.youtube.com/watch?v=cP87WtU5F9I)  
+
+Бенчмарк SEMod 1.2 на Intel HD Graphics 4000:  
+[![video](http://img.youtube.com/vi/IbHq2INIn5c/0.jpg)](https://www.youtube.com/watch?v=IbHq2INIn5c)  
