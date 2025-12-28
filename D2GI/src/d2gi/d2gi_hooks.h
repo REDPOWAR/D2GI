@@ -13,6 +13,7 @@ class D2GIHookInjector
 		D2V_UNKNOWN = -1,
 		D2V_8_1,
 		D2V_8_1B,
+		D2V_KOTR_1_3,
 	};
 
 	static D2VERSION s_eCurrentD2Version;

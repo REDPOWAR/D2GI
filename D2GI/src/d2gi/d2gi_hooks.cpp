@@ -20,7 +20,7 @@ D2GI* D2GIHookInjector::ObtainD2GI()
 {
 	static DWORD c_adwDeviceAddresses[] =
 	{
-		0x00720908, 0x00720928
+		0x00720908, 0x00720928, 0x0071F868
 	};
 
 	DWORD                   dwDevAddr = c_adwDeviceAddresses[s_eCurrentD2Version];
@@ -64,7 +64,7 @@ INT D2GIHookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, M
 {
 	static DWORD c_adwSetupTransformsAddresses[] =
 	{
-		0x005AE0E0, 0x005AE070
+		0x005AE0E0, 0x005AE070, 0x005AD7F0
 	};
 
 	INT nResult, nAddr = c_adwSetupTransformsAddresses[s_eCurrentD2Version];
@@ -94,6 +94,7 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 	{
 		0x400502EA, // 8.1
 		0x4760F7AC, // 8.1B
+		0x3C970FF7, // KotR 1.3
 	};
 
 	const HMODULE gameModule = GetModuleHandle(nullptr);
@@ -123,14 +124,15 @@ BOOL D2GIHookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewC
 
 VOID D2GIHookInjector::InjectHooks()
 {
-	static DWORD c_adwSetupTransformsCalls[] =
+	const DWORD c_adwSetupTransformsCalls[] =
 	{
-		0x005EB682, 0x005EB622
+		0x005EB682, 0x005EB622, 0x005EACB2
 	};
-	static TCHAR* c_lpszVersionNames[] =
+	const TCHAR* c_lpszVersionNames[] =
 	{
 		TEXT("8.1"),
-		TEXT("8.1B")
+		TEXT("8.1B"),
+		TEXT("KoTR 1.3"),
 	};
 
 
