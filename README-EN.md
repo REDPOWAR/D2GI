@@ -11,13 +11,14 @@
 * 3 modes: windowed, borderless, fullscreen
 * 32-bit color rendering
 * Compatibility with vanilla 8.1 game version
+* Compatibility with King of the Road 1.3 (digital releases)
 * Compatibility with [SEMod 1.2](https://vk.com/rnr_mods?w=page-157113673_53889819)
 * Works stable, without freezes or crashes (~~as for me~~)
 * High FPS on low-end hardware
 
 ### Requirements  
 
-* Game version 8.1 or higher 
+* Game version 8.1 or higher, or KotR 1.3
 * Windows XP or higher  
 
 ### Download  
