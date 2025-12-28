@@ -76,18 +76,19 @@ VOID D2GI::LoadD3D9Library()
 {
 	typedef D3D9::IDirect3D9* (WINAPI* DIRECT3DCREATE9)(UINT);
 
-	TCHAR           szPath[MAX_PATH];
-	DIRECT3DCREATE9 pfnDirect3DCreate9;
-
-	PathCombine(szPath, Directory::GetSysDirectory(), TEXT("d3d9.dll"));
-
-	m_hD3D9Lib = LoadLibrary(szPath);
+	m_hD3D9Lib = LoadLibrary(TEXT("d3d9"));
 	if (m_hD3D9Lib == NULL)
+	{
 		Logger::Error(TEXT("Failed to load D3D9 library"));
+		return;
+	}
 
-	pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
+	DIRECT3DCREATE9 pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
 	if (pfnDirect3DCreate9 == NULL)
+	{
 		Logger::Error(TEXT("Failed to get Direct3DCreate9 address"));
+		return;
+	}
 
 	m_pD3D9 = pfnDirect3DCreate9(D3D_SDK_VERSION);
 	if (m_pD3D9 == NULL)

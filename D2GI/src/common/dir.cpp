@@ -5,7 +5,6 @@
 #pragma comment(lib, "Shlwapi.lib")
 
 
-TCHAR Directory::s_szSysDir[MAX_PATH] = { '\0' };
 TCHAR Directory::s_szEXEDir[MAX_PATH] = { '\0' };
 
 
@@ -18,13 +17,4 @@ const TCHAR* Directory::GetEXEDirectory()
 	}
 
 	return s_szEXEDir;
-}
-
-
-const TCHAR* Directory::GetSysDirectory()
-{
-	if (*s_szSysDir == '\0')
-		GetSystemDirectory(s_szSysDir, MAX_PATH);
-
-	return s_szSysDir;
 }
