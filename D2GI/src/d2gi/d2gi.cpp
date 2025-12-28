@@ -1009,7 +1009,9 @@ VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback
 		}
 	}
 
-	for (i = 0; i < (INT)descs.size(); i++)
-		if (!pCallback(descs.data() + i, pArg))
-			return;
+	for (D3D7::DDSURFACEDESC2& desc : descs)
+	{
+		if (pCallback(&desc, pArg) == DDENUMRET_CANCEL)
+			break;
+	}
 }

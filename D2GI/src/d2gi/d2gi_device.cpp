@@ -42,7 +42,7 @@ HRESULT D2GIDevice::EnumTextureFormats(LPD3DENUMPIXELFORMATSCALLBACK pCallback, 
 
 	for (i = 0; i < (INT)g_uTextureFormatsCount; i++)
 	{
-		if (!pCallback(g_asTextureFormats + i, pArg))
+		if (pCallback(g_asTextureFormats + i, pArg) == DDENUMRET_CANCEL)
 			break;
 	}
 

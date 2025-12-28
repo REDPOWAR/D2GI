@@ -6,49 +6,49 @@
 using namespace D3D7;
 
 
-DDPIXELFORMAT g_pf16_565 =
+const DDPIXELFORMAT g_pf16_565 =
 {
 	sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 63488, 2016, 31, 0,
 };
 
 
-DDPIXELFORMAT g_pf16_555 =
+const DDPIXELFORMAT g_pf16_555 =
 {
 	sizeof(DDPIXELFORMAT), DDPF_RGB, 0, 16, 31744, 992, 31, 0,
 };
 
 
-DDPIXELFORMAT g_pf16_1555 =
+const DDPIXELFORMAT g_pf16_1555 =
 {
 	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 31744, 992, 31, 32768
 };
 
 
-DDPIXELFORMAT g_pf16_4444 =
+const DDPIXELFORMAT g_pf16_4444 =
 {
 	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_ALPHAPIXELS, 0, 16, 3840, 240, 15, 61440
 };
 
 
-DDPIXELFORMAT g_pf16_v8u8 =
+const DDPIXELFORMAT g_pf16_v8u8 =
 {
 	sizeof(DDPIXELFORMAT), DDPF_BUMPDUDV, 0, 16, 255, 65280, 0, 0
 };
 
 
-DDPIXELFORMAT g_pf8_Pal =
+const DDPIXELFORMAT g_pf8_Pal =
 {
 	sizeof(DDPIXELFORMAT), DDPF_RGB | DDPF_PALETTEINDEXED8, 0, 8, 0, 0, 0, 0,
 };
 
 
-DDPIXELFORMAT g_pf16_depth =
+const DDPIXELFORMAT g_pf16_depth =
 {
 	sizeof(DDPIXELFORMAT), DDPF_ZBUFFER, 0, 16, 0, 65535, 0, 0
 };
 
 
-DDSURFACEDESC2 g_asStdDisplayModes[] =
+const DDSURFACEDESC2 g_asStdDisplayModes[] =
 {
 	// 640x480x8
 	{
@@ -92,10 +92,10 @@ DDSURFACEDESC2 g_asStdDisplayModes[] =
 	},
 };
 
-UINT g_uStdDisplayModesCount = ARRAYSIZE(g_asStdDisplayModes);
+const UINT g_uStdDisplayModesCount = ARRAYSIZE(g_asStdDisplayModes);
 
 
-DDCAPS g_sHALCaps = 
+const DDCAPS g_sHALCaps = 
 {
 	380, 2513600449, 2691346992, 189201, 581784800,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -110,7 +110,7 @@ DDCAPS g_sHALCaps =
 };
 
 
-DDCAPS g_sHELCaps =
+const DDCAPS g_sHELCaps =
 {
 	380, 4106256961, 1, 512, 261347, 0, 839, 
 	0, 0, 0, 0, 0, 0, 0, 1024, 
@@ -192,7 +192,7 @@ CHAR* g_lpszDeviceNames[] = {
 	"Direct3D T&L HAL" 
 };
 
-UINT g_uDeviceCount = ARRAYSIZE(g_asDeviceDescs);
+const UINT g_uDeviceCount = ARRAYSIZE(g_asDeviceDescs);
 
 
 DDPIXELFORMAT g_asTextureFormats[] =
@@ -218,7 +218,7 @@ DDPIXELFORMAT g_asTextureFormats[] =
 	{sizeof(DDPIXELFORMAT), DDPF_FOURCC, 877942852},
 	{sizeof(DDPIXELFORMAT), DDPF_FOURCC, 894720068},
 };
-UINT g_uTextureFormatsCount = ARRAYSIZE(g_asTextureFormats);
+const UINT g_uTextureFormatsCount = ARRAYSIZE(g_asTextureFormats);
 
 
 DDPIXELFORMAT g_asZBufferFormats[] =
@@ -229,10 +229,10 @@ DDPIXELFORMAT g_asZBufferFormats[] =
 	{sizeof(DDPIXELFORMAT), DDPF_ZBUFFER, 0, 24, 0, 16777215, 0, 0},
 };
 
-UINT g_uZBufferFormatsCount = ARRAYSIZE(g_asZBufferFormats);
+const UINT g_uZBufferFormatsCount = ARRAYSIZE(g_asZBufferFormats);
 
 
-DDPIXELFORMAT g_asD2GIPF_To_DD7PF[] = 
+const DDPIXELFORMAT g_asD2GIPF_To_DD7PF[] = 
 {
 	g_pf8_Pal,
 	g_pf16_565,
@@ -244,7 +244,7 @@ DDPIXELFORMAT g_asD2GIPF_To_DD7PF[] =
 };
 
 
-D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[] =
+const D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[] =
 {
 	D3D9::D3DFMT_P8,
 	D3D9::D3DFMT_R5G6B5,
@@ -277,15 +277,11 @@ D2GIPIXELFORMAT DD7PF_To_D2GIPF(D3D7::DDPIXELFORMAT* ppf)
 }
 
 
-BOOL IsStdDisplayMode(DWORD dwWidth, DWORD dwHeight)
+bool IsStdDisplayMode(DWORD dwWidth, DWORD dwHeight)
 {
-	INT i;
-
-	for (i = 0; i < (INT)g_uStdDisplayModesCount; i++)
+	for (const DDSURFACEDESC2& desc : g_asStdDisplayModes)
 	{
-		DDSURFACEDESC2* pDesc = g_asStdDisplayModes + i;
-
-		if (pDesc->dwWidth == dwWidth && pDesc->dwHeight == dwHeight)
+		if (desc.dwWidth == dwWidth && desc.dwHeight == dwHeight)
 			return TRUE;
 	}
 

@@ -18,31 +18,31 @@ enum D2GIPIXELFORMAT
 };
 
 
-extern D3D7::DDSURFACEDESC2 g_asStdDisplayModes[];
-extern UINT g_uStdDisplayModesCount;
+extern const D3D7::DDSURFACEDESC2 g_asStdDisplayModes[];
+extern const UINT g_uStdDisplayModesCount;
 
-extern D3D7::DDCAPS g_sHALCaps;
-extern D3D7::DDCAPS g_sHELCaps;
+extern const D3D7::DDCAPS g_sHALCaps;
+extern const D3D7::DDCAPS g_sHELCaps;
 
 extern D3D7::D3DDEVICEDESC7 g_asDeviceDescs[];
 extern CHAR* g_lpszDeviceDescs[];
 extern CHAR* g_lpszDeviceNames[];
-extern UINT g_uDeviceCount;
+extern const UINT g_uDeviceCount;
 
 extern D3D7::DDPIXELFORMAT g_asTextureFormats[];
-extern UINT g_uTextureFormatsCount;
+extern const UINT g_uTextureFormatsCount;
 
-extern D3D7::DDPIXELFORMAT g_pf16_565;
-extern D3D7::DDPIXELFORMAT g_pf16_1555;
-extern D3D7::DDPIXELFORMAT g_pf16_4444;
-extern D3D7::DDPIXELFORMAT g_pf8_Pal;
-extern D3D7::DDPIXELFORMAT g_pf16_v8u8;
+extern const D3D7::DDPIXELFORMAT g_pf16_565;
+extern const D3D7::DDPIXELFORMAT g_pf16_1555;
+extern const D3D7::DDPIXELFORMAT g_pf16_4444;
+extern const D3D7::DDPIXELFORMAT g_pf8_Pal;
+extern const D3D7::DDPIXELFORMAT g_pf16_v8u8;
 
 extern D3D7::DDPIXELFORMAT g_asZBufferFormats[];
-extern UINT g_uZBufferFormatsCount;
+extern const UINT g_uZBufferFormatsCount;
 
-extern D3D7::DDPIXELFORMAT g_asD2GIPF_To_DD7PF[];
-extern D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[];
+extern const D3D7::DDPIXELFORMAT g_asD2GIPF_To_DD7PF[];
+extern const D3D9::D3DFORMAT g_asD2GIPF_To_D3D9PF[];
 
 D2GIPIXELFORMAT DD7PF_To_D2GIPF(D3D7::DDPIXELFORMAT*);
-BOOL IsStdDisplayMode(DWORD dwWidth, DWORD dwHeight);
+bool IsStdDisplayMode(DWORD dwWidth, DWORD dwHeight);
