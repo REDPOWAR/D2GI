@@ -8,7 +8,7 @@
   </PropertyGroup >
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>D2GI_VERSION=TEXT("0.1");%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D2GI_VERSION=TEXT("0.2");%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
