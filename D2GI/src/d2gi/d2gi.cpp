@@ -21,6 +21,7 @@
 #include <cmath>
 
 #include <shlwapi.h>
+#include <windowsx.h>
 
 D2GI::D2GI()
 {
@@ -888,8 +889,6 @@ LRESULT D2GI::WndProc_Static(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	INT x, y;
-
 	switch (uMsg)
 	{
 		case WM_MOUSEMOVE:
@@ -902,17 +901,21 @@ LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MBUTTONDOWN:
 		case WM_MBUTTONUP:
 		case WM_MBUTTONDBLCLK:
-			x = LOWORD(lParam);
-			y = HIWORD(lParam);
+		{
+			INT x = GET_X_LPARAM(lParam);
+			INT y = GET_Y_LPARAM(lParam);
 
 			x = x * m_dwOriginalWidth / m_dwForcedWidth;
 			y = y * m_dwOriginalHeight / m_dwForcedHeight;
 
 			lParam = MAKELPARAM(x, y);
 			break;
+		}
 		case WM_GETMINMAXINFO:
+		case WM_NCACTIVATE:
+		case WM_ACTIVATE:
+		case WM_ACTIVATEAPP:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
-			break;
 	}
 
 	return CallWindowProc(m_pfnOriginalWndProc, hWnd, uMsg, wParam, lParam);
@@ -972,6 +975,9 @@ VOID D2GI::SetupWindow()
 	SetWindowLong(m_hWnd, GWL_STYLE, dwWinStyle);
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, dwWinExStyle);
 	SetWindowPos(m_hWnd, HWND_TOP, rtWindowRect.left, rtWindowRect.top, rtWindowRect.right - rtWindowRect.left, rtWindowRect.bottom - rtWindowRect.top, SWP_DRAWFRAME);
+	
+	// The window is already active, but the original WndProc didn't let the window style to change the first time - invalidate the nonclient area to force it to repaint.
+	SendMessage(m_hWnd, WM_NCACTIVATE, TRUE, NULL);
 
 	m_dwForcedWidth = nWinWidth;
 	m_dwForcedHeight = nWinHeight;
