@@ -17,6 +17,8 @@
 #include "d2gi_strided_renderer.h"
 #include "d2gi_config.h"
 
+#include <algorithm>
+#include <cmath>
 
 D2GI::D2GI()
 {
@@ -236,10 +238,10 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 	if (pVP->dwX != 0 && pVP->dwY != 0 
 		&& pVP->dwWidth != m_dwOriginalWidth && pVP->dwHeight != m_dwOriginalHeight)
 	{
-		frtScaledVP.fLeft = max(0.0f, floorf(frtScaledVP.fLeft - 0.5f));
-		frtScaledVP.fTop = max(0.0f, floorf(frtScaledVP.fTop - 0.5f));
-		frtScaledVP.fRight = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fRight + 0.5f));
-		frtScaledVP.fBottom = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fBottom + 0.5f));
+		frtScaledVP.fLeft = std::max(0.0f, std::floor(frtScaledVP.fLeft - 0.5f));
+		frtScaledVP.fTop = std::max(0.0f, std::floor(frtScaledVP.fTop - 0.5f));
+		frtScaledVP.fRight = std::min((FLOAT)m_dwForcedWidth, std::ceil(frtScaledVP.fRight + 0.5f));
+		frtScaledVP.fBottom = std::min((FLOAT)m_dwForcedWidth, std::ceil(frtScaledVP.fBottom + 0.5f));
 	}
 
 	sD3D9Viewport.X = (DWORD)frtScaledVP.fLeft;
@@ -958,8 +960,8 @@ VOID D2GI::SetupWindow()
 	const DWORD dwWinExStyle = c_adwWinModeToWinExStyle[D2GIConfig::GetWindowMode()];
 	const INT nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
 	const INT nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
-	const INT nWinWidth = min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
-	const INT nWinHeight = min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
+	const INT nWinWidth = std::min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
+	const INT nWinHeight = std::min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
 	const INT nWinX = (nDisplayWidth - nWinWidth) / 2;
 	const INT nWinY = (nDisplayHeight - nWinHeight) / 2;
 

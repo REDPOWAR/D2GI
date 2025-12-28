@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#define NOMINMAX
 #include <windows.h>
 
 #include "d2gi_common.h"

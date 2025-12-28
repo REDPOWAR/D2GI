@@ -4,7 +4,7 @@
 #include "d2gi_ib_container.h"
 
 
-#define DEFAULT_IB_SIZE  (2 * 256 * 256)
+#define DEFAULT_IB_SIZE  (2u * 256u * 256u)
 
 
 D2GIIndexBufferContainer::D2GIIndexBufferContainer(D2GI* pD2GI)
@@ -22,7 +22,7 @@ D2GIIndexBufferContainer::~D2GIIndexBufferContainer()
 
 INDEX_STREAMING_BUFFER* D2GIIndexBufferContainer::AllocNewBuffer(UINT uRequiredSize)
 {
-	UINT uSelectedSize = max(uRequiredSize, DEFAULT_IB_SIZE);
+	UINT uSelectedSize = std::max(uRequiredSize, DEFAULT_IB_SIZE);
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 	D3D9::IDirect3DIndexBuffer9* pIB;
 
