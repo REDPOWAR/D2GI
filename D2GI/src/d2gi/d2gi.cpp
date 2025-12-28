@@ -941,33 +941,37 @@ VOID D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 
 VOID D2GI::SetupWindow()
 {
-	static DWORD c_adwWinModeToWinStyle[] =
+	static const DWORD c_adwWinModeToWinStyle[] =
 	{
-		WS_VISIBLE | WS_CAPTION | WS_SYSMENU,
-		WS_VISIBLE | WS_POPUP,
-		WS_VISIBLE | WS_POPUP,
+		WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // windowed
+		WS_VISIBLE | WS_POPUP, // borderless
+		WS_VISIBLE | WS_POPUP, // fullscreen
+	};
+	static const DWORD c_adwWinModeToWinExStyle[] =
+	{
+		WS_EX_OVERLAPPEDWINDOW, // windowed
+		0, // borderless
+		0, // fullscreen
 	};
 
-	DWORD                       dwWinStyle;
-	INT                         nDisplayWidth, nDisplayHeight;
-	INT                         nWinX, nWinY, nWinWidth, nWinHeight;
-	RECT                        rtClientRect;
+	const DWORD dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
+	const DWORD dwWinExStyle = c_adwWinModeToWinExStyle[D2GIConfig::GetWindowMode()];
+	const INT nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
+	const INT nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
+	const INT nWinWidth = min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
+	const INT nWinHeight = min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
+	const INT nWinX = (nDisplayWidth - nWinWidth) / 2;
+	const INT nWinY = (nDisplayHeight - nWinHeight) / 2;
 
-	dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
-	nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
-	nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
-	nWinWidth = min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
-	nWinHeight = min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
-	nWinX = (nDisplayWidth - nWinWidth) / 2;
-	nWinY = (nDisplayHeight - nWinHeight) / 2;
+	RECT rtWindowRect = { nWinX, nWinY, nWinX+nWinWidth, nWinY+nWinHeight };
+	AdjustWindowRectEx(&rtWindowRect, dwWinStyle, FALSE, dwWinExStyle);
 
 	SetWindowLong(m_hWnd, GWL_STYLE, dwWinStyle);
-	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
-	SetWindowPos(m_hWnd, HWND_TOP, nWinX, nWinY, nWinWidth, nWinHeight, SWP_DRAWFRAME);
-	GetClientRect(m_hWnd, &rtClientRect);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, dwWinExStyle);
+	SetWindowPos(m_hWnd, HWND_TOP, rtWindowRect.left, rtWindowRect.top, rtWindowRect.right - rtWindowRect.left, rtWindowRect.bottom - rtWindowRect.top, SWP_DRAWFRAME);
 
-	m_dwForcedWidth = rtClientRect.right - rtClientRect.left;
-	m_dwForcedHeight = rtClientRect.bottom - rtClientRect.top;
+	m_dwForcedWidth = nWinWidth;
+	m_dwForcedHeight = nWinHeight;
 }
 
 
