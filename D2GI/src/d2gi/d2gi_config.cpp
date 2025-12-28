@@ -4,6 +4,7 @@
 
 #include "d2gi_config.h"
 
+#include <shlwapi.h>
 
 WINDOWMODE D2GIConfig::s_eWindowMode  = WMODE_BORDERLESS;
 DWORD      D2GIConfig::s_dwVideoWidth = 0, D2GIConfig::s_dwVideoHeight = 0;
@@ -33,8 +34,7 @@ VOID D2GIConfig::ReadFromFile()
 	TCHAR szWinMode[256];
 	TCHAR szConfigFile[MAX_PATH];
 
-	_tcscpy(szConfigFile, Directory::GetEXEDirectory());
-	_tcscat(szConfigFile, TEXT("d2gi.ini"));
+	PathCombine(szConfigFile, Directory::GetEXEDirectory(), TEXT("d2gi.ini"));
 
 	GetPrivateProfileString(TEXT("VIDEO"), TEXT("WindowMode"), 
 		TEXT("borderless"), szWinMode, ARRAYSIZE(szWinMode), szConfigFile);

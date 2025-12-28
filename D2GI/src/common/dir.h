@@ -9,6 +9,6 @@ class Directory
 	static TCHAR s_szSysDir[MAX_PATH];
 	static TCHAR s_szEXEDir[MAX_PATH];
 public:
-	static TCHAR* GetEXEDirectory();
-	static TCHAR* GetSysDirectory();
+	static const TCHAR* GetEXEDirectory();
+	static const TCHAR* GetSysDirectory();
 };

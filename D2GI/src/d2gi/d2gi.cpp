@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <shlwapi.h>
+
 D2GI::D2GI()
 {
 	m_hD3D9Lib = NULL;
@@ -76,8 +78,7 @@ VOID D2GI::LoadD3D9Library()
 	TCHAR           szPath[MAX_PATH];
 	DIRECT3DCREATE9 pfnDirect3DCreate9;
 
-	_tcscpy(szPath, Directory::GetSysDirectory());
-	_tcscat(szPath, TEXT("\\d3d9.dll"));
+	PathCombine(szPath, Directory::GetSysDirectory(), TEXT("d3d9.dll"));
 
 	m_hD3D9Lib = LoadLibrary(szPath);
 	if (m_hD3D9Lib == NULL)
