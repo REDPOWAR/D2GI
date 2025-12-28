@@ -90,31 +90,19 @@ INT D2GIHookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, M
 
 D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 {
-	static DWORD c_adwTimestamps[] =
+	const DWORD c_adwTimestamps[] =
 	{
-		0x400502EA, 0x4760F7AC
+		0x400502EA, // 8.1
+		0x4760F7AC, // 8.1B
 	};
 
-	FILE* pFile;
-	IMAGE_DOS_HEADER sDOSHeader;
-	IMAGE_FILE_HEADER sImageHeader;
-	INT i;
+	const HMODULE gameModule = GetModuleHandle(nullptr);
 
-	pFile = _tfopen(Directory::GetEXEPath(), TEXT("rb"));
-	if (pFile == NULL)
-	{
-		Logger::Warning(
-			TEXT("Failed to open D2 EXE file to detect version (%s)"), Directory::GetEXEPath());
-		return D2V_UNKNOWN;
-	}
+	PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(gameModule);
+	PIMAGE_NT_HEADERS ntHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<char*>(dosHeader) + dosHeader->e_lfanew);
 
-	fread(&sDOSHeader, sizeof(sDOSHeader), 1, pFile);
-	fseek(pFile, sDOSHeader.e_lfanew + 4, SEEK_SET);
-	fread(&sImageHeader, sizeof(sImageHeader), 1, pFile);
-	fclose(pFile);
-
-	for (i = 0; i < ARRAYSIZE(c_adwTimestamps); i++)
-		if (c_adwTimestamps[i] == sImageHeader.TimeDateStamp)
+	for (size_t i = 0; i < ARRAYSIZE(c_adwTimestamps); i++)
+		if (c_adwTimestamps[i] == ntHeader->FileHeader.TimeDateStamp)
 			return (D2VERSION)i;
 
 	return D2V_UNKNOWN;
