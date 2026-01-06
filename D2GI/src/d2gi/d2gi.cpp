@@ -17,6 +17,11 @@
 #include "d2gi_strided_renderer.h"
 #include "d2gi_config.h"
 
+#include <algorithm>
+#include <cmath>
+
+#include <shlwapi.h>
+#include <windowsx.h>
 
 D2GI::D2GI()
 {
@@ -71,19 +76,19 @@ VOID D2GI::LoadD3D9Library()
 {
 	typedef D3D9::IDirect3D9* (WINAPI* DIRECT3DCREATE9)(UINT);
 
-	TCHAR           szPath[MAX_PATH];
-	DIRECT3DCREATE9 pfnDirect3DCreate9;
-
-	_tcscpy(szPath, Directory::GetSysDirectory());
-	_tcscat(szPath, TEXT("\\d3d9.dll"));
-
-	m_hD3D9Lib = LoadLibrary(szPath);
+	m_hD3D9Lib = LoadLibrary(TEXT("d3d9"));
 	if (m_hD3D9Lib == NULL)
+	{
 		Logger::Error(TEXT("Failed to load D3D9 library"));
+		return;
+	}
 
-	pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
+	DIRECT3DCREATE9 pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
 	if (pfnDirect3DCreate9 == NULL)
+	{
 		Logger::Error(TEXT("Failed to get Direct3DCreate9 address"));
+		return;
+	}
 
 	m_pD3D9 = pfnDirect3DCreate9(D3D_SDK_VERSION);
 	if (m_pD3D9 == NULL)
@@ -236,10 +241,10 @@ VOID D2GI::OnViewportSet(D3D7::LPD3DVIEWPORT7 pVP)
 	if (pVP->dwX != 0 && pVP->dwY != 0 
 		&& pVP->dwWidth != m_dwOriginalWidth && pVP->dwHeight != m_dwOriginalHeight)
 	{
-		frtScaledVP.fLeft = max(0.0f, floorf(frtScaledVP.fLeft - 0.5f));
-		frtScaledVP.fTop = max(0.0f, floorf(frtScaledVP.fTop - 0.5f));
-		frtScaledVP.fRight = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fRight + 0.5f));
-		frtScaledVP.fBottom = min((FLOAT)m_dwForcedWidth, ceilf(frtScaledVP.fBottom + 0.5f));
+		frtScaledVP.fLeft = std::max(0.0f, std::floor(frtScaledVP.fLeft - 0.5f));
+		frtScaledVP.fTop = std::max(0.0f, std::floor(frtScaledVP.fTop - 0.5f));
+		frtScaledVP.fRight = std::min((FLOAT)m_dwForcedWidth, std::ceil(frtScaledVP.fRight + 0.5f));
+		frtScaledVP.fBottom = std::min((FLOAT)m_dwForcedWidth, std::ceil(frtScaledVP.fBottom + 0.5f));
 	}
 
 	sD3D9Viewport.X = (DWORD)frtScaledVP.fLeft;
@@ -885,8 +890,6 @@ LRESULT D2GI::WndProc_Static(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	INT x, y;
-
 	switch (uMsg)
 	{
 		case WM_MOUSEMOVE:
@@ -899,17 +902,21 @@ LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MBUTTONDOWN:
 		case WM_MBUTTONUP:
 		case WM_MBUTTONDBLCLK:
-			x = LOWORD(lParam);
-			y = HIWORD(lParam);
+		{
+			INT x = GET_X_LPARAM(lParam);
+			INT y = GET_Y_LPARAM(lParam);
 
 			x = x * m_dwOriginalWidth / m_dwForcedWidth;
 			y = y * m_dwOriginalHeight / m_dwForcedHeight;
 
 			lParam = MAKELPARAM(x, y);
 			break;
+		}
 		case WM_GETMINMAXINFO:
+		case WM_NCACTIVATE:
+		case WM_ACTIVATE:
+		case WM_ACTIVATEAPP:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
-			break;
 	}
 
 	return CallWindowProc(m_pfnOriginalWndProc, hWnd, uMsg, wParam, lParam);
@@ -941,33 +948,40 @@ VOID D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 
 VOID D2GI::SetupWindow()
 {
-	static DWORD c_adwWinModeToWinStyle[] =
+	static const DWORD c_adwWinModeToWinStyle[] =
 	{
-		WS_VISIBLE | WS_CAPTION | WS_SYSMENU,
-		WS_VISIBLE | WS_POPUP,
-		WS_VISIBLE | WS_POPUP,
+		WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // windowed
+		WS_VISIBLE | WS_POPUP, // borderless
+		WS_VISIBLE | WS_POPUP, // fullscreen
+	};
+	static const DWORD c_adwWinModeToWinExStyle[] =
+	{
+		WS_EX_OVERLAPPEDWINDOW, // windowed
+		0, // borderless
+		0, // fullscreen
 	};
 
-	DWORD                       dwWinStyle;
-	INT                         nDisplayWidth, nDisplayHeight;
-	INT                         nWinX, nWinY, nWinWidth, nWinHeight;
-	RECT                        rtClientRect;
+	const DWORD dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
+	const DWORD dwWinExStyle = c_adwWinModeToWinExStyle[D2GIConfig::GetWindowMode()];
+	const INT nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
+	const INT nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
+	const INT nWinWidth = std::min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
+	const INT nWinHeight = std::min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
+	const INT nWinX = (nDisplayWidth - nWinWidth) / 2;
+	const INT nWinY = (nDisplayHeight - nWinHeight) / 2;
 
-	dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
-	nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
-	nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
-	nWinWidth = min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());
-	nWinHeight = min(nDisplayHeight, (INT)D2GIConfig::GetVideoHeight());
-	nWinX = (nDisplayWidth - nWinWidth) / 2;
-	nWinY = (nDisplayHeight - nWinHeight) / 2;
+	RECT rtWindowRect = { nWinX, nWinY, nWinX+nWinWidth, nWinY+nWinHeight };
+	AdjustWindowRectEx(&rtWindowRect, dwWinStyle, FALSE, dwWinExStyle);
 
 	SetWindowLong(m_hWnd, GWL_STYLE, dwWinStyle);
-	SetWindowLong(m_hWnd, GWL_EXSTYLE, 0);
-	SetWindowPos(m_hWnd, HWND_TOP, nWinX, nWinY, nWinWidth, nWinHeight, SWP_DRAWFRAME);
-	GetClientRect(m_hWnd, &rtClientRect);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, dwWinExStyle);
+	SetWindowPos(m_hWnd, HWND_TOP, rtWindowRect.left, rtWindowRect.top, rtWindowRect.right - rtWindowRect.left, rtWindowRect.bottom - rtWindowRect.top, SWP_DRAWFRAME);
+	
+	// The window is already active, but the original WndProc didn't let the window style to change the first time - invalidate the nonclient area to force it to repaint.
+	SendMessage(m_hWnd, WM_NCACTIVATE, TRUE, NULL);
 
-	m_dwForcedWidth = rtClientRect.right - rtClientRect.left;
-	m_dwForcedHeight = rtClientRect.bottom - rtClientRect.top;
+	m_dwForcedWidth = nWinWidth;
+	m_dwForcedHeight = nWinHeight;
 }
 
 
@@ -1009,7 +1023,9 @@ VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback
 		}
 	}
 
-	for (i = 0; i < (INT)descs.size(); i++)
-		if (!pCallback(descs.data() + i, pArg))
-			return;
+	for (D3D7::DDSURFACEDESC2& desc : descs)
+	{
+		if (pCallback(&desc, pArg) == DDENUMRET_CANCEL)
+			break;
+	}
 }

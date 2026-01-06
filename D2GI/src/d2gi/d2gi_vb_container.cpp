@@ -4,7 +4,7 @@
 #include "d2gi_vb_container.h"
 
 
-#define DEFAULT_VB_SIZE  (32 * 256 * 256)
+#define DEFAULT_VB_SIZE  (32u * 256u * 256u)
 
 
 D2GIVertexBufferContainer::D2GIVertexBufferContainer(D2GI* pD2GI) 
@@ -22,7 +22,7 @@ D2GIVertexBufferContainer::~D2GIVertexBufferContainer()
 
 VERTEX_STREAMING_BUFFER* D2GIVertexBufferContainer::AllocNewBuffer(UINT uRequiredSize)
 {
-	UINT uSelectedSize = max(uRequiredSize, DEFAULT_VB_SIZE);
+	UINT uSelectedSize = std::max(uRequiredSize, DEFAULT_VB_SIZE);
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 	D3D9::IDirect3DVertexBuffer9* pVB;
 

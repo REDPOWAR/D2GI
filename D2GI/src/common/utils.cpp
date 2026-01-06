@@ -2,6 +2,8 @@
 #include "common.h"
 #include "utils.h"
 
+#include <algorithm>
+
 using namespace D3D7;
 
 
@@ -68,6 +70,6 @@ VOID CalcMipMapLevelSize(DWORD dwTextureW, DWORD dwTextureH, UINT uLevel, DWORD*
 {
 	UINT uPow = 1 << uLevel;
 
-	*pMipMapW = max(dwTextureW / uPow, 1);
-	*pMipMapH = max(dwTextureH / uPow, 1);
+	*pMipMapW = std::max(dwTextureW / uPow, 1ul);
+	*pMipMapH = std::max(dwTextureH / uPow, 1ul);
 }

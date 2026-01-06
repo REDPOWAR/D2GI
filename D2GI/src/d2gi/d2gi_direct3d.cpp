@@ -35,7 +35,7 @@ HRESULT D2GIDirect3D::EnumDevices(LPD3DENUMDEVICESCALLBACK7 pCallback, LPVOID pA
 
 	for (i = 0; i < (INT)g_uDeviceCount; i++)
 	{
-		if (!pCallback(g_lpszDeviceDescs[i], g_lpszDeviceNames[i], g_asDeviceDescs + i, pArg))
+		if (pCallback(g_lpszDeviceDescs[i], g_lpszDeviceNames[i], g_asDeviceDescs + i, pArg) == DDENUMRET_CANCEL)
 			break;
 	}
 
@@ -49,7 +49,7 @@ HRESULT D2GIDirect3D::EnumZBufferFormats(REFCLSID, D3D7::LPD3DENUMPIXELFORMATSCA
 
 	for (i = 0; i < (INT)g_uZBufferFormatsCount; i++)
 	{
-		if (!pCallback(g_asZBufferFormats + i, lpArg))
+		if (pCallback(g_asZBufferFormats + i, lpArg) == DDENUMRET_CANCEL)
 			break;
 	}
 

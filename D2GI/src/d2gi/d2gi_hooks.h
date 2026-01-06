@@ -13,16 +13,18 @@ class D2GIHookInjector
 		D2V_UNKNOWN = -1,
 		D2V_8_1,
 		D2V_8_1B,
+		D2V_KOTR_1_3,
 	};
 
-	static D2VERSION s_eCurrentD2Version;
-
 	static D2GI* ObtainD2GI();
-	static INT __stdcall SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
-	static INT CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
+	static void __fastcall SetupTransforms(void* pThis, void*, MAT3X4* pmView, MAT3X4* pmProj);
 
 	static D2VERSION DetectD2Version();
-	static BOOL PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallAddress);
+	static void PatchCallOperation(DWORD_PTR dwOperationAddress);
 public:
-	static VOID InjectHooks();
+	static void InjectHooks();
+
+private:
+	static void (__thiscall *m_origSetupTransform)(void* pThis, MAT3X4* pmView, MAT3X4* pmProj);
+	static D3D7::IDirect3DDevice7** m_deviceAddress;
 };

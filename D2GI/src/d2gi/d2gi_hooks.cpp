@@ -1,7 +1,6 @@
 
 #include "../common/common.h"
 #include "../common/logger.h"
-#include "../common/dir.h"
 
 #include "d2gi.h"
 #include "d2gi_device.h"
@@ -13,19 +12,13 @@
 #define OPCODE_SIZE           1
 
 
-D2GIHookInjector::D2VERSION D2GIHookInjector::s_eCurrentD2Version;
+void (__thiscall *D2GIHookInjector::m_origSetupTransform)(void* pThis, MAT3X4* pmView, MAT3X4* pmProj);
+D3D7::IDirect3DDevice7** D2GIHookInjector::m_deviceAddress;
 
 
 D2GI* D2GIHookInjector::ObtainD2GI()
 {
-	static DWORD c_adwDeviceAddresses[] =
-	{
-		0x00720908, 0x00720928
-	};
-
-	DWORD                   dwDevAddr = c_adwDeviceAddresses[s_eCurrentD2Version];
-	D3D7::IDirect3DDevice7* pDev      = *(D3D7::IDirect3DDevice7**)dwDevAddr;
-
+	D3D7::IDirect3DDevice7* pDev      = *m_deviceAddress;
 	if (pDev == NULL)
 		return NULL;
 
@@ -33,7 +26,7 @@ D2GI* D2GIHookInjector::ObtainD2GI()
 }
 
 
-INT D2GIHookInjector::SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
+void __fastcall D2GIHookInjector::SetupTransforms(void* pThis, void*, MAT3X4* pmView, MAT3X4* pmProj)
 {
 	D2GI* pD2GI = ObtainD2GI();
 	MAT3X4 mPatchedView = *pmView, mPatchedProj = *pmProj;
@@ -41,108 +34,63 @@ INT D2GIHookInjector::SetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmPro
 	if(pD2GI != NULL)
 		pD2GI->OnTransformsSetup(pThis, &mPatchedView, &mPatchedProj);
 
-	return CallOriginalSetupTransforms(pThis, &mPatchedView, &mPatchedProj);
-}
-
-
-__declspec(naked) VOID SetupTransformsHook()
-{
-	__asm
-	{
-		mov eax, [esp + 8];
-		push eax;
-		mov eax, [esp + 8];
-		push eax;
-		push ecx;
-		call D2GIHookInjector::SetupTransforms;
-		ret 8;
-	};
-}
-
-
-INT D2GIHookInjector::CallOriginalSetupTransforms(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
-{
-	static DWORD c_adwSetupTransformsAddresses[] =
-	{
-		0x005AE0E0, 0x005AE070
-	};
-
-	INT nResult, nAddr = c_adwSetupTransformsAddresses[s_eCurrentD2Version];
-
-	__asm
-	{
-		push ecx;
-		push eax;
-
-		mov ecx, pThis;
-		push pmProj;
-		push pmView;
-		call nAddr;
-
-		mov nResult, eax;
-		pop eax;
-		pop ecx;
-	};
-
-	return nResult;
+	m_origSetupTransform(pThis, &mPatchedView, &mPatchedProj);
 }
 
 
 D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 {
-	static DWORD c_adwTimestamps[] =
+	const DWORD c_adwTimestamps[] =
 	{
-		0x400502EA, 0x4760F7AC
+		0x400502EA, // 8.1
+		0x4760F7AC, // 8.1B
+		0x3C970FF7, // KotR 1.3
 	};
 
-	FILE* pFile;
-	IMAGE_DOS_HEADER sDOSHeader;
-	IMAGE_FILE_HEADER sImageHeader;
-	INT i;
+	const HMODULE gameModule = GetModuleHandle(nullptr);
 
-	pFile = _tfopen(Directory::GetEXEPath(), TEXT("rb"));
-	if (pFile == NULL)
-	{
-		Logger::Warning(
-			TEXT("Failed to open D2 EXE file to detect version (%s)"), Directory::GetEXEPath());
-		return D2V_UNKNOWN;
-	}
+	PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(gameModule);
+	PIMAGE_NT_HEADERS ntHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<char*>(dosHeader) + dosHeader->e_lfanew);
 
-	fread(&sDOSHeader, sizeof(sDOSHeader), 1, pFile);
-	fseek(pFile, sDOSHeader.e_lfanew + 4, SEEK_SET);
-	fread(&sImageHeader, sizeof(sImageHeader), 1, pFile);
-	fclose(pFile);
-
-	for (i = 0; i < ARRAYSIZE(c_adwTimestamps); i++)
-		if (c_adwTimestamps[i] == sImageHeader.TimeDateStamp)
+	for (size_t i = 0; i < ARRAYSIZE(c_adwTimestamps); i++)
+		if (c_adwTimestamps[i] == ntHeader->FileHeader.TimeDateStamp)
 			return (D2VERSION)i;
 
 	return D2V_UNKNOWN;
 }
 
 
-BOOL D2GIHookInjector::PatchCallOperation(DWORD dwOperationAddress, DWORD dwNewCallAddress)
+void D2GIHookInjector::PatchCallOperation(DWORD_PTR dwOperationAddress)
 {
-	INT nCallOffset;
+	DWORD dwProtect;
+	VirtualProtect((void*)dwOperationAddress, CALL_INSTRUCTION_SIZE, PAGE_EXECUTE_READWRITE, &dwProtect);
 
-	nCallOffset = (INT32)dwNewCallAddress;
-	nCallOffset -= (INT32)dwOperationAddress + CALL_INSTRUCTION_SIZE;
+	INT nOriginalCallOffset;
+	memcpy(&nOriginalCallOffset, (void*)(dwOperationAddress + OPCODE_SIZE), sizeof(nOriginalCallOffset));
+	m_origSetupTransform = (decltype(m_origSetupTransform))(nOriginalCallOffset + dwOperationAddress + CALL_INSTRUCTION_SIZE);
 
-	return WriteProcessMemory(GetCurrentProcess(), 
-		(BYTE*)dwOperationAddress + OPCODE_SIZE, &nCallOffset, sizeof(nCallOffset), NULL);
+	const INT nCallOffset = (INT32)&SetupTransforms - (INT32)dwOperationAddress - CALL_INSTRUCTION_SIZE;
+	memcpy((void*)(dwOperationAddress + OPCODE_SIZE), &nCallOffset, sizeof(nCallOffset));
+
+	VirtualProtect((void*)dwOperationAddress, CALL_INSTRUCTION_SIZE, dwProtect, &dwProtect);
 }
 
 
-VOID D2GIHookInjector::InjectHooks()
+void D2GIHookInjector::InjectHooks()
 {
-	static DWORD c_adwSetupTransformsCalls[] =
+	const DWORD c_adwSetupTransformsCalls[] =
 	{
-		0x005EB682, 0x005EB622
+		0x005EB682, 0x005EB622, 0x005EACB2
 	};
-	static TCHAR* c_lpszVersionNames[] =
+	const DWORD c_adwDeviceAddresses[] =
+	{
+		0x00720908, 0x00720928, 0x0071F868
+	};
+	const TCHAR* c_lpszVersionNames[] =
 	{
 		TEXT("8.1"),
-		TEXT("8.1B")
+		TEXT("8.1B"),
+		TEXT("KoTR 1.3"),
 	};
 
 
@@ -154,16 +102,14 @@ VOID D2GIHookInjector::InjectHooks()
 
 	Logger::Log(TEXT("Trying to inject hooks..."));
 
-	s_eCurrentD2Version = DetectD2Version();
-	if (s_eCurrentD2Version == D2V_UNKNOWN)
+	const D2VERSION eCurrentD2Version = DetectD2Version();
+	if (eCurrentD2Version == D2V_UNKNOWN)
 	{
 		Logger::Log(TEXT("Current D2 executable version is unknown, injection aborted"));
 		return;
 	}
 
-	Logger::Log(TEXT("Detected D2 version %s"), c_lpszVersionNames[s_eCurrentD2Version]);
-	if (PatchCallOperation(c_adwSetupTransformsCalls[s_eCurrentD2Version], (DWORD)SetupTransformsHook))
-		Logger::Log(TEXT("Successfully injected hooks"));
-	else
-		Logger::Log(TEXT("Unable to write process memory to inject hooks"));
+	Logger::Log(TEXT("Detected D2 version %s"), c_lpszVersionNames[eCurrentD2Version]);
+	PatchCallOperation(c_adwSetupTransformsCalls[eCurrentD2Version]);
+	m_deviceAddress = (D3D7::IDirect3DDevice7**)c_adwDeviceAddresses[eCurrentD2Version];
 }

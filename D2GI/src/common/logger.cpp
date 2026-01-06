@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "dir.h"
 
+#include <shlwapi.h>
 
 TCHAR Logger::s_szLogPath[MAX_PATH] = {'\0'};
 HWND  Logger::s_hWnd = NULL;
@@ -16,8 +17,7 @@ VOID Logger::WriteLog(TCHAR* pszMessage)
 
 	if (*s_szLogPath == '\0')
 	{
-		_tcscpy(s_szLogPath, Directory::GetEXEDirectory());
-		_tcscat(s_szLogPath, TEXT("d2gi.log"));
+		PathCombine(s_szLogPath, Directory::GetEXEDirectory(), TEXT("d2gi.log"));
 	}
 
 	GetSystemTime(&stTime);
@@ -33,8 +33,11 @@ VOID Logger::WriteLog(TCHAR* pszMessage)
 #endif
 
 	pFile = _tfopen(s_szLogPath, TEXT("a"));
-	_ftprintf(pFile, TEXT("%s"), szFormattedMessage);
-	fclose(pFile);
+	if (pFile != nullptr)
+	{
+		_fputts(szFormattedMessage, pFile);
+		fclose(pFile);
+	}
 }
 
 
