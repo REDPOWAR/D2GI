@@ -6,7 +6,7 @@
 
 #include <shlwapi.h>
 
-WINDOWMODE D2GIConfig::s_eWindowMode  = WMODE_BORDERLESS;
+WINDOWMODE D2GIConfig::s_eWindowMode  = WINDOWMODE::BORDERLESS;
 DWORD      D2GIConfig::s_dwVideoWidth = 0, D2GIConfig::s_dwVideoHeight = 0;
 BOOL       D2GIConfig::s_bEnableHooks = TRUE;
 BOOL       D2GIConfig::s_bEnableVSync = FALSE;
@@ -40,15 +40,15 @@ VOID D2GIConfig::ReadFromFile()
 		TEXT("borderless"), szWinMode, ARRAYSIZE(szWinMode), szConfigFile);
 
 	if (_tcsicmp(szWinMode, TEXT("fullscreen")) == 0)
-		s_eWindowMode = WMODE_FULLSCREEN;
+		s_eWindowMode = WINDOWMODE::FULLSCREEN;
 	else if (_tcsicmp(szWinMode, TEXT("windowed")) == 0)
-		s_eWindowMode = WMODE_WINDOWED;
+		s_eWindowMode = WINDOWMODE::WINDOWED;
 	else if (_tcsicmp(szWinMode, TEXT("borderless")) == 0)
-		s_eWindowMode = WMODE_BORDERLESS;
+		s_eWindowMode = WINDOWMODE::BORDERLESS;
 	else
 	{
 		Logger::Warning(TEXT("Unknown window mode \"%s\", setting it to borderless"), szWinMode);
-		s_eWindowMode = WMODE_BORDERLESS;
+		s_eWindowMode = WINDOWMODE::BORDERLESS;
 	}
 
 	s_dwVideoWidth = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Width"), 0, szConfigFile);

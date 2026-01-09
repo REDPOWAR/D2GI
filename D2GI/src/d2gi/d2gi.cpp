@@ -164,7 +164,7 @@ VOID D2GI::ResetD3D9Device()
 	sParams.PresentationInterval       =
 		D2GIConfig::VSyncEnabled() ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 
-	if (D2GIConfig::GetWindowMode() == WMODE_FULLSCREEN)
+	if (D2GIConfig::GetWindowMode() == WINDOWMODE::FULLSCREEN)
 	{
 		D3D9::D3DDISPLAYMODE sDisplayMode;
 		UINT uModeID, uModeCount;
@@ -948,21 +948,19 @@ VOID D2GI::OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj)
 
 VOID D2GI::SetupWindow()
 {
-	static const DWORD c_adwWinModeToWinStyle[] =
+	DWORD dwWinStyle;
+	DWORD dwWinExStyle;
+	if (D2GIConfig::GetWindowMode() == WINDOWMODE::WINDOWED)
 	{
-		WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // windowed
-		WS_VISIBLE | WS_POPUP, // borderless
-		WS_VISIBLE | WS_POPUP, // fullscreen
-	};
-	static const DWORD c_adwWinModeToWinExStyle[] =
+		dwWinStyle = WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+		dwWinExStyle = WS_EX_OVERLAPPEDWINDOW;
+	}
+	else
 	{
-		WS_EX_OVERLAPPEDWINDOW, // windowed
-		0, // borderless
-		0, // fullscreen
-	};
+		dwWinStyle = WS_VISIBLE | WS_POPUP;
+		dwWinExStyle = 0;
+	}
 
-	const DWORD dwWinStyle = c_adwWinModeToWinStyle[D2GIConfig::GetWindowMode()];
-	const DWORD dwWinExStyle = c_adwWinModeToWinExStyle[D2GIConfig::GetWindowMode()];
 	const INT nDisplayWidth = GetSystemMetrics(SM_CXSCREEN);
 	const INT nDisplayHeight = GetSystemMetrics(SM_CYSCREEN);
 	const INT nWinWidth = std::min(nDisplayWidth, (INT)D2GIConfig::GetVideoWidth());

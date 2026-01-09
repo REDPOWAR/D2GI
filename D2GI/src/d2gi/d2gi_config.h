@@ -4,11 +4,11 @@
 #include "d2gi_common.h"
 
 
-enum WINDOWMODE
+enum class WINDOWMODE
 {
-	WMODE_WINDOWED,
-	WMODE_BORDERLESS,
-	WMODE_FULLSCREEN,
+	WINDOWED,
+	BORDERLESS,
+	FULLSCREEN,
 };
 
 
