@@ -41,6 +41,7 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 {
 	const DWORD c_adwTimestamps[] =
 	{
+		0x39DC4F94, // 5.5
 		0x400502EA, // 8.1
 		0x4760F7AC, // 8.1B
 		0x3C970FF7, // KotR 1.3
@@ -64,6 +65,7 @@ void D2GIHookInjector::InjectHooks()
 {
 	const TCHAR* c_lpszVersionNames[] =
 	{
+		TEXT("5.5"),
 		TEXT("8.1"),
 		TEXT("8.1B"),
 		TEXT("KoTR 1.3"),

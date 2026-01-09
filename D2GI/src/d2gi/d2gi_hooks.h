@@ -10,7 +10,8 @@ class D2GIHookInjector
 {
 	enum D2VERSION
 	{
-		D2V_8_1 = 0,
+		D2V_5_5 = 0,
+		D2V_8_1,
 		D2V_8_1B,
 		D2V_KOTR_1_3,
 
