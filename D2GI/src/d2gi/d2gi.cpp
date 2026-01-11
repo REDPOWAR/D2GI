@@ -767,9 +767,10 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 	D2GITexture* pTexture = m_lpCurrentTextures[0];
 
 	BOOL bEmulateColorKey = (m_bColorKeyEnabled && pTexture != NULL && pTexture->HasColorKeyConversion());
+	BOOL fixAlpha = D2GIConfig::FixAlphaEnabled() && (pTexture != NULL && pTexture->GetD2GIPixelFormat() == D2GIPF_16_4444);
 
 
-	if (bEmulateColorKey)
+	if (bEmulateColorKey || fixAlpha)
 	{
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHATESTENABLE, &dwAlphaTestEnable);
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAFUNC, &dwAlphaTestFunc);
@@ -777,6 +778,9 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
+		
+		if (fixAlpha)
+			m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, (DWORD)0x00000001); //20
 	}
 
 	if (bStrided)
@@ -817,7 +821,7 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		}
 	}
 
-	if (bEmulateColorKey)
+	if (bEmulateColorKey || fixAlpha)
 	{
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, dwAlphaTestEnable);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, dwAlphaTestFunc);

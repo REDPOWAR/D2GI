@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}</ProjectGuid>
     <RootNamespace>D2GI</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -34,7 +34,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -75,16 +75,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>ddraw</TargetName>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(DXSDK_DIR)\Include\;$(IncludePath)</IncludePath>
     <OutDir>$(D2DIR)</OutDir>
-    <LibraryPath>$(DXSDK_DIR)\Lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>ddraw</TargetName>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(DXSDK_DIR)\Include\;$(IncludePath)</IncludePath>
-    <OutDir>$(D2DIR)</OutDir>
-    <LibraryPath>$(DXSDK_DIR)\Lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(DXSDK_DIR)\Include\</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(DXSDK_DIR)\Lib\$(PlatformTarget)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,7 +126,7 @@ call echo Shaders compiled.</Command>
       <SDLCheck>false</SDLCheck>
       <ConformanceMode>false</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_NON_CONFORMING_SWPRINTFS;_CRT_SECURE_NO_WARNINGS;NO_INIT_ALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -197,6 +194,7 @@ call echo Shaders compiled.</Command>
     <ClCompile Include="src\d2gi\d2gi_texture.cpp" />
     <ClCompile Include="src\d2gi\d2gi_vb_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp" />
+    <ClCompile Include="src\d2gi\ScreenGrab\ScreenGrab9.cpp" />
     <ClCompile Include="src\d2gi\Utils\Patterns.cpp" />
     <ClCompile Include="src\d3d\d3d_device.cpp" />
     <ClCompile Include="src\d3d\d3d_direct3d.cpp" />
@@ -240,8 +238,16 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\d2gi\d2gi_texture.h" />
     <ClInclude Include="src\d2gi\d2gi_vb_container.h" />
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h" />
+    <ClInclude Include="src\d2gi\ScreenGrab\ScreenGrab9.h" />
+    <ClInclude Include="src\d2gi\Utils\CPatch.h" />
+    <ClInclude Include="src\d2gi\Utils\HookEach.hpp" />
+    <ClInclude Include="src\d2gi\Utils\HookInit.hpp" />
+    <ClInclude Include="src\d2gi\Utils\LateStaticInit.h" />
     <ClInclude Include="src\d2gi\Utils\MemoryMgr.h" />
+    <ClInclude Include="src\d2gi\Utils\ModuleList.hpp" />
     <ClInclude Include="src\d2gi\Utils\Patterns.h" />
+    <ClInclude Include="src\d2gi\Utils\ScopedUnprotect.hpp" />
+    <ClInclude Include="src\d2gi\Utils\Trampoline.h" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />
     <ClInclude Include="src\d3d\d3d_device.h" />
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
