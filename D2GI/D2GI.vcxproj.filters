@@ -49,6 +49,12 @@
     <Filter Include="Файлы заголовков\d2gi\g-streaming">
       <UniqueIdentifier>{8a3b8274-abc7-40e3-8c0e-ce04aac64cd0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\d2gi\Utils">
+      <UniqueIdentifier>{d98df3af-111c-41a4-925c-205bd41fd14f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы заголовков\d2gi\Utils">
+      <UniqueIdentifier>{e53780ad-ba43-4d04-9ef3-e9f00bfa58b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
@@ -161,6 +167,9 @@
     </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_config.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d2gi\Utils\Patterns.cpp">
+      <Filter>Исходные файлы\d2gi\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +289,12 @@
     </ClInclude>
     <ClInclude Include="src\d2gi\d2gi_blitter_vs.h">
       <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\Utils\MemoryMgr.h">
+      <Filter>Файлы заголовков\d2gi\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\Utils\Patterns.h">
+      <Filter>Файлы заголовков\d2gi\Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

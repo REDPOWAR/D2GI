@@ -7,9 +7,8 @@
 #include "d2gi_hooks.h"
 #include "d2gi_config.h"
 
-
-#define CALL_INSTRUCTION_SIZE 5
-#define OPCODE_SIZE           1
+#include "Utils/MemoryMgr.h"
+#include "Utils/Patterns.h"
 
 
 void (__thiscall *D2GIHookInjector::m_origSetupTransform)(void* pThis, MAT3X4* pmView, MAT3X4* pmProj);
@@ -42,10 +41,12 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 {
 	const DWORD c_adwTimestamps[] =
 	{
+		0x39DC4F94, // 5.5
 		0x400502EA, // 8.1
 		0x4760F7AC, // 8.1B
 		0x3C970FF7, // KotR 1.3
 	};
+	static_assert(std::size(c_adwTimestamps) == NUM_D2VERSIONS);
 
 	const HMODULE gameModule = GetModuleHandle(nullptr);
 
@@ -60,39 +61,19 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 }
 
 
-void D2GIHookInjector::PatchCallOperation(DWORD_PTR dwOperationAddress)
-{
-	DWORD dwProtect;
-	VirtualProtect((void*)dwOperationAddress, CALL_INSTRUCTION_SIZE, PAGE_EXECUTE_READWRITE, &dwProtect);
-
-	INT nOriginalCallOffset;
-	memcpy(&nOriginalCallOffset, (void*)(dwOperationAddress + OPCODE_SIZE), sizeof(nOriginalCallOffset));
-	m_origSetupTransform = (decltype(m_origSetupTransform))(nOriginalCallOffset + dwOperationAddress + CALL_INSTRUCTION_SIZE);
-
-	const INT nCallOffset = (INT32)&SetupTransforms - (INT32)dwOperationAddress - CALL_INSTRUCTION_SIZE;
-	memcpy((void*)(dwOperationAddress + OPCODE_SIZE), &nCallOffset, sizeof(nCallOffset));
-
-	VirtualProtect((void*)dwOperationAddress, CALL_INSTRUCTION_SIZE, dwProtect, &dwProtect);
-}
-
-
 void D2GIHookInjector::InjectHooks()
 {
-	const DWORD c_adwSetupTransformsCalls[] =
-	{
-		0x005EB682, 0x005EB622, 0x005EACB2
-	};
-	const DWORD c_adwDeviceAddresses[] =
-	{
-		0x00720908, 0x00720928, 0x0071F868
-	};
 	const TCHAR* c_lpszVersionNames[] =
 	{
+		TEXT("5.5"),
 		TEXT("8.1"),
 		TEXT("8.1B"),
 		TEXT("KoTR 1.3"),
-	};
 
+		TEXT("Unknown")
+	};
+	static_assert(std::size(c_lpszVersionNames) == NUM_D2VERSIONS + 1);
+	Logger::Log(TEXT("Detected D2 version: %s"), c_lpszVersionNames[DetectD2Version()]);
 
 	if (!D2GIConfig::HooksEnabled())
 	{
@@ -100,16 +81,22 @@ void D2GIHookInjector::InjectHooks()
 		return;
 	}
 
-	Logger::Log(TEXT("Trying to inject hooks..."));
+	using namespace Memory::VP;
+	using namespace hook::txn;
 
-	const D2VERSION eCurrentD2Version = DetectD2Version();
-	if (eCurrentD2Version == D2V_UNKNOWN)
+	try
 	{
-		Logger::Log(TEXT("Current D2 executable version is unknown, injection aborted"));
+		auto device_address_ptr = get_pattern<D3D7::IDirect3DDevice7**>("8B 0D ? ? ? ? 8D 54 24 ? 51 6A ? 52 68 ? ? ? ? 68 ? ? ? ? C7 44 24", 2);
+		auto setup_transforms = get_pattern("50 51 8B CE E8 ? ? ? ? 5F 5E 5D", 4);
+
+		m_deviceAddress = *device_address_ptr;
+		InterceptCall(setup_transforms, m_origSetupTransform, &SetupTransforms);
+	}
+	catch (const hook::txn_exception&)
+	{
+		Logger::Log(TEXT("Failed to inject hooks, signature scan(s) failed."));
 		return;
 	}
 
-	Logger::Log(TEXT("Detected D2 version %s"), c_lpszVersionNames[eCurrentD2Version]);
-	PatchCallOperation(c_adwSetupTransformsCalls[eCurrentD2Version]);
-	m_deviceAddress = (D3D7::IDirect3DDevice7**)c_adwDeviceAddresses[eCurrentD2Version];
+	Logger::Log(TEXT("Hooks injected."));
 }

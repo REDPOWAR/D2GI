@@ -1,0 +1,4 @@
+[submodule "D2GI/src/d2gi/Utils"]
+	path = D2GI/src/d2gi/Utils
+	url = https://github.com/CookiePLMonster/ModUtils
+	branch = master

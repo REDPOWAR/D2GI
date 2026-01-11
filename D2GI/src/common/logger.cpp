@@ -12,19 +12,17 @@ VOID Logger::WriteLog(TCHAR* pszMessage)
 {
 	TCHAR      szFormattedMessage[1024];
 	SYSTEMTIME stTime;
-	DWORD      dwPID, dwTID;
-	FILE*      pFile;
 
 	if (*s_szLogPath == '\0')
 	{
 		PathCombine(s_szLogPath, Directory::GetEXEDirectory(), TEXT("d2gi.log"));
 	}
 
-	GetSystemTime(&stTime);
-	dwPID = GetCurrentProcessId();
-	dwTID = GetCurrentThreadId();
+	GetLocalTime(&stTime);
+	const DWORD dwPID = GetCurrentProcessId();
+	const DWORD dwTID = GetCurrentThreadId();
 
-	_stprintf(szFormattedMessage, TEXT("[%i-%02i-%02i %02i:%02i:%02i:%03i %i:%i] %s\n"),
+	_stprintf_s(szFormattedMessage, TEXT("[%u-%02u-%02u %02u:%02u:%02u:%03u %u:%u] %s\n"),
 		stTime.wYear, stTime.wMonth, stTime.wDay, stTime.wHour,
 		stTime.wMinute, stTime.wSecond, stTime.wMilliseconds, dwPID, dwTID, pszMessage);
 
@@ -32,7 +30,7 @@ VOID Logger::WriteLog(TCHAR* pszMessage)
 	OutputDebugString(szFormattedMessage);
 #endif
 
-	pFile = _tfopen(s_szLogPath, TEXT("a"));
+	FILE* pFile = _tfopen(s_szLogPath, TEXT("a"));
 	if (pFile != nullptr)
 	{
 		_fputts(szFormattedMessage, pFile);
