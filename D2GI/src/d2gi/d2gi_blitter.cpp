@@ -83,14 +83,17 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 {
 	IDirect3DDevice9* pDev = GetD3D9Device();
 
-	D3DXVECTOR4 vTextureRect, vScreenPosRect, vTextureBorder;
+	struct
+	{
+		float x, y, z, w;
+	} vTextureRect, vScreenPosRect, vTextureBorder;
 
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	FRECT rtSrc, rtDst;
 
-	IDirect3DSurface9* pOriginalRT = NULL, *pOriginalDS;
+	IDirect3DSurface9* pOriginalRT = NULL, * pOriginalDS;
 	IDirect3DBaseTexture9* pCurrentTexture1 = NULL, * pCurrentTexture2 = NULL;
-	DWORD dwMinFilter, dwMagFilter, dwCullMode, dwAlphaTestEnable; 
+	DWORD dwMinFilter, dwMagFilter, dwCullMode, dwAlphaTestEnable;
 	DWORD dwAlphaBlending, dwAlphaOp, dwAlphaSrc, dwAlphaDst;
 	DWORD dwZEnable, dwZWriteEnable;
 	D3DVIEWPORT9 sOriginalVP, sUsedVP;
@@ -149,7 +152,7 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 	sUsedVP.MinZ = 0.0;
 	sUsedVP.MaxZ = 1.0f;
 
-	if(pDst != pOriginalRT)
+	if (pDst != pOriginalRT)
 		pDev->SetRenderTarget(0, pDst);
 	pDev->SetDepthStencilSurface(NULL);
 	pDev->SetViewport(&sUsedVP);
@@ -180,7 +183,8 @@ VOID D2GIBlitter::Blit(IDirect3DSurface9* pDst, FRECT* pDstRT,
 		pDev->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
 		pDev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
 		pDev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	}else
+	}
+	else
 		pDev->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 
 	pDev->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
