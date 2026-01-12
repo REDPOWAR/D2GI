@@ -61,6 +61,9 @@
     <Filter Include="Исходные файлы\d2gi\ScreenGrab">
       <UniqueIdentifier>{20a745f6-c766-4b15-87eb-1e8cfbd9eda8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Файлы заголовков\d2gi\CPatch">
+      <UniqueIdentifier>{19ccae48-3735-4f72-a610-56ca76bb497b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
@@ -299,35 +302,14 @@
     <ClInclude Include="src\d2gi\d2gi_blitter_vs.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\MemoryMgr.h">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\Patterns.h">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\CPatch.h">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="src\d2gi\ScreenGrab\ScreenGrab9.h">
       <Filter>Файлы заголовков\d2gi\ScreenGrab</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\HookEach.hpp">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\HookInit.hpp">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\LateStaticInit.h">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\ModuleList.hpp">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
     </ClInclude>
     <ClInclude Include="src\d2gi\Utils\ScopedUnprotect.hpp">
       <Filter>Файлы заголовков\d2gi\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\d2gi\Utils\Trampoline.h">
-      <Filter>Файлы заголовков\d2gi\Utils</Filter>
+    <ClInclude Include="src\d2gi\CPatch\CPatch.h">
+      <Filter>Файлы заголовков\d2gi\CPatch</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

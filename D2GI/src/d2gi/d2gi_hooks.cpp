@@ -11,7 +11,7 @@
 #include "Utils/Patterns.h"
 
 
-#include "Utils/CPatch.h"
+#include "CPatch/CPatch.h"
 
 // Normally a bad practice, but wincodec.h expects some D3D9 types in the global scope, so provide them.
 using namespace D3D9;

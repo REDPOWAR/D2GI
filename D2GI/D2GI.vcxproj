@@ -212,6 +212,7 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\common\logger.h" />
     <ClInclude Include="src\common\m3x4.h" />
     <ClInclude Include="src\common\utils.h" />
+    <ClInclude Include="src\d2gi\CPatch\CPatch.h" />
     <ClInclude Include="src\d2gi\d2gi.h" />
     <ClInclude Include="src\d2gi\d2gi_backbuf_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_blitter_ps.h" />
@@ -239,15 +240,7 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\d2gi\d2gi_vb_container.h" />
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h" />
     <ClInclude Include="src\d2gi\ScreenGrab\ScreenGrab9.h" />
-    <ClInclude Include="src\d2gi\Utils\CPatch.h" />
-    <ClInclude Include="src\d2gi\Utils\HookEach.hpp" />
-    <ClInclude Include="src\d2gi\Utils\HookInit.hpp" />
-    <ClInclude Include="src\d2gi\Utils\LateStaticInit.h" />
-    <ClInclude Include="src\d2gi\Utils\MemoryMgr.h" />
-    <ClInclude Include="src\d2gi\Utils\ModuleList.hpp" />
-    <ClInclude Include="src\d2gi\Utils\Patterns.h" />
     <ClInclude Include="src\d2gi\Utils\ScopedUnprotect.hpp" />
-    <ClInclude Include="src\d2gi\Utils\Trampoline.h" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />
     <ClInclude Include="src\d3d\d3d_device.h" />
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
