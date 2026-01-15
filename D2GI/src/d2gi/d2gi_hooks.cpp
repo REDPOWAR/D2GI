@@ -369,7 +369,7 @@ void D2GIHookInjector::InjectHooks()
 	const TCHAR* c_lpszVersionNames[] =
 	{
 		TEXT("5.5"),
-		TEXT("1.3"),
+		TEXT("KotR 1.3"),
 		TEXT("8.1"),
 		TEXT("8.2"),
 
@@ -413,7 +413,8 @@ void D2GIHookInjector::InjectHooks()
 		D2GIHookInjector::InjectScreenshotsPatch();
 
 		//Interface aspect fix
-		D2GIHookInjector::InjectInterfacePatch();
+		if (D2GIConfig::UIHooksEnabled())
+			D2GIHookInjector::InjectInterfacePatch();
 
 	} else {
 		Logger::Log(TEXT("Interface and screenshot hooks don't support this version of the game."));

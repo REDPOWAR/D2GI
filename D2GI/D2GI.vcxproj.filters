@@ -311,5 +311,11 @@
     <ClInclude Include="src\d2gi\CPatch\CPatch.h">
       <Filter>Файлы заголовков\d2gi\CPatch</Filter>
     </ClInclude>
+    <ClInclude Include="src\d2gi\Utils\MemoryMgr.h">
+      <Filter>Файлы заголовков\d2gi\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\Utils\Patterns.h">
+      <Filter>Файлы заголовков\d2gi\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
