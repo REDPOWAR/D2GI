@@ -777,7 +777,6 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		m_pDev->GetRenderState(D3D9::D3DRS_ALPHAREF, &dwAlphaTestRef);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHATESTENABLE, TRUE);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAFUNC, D3D9::D3DCMP_GREATEREQUAL);
-		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, 0x00000080);
 		m_pDev->SetRenderState(D3D9::D3DRS_ALPHAREF, fixAlpha ? 0x1 : 0x80);
 	}
 
