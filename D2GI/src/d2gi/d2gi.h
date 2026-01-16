@@ -60,6 +60,8 @@ class D2GI
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
+	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
+
 	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
 	VOID ReleaseResources();

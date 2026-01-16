@@ -8,10 +8,11 @@
 
 WINDOWMODE D2GIConfig::s_eWindowMode    = WINDOWMODE::BORDERLESS;
 DWORD      D2GIConfig::s_dwVideoWidth   = 0, D2GIConfig::s_dwVideoHeight = 0;
-BOOL       D2GIConfig::s_bEnableHooks   = TRUE;
-BOOL       D2GIConfig::s_bEnableVSync   = FALSE;
-BOOL       D2GIConfig::s_bFixAlpha      = TRUE;
-BOOL       D2GIConfig::s_bEnableUIHooks = TRUE;
+DWORD      D2GIConfig::s_AnisotropyLevel = 1;
+bool       D2GIConfig::s_bEnableHooks   = true;
+bool       D2GIConfig::s_bEnableVSync   = false;
+bool       D2GIConfig::s_bFixAlpha      = true;
+bool       D2GIConfig::s_bEnableUIHooks = true;
 wchar_t    D2GIConfig::s_cScreenshotsPath[MAX_PATH];
 IMG_FORMAT D2GIConfig::s_eImgFormat     = IMG_BMP;
 
@@ -78,5 +79,11 @@ VOID D2GIConfig::ReadFromFile()
 	{
 		Logger::Warning(TEXT("Unknown image format \"%s\", setting it to BMP"), szTempBuf);
 		s_eImgFormat = IMG_BMP;
+	}
+
+	const INT AnisotropyLevel = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("AnisotropyLevel"), 1, szConfigFile);
+	if (AnisotropyLevel > 0) // Protect against people trying to set negative values
+	{
+		s_AnisotropyLevel = AnisotropyLevel;
 	}
 }

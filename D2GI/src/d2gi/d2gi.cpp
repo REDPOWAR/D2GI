@@ -224,6 +224,24 @@ VOID D2GI::ResetD3D9Device()
 	if (FAILED(m_pBackBufferCopy->GetSurfaceLevel(0, &m_pBackBufferCopySurf)))
 		Logger::Error(TEXT("Failed to get backbuffer copy surface"));
 
+	bool MinFilterAnisotropic = false, MagFilterAnisotropic = false;
+	D3D9::D3DCAPS9 DeviceCaps;
+	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)) && (DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
+	{
+		const DWORD MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1ul, DeviceCaps.MaxAnisotropy);
+		if (MaxAnisotropy > 1)
+		{
+			MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
+			MagFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
+			for (DWORD Stage = 0; Stage < 8; Stage++)
+			{
+				m_pDev->SetSamplerState(Stage, D3D9::D3DSAMP_MAXANISOTROPY, MaxAnisotropy);
+			}
+		}
+	}
+	m_MinFilterAnisotropic = MinFilterAnisotropic;
+	m_MagFilterAnisotropic = MagFilterAnisotropic;
+
 	LoadResources();
 }
 
@@ -511,32 +529,6 @@ VOID D2GI::OnRenderStateSet(D3D7::D3DRENDERSTATETYPE eState, DWORD dwValue)
 
 VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWORD dwValue)
 {
-	D3D9::D3DTEXTUREFILTERTYPE aeMagTexFMap[] =
-	{
-		D3D9::D3DTEXF_NONE,
-		D3D9::D3DTEXF_POINT,
-		D3D9::D3DTEXF_LINEAR,
-		D3D9::D3DTEXF_PYRAMIDALQUAD,
-		D3D9::D3DTEXF_GAUSSIANQUAD,
-		D3D9::D3DTEXF_ANISOTROPIC,
-	};
-
-	D3D9::D3DTEXTUREFILTERTYPE aeMinTexFMap[] =
-	{
-		D3D9::D3DTEXF_NONE,
-		D3D9::D3DTEXF_POINT,
-		D3D9::D3DTEXF_LINEAR,
-		D3D9::D3DTEXF_ANISOTROPIC,
-	};
-
-	D3D9::D3DTEXTUREFILTERTYPE aeMipTexFMap[] =
-	{
-		D3D9::D3DTEXF_NONE,
-		D3D9::D3DTEXF_NONE,
-		D3D9::D3DTEXF_POINT,
-		D3D9::D3DTEXF_LINEAR,
-	};
-
 	switch (eState)
 	{
 		case D3D7::D3DTSS_COLOROP:
@@ -596,13 +588,42 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_BORDERCOLOR, dwValue);
 			break;
 		case D3D7::D3DTSS_MAGFILTER:
-			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAGFILTER, aeMagTexFMap[dwValue]);
+			{
+				const D3D9::D3DTEXTUREFILTERTYPE aeMagTexFMap[] =
+				{
+					D3D9::D3DTEXF_NONE,
+					D3D9::D3DTEXF_POINT,
+					m_MagFilterAnisotropic ? D3D9::D3DTEXF_ANISOTROPIC : D3D9::D3DTEXF_LINEAR,
+					D3D9::D3DTEXF_PYRAMIDALQUAD,
+					D3D9::D3DTEXF_GAUSSIANQUAD,
+					D3D9::D3DTEXF_ANISOTROPIC,
+				};
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAGFILTER, aeMagTexFMap[dwValue]);
+			}
 			break;
 		case D3D7::D3DTSS_MINFILTER:
-			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MINFILTER, aeMinTexFMap[dwValue]);
+			{
+				const D3D9::D3DTEXTUREFILTERTYPE aeMinTexFMap[] =
+				{
+					D3D9::D3DTEXF_NONE,
+					D3D9::D3DTEXF_POINT,
+					m_MinFilterAnisotropic ? D3D9::D3DTEXF_ANISOTROPIC : D3D9::D3DTEXF_LINEAR,
+					D3D9::D3DTEXF_ANISOTROPIC,
+				};
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MINFILTER, aeMinTexFMap[dwValue]);
+			}
 			break;
 		case D3D7::D3DTSS_MIPFILTER:
-			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MIPFILTER, aeMipTexFMap[dwValue]);
+			{
+				static const D3D9::D3DTEXTUREFILTERTYPE aeMipTexFMap[] =
+				{
+					D3D9::D3DTEXF_NONE,
+					D3D9::D3DTEXF_NONE,
+					D3D9::D3DTEXF_POINT,
+					D3D9::D3DTEXF_LINEAR,
+				};
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MIPFILTER, aeMipTexFMap[dwValue]);
+			}
 			break;
 		case D3D7::D3DTSS_MIPMAPLODBIAS:
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MIPMAPLODBIAS, dwValue);
@@ -611,7 +632,11 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAXMIPLEVEL, dwValue);
 			break;
 		case D3D7::D3DTSS_MAXANISOTROPY:
-			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAXANISOTROPY, dwValue);
+			// If we force anisotropy, don't let the game change it
+			if (!m_MinFilterAnisotropic && !m_MagFilterAnisotropic)
+			{
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAXANISOTROPY, dwValue);
+			}
 			break;
 	}
 
