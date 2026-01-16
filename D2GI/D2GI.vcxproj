@@ -240,6 +240,8 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\d2gi\d2gi_texture.h" />
     <ClInclude Include="src\d2gi\d2gi_vb_container.h" />
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h" />
+    <ClInclude Include="src\d2gi\Utils\MemoryMgr.h" />
+    <ClInclude Include="src\d2gi\Utils\Patterns.h" />
     <ClInclude Include="src\d2gi\ScreenGrab\ScreenGrab9.h" />
     <ClInclude Include="src\d2gi\Utils\ScopedUnprotect.hpp" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />

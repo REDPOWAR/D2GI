@@ -10,7 +10,7 @@ WINDOWMODE D2GIConfig::s_eWindowMode    = WINDOWMODE::BORDERLESS;
 DWORD      D2GIConfig::s_dwVideoWidth   = 0, D2GIConfig::s_dwVideoHeight = 0;
 BOOL       D2GIConfig::s_bEnableHooks   = TRUE;
 BOOL       D2GIConfig::s_bEnableVSync   = FALSE;
-BOOL       D2GIConfig::s_bFixAlpha      = FALSE;
+BOOL       D2GIConfig::s_bFixAlpha      = TRUE;
 BOOL       D2GIConfig::s_bEnableUIHooks = TRUE;
 wchar_t    D2GIConfig::s_cScreenshotsPath[MAX_PATH];
 IMG_FORMAT D2GIConfig::s_eImgFormat     = IMG_BMP;
@@ -60,7 +60,7 @@ VOID D2GIConfig::ReadFromFile()
 	s_bEnableVSync   = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("EnableVSync"), FALSE, szConfigFile);
 	s_bEnableHooks   = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableHooks"), TRUE, szConfigFile);
 	s_bEnableUIHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableUIFix"), TRUE, szConfigFile);
-	s_bFixAlpha      = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("FixAlpha"), FALSE, szConfigFile);
+	s_bFixAlpha      = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("FixAlpha"), TRUE, szConfigFile);
 
 	GetPrivateProfileStringW(L"SCREENSHOTS", L"SavePath", L".\\screenshots",
 		s_cScreenshotsPath, MAX_PATH, szConfigFile);

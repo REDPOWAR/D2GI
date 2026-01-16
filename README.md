@@ -7,6 +7,8 @@
 ### Features  
 
 * Fixes incorrect graphics output (["Rainbow" bug](https://www.pcgamingwiki.com/wiki/Rainbow_color_problems_in_older_games), bug with an object's transparency etc.)
+* Fixes problems with rendering the background of translucent objects
+* Fixes a bug with overwriting screenshots and allows you to select the format and path for saving them
 * You can specify any resolution with any aspect ratio (4:3, 16:9 etc.)
 * 3 modes: windowed, borderless, fullscreen
 * 32-bit color rendering
@@ -17,7 +19,7 @@
 
 ### Requirements  
 
-* Game version 8.1 or KotR 1.3 (only these are tested, maybe it works on another versions too)
+* Game version 8.2, 8.1 or KotR 1.3 (only these are tested, maybe it works on another versions too)
 * Windows XP or higher  
 
 ### Download  
@@ -36,6 +38,12 @@ The `d2gi.ini` file has the following settings.
 * `Height` - Screen height like `1080` (`0` - auto)  
 * `WindowMode` - Window mode. Possible values: `windowed`, `borderless`, `fullscreen`.
 * `EnableVSync` - Turn vertical sync on or off (`1` and `0` accordingly)
+* `FixAlpha`- Turn correction of background rendering of translucent objects on or off (`1` and `0` accordingly)
 
 `HOOKS` section:
-* `EnableHooks` - enable game functions hooking (projection matrix correction with any aspect ratio) 
+* `EnableHooks` - Enable game functions hooking (projection matrix correction with any aspect ratio)
+* `EnableUIFix` - Enable GUI functions hooking (improves the appearance of game menus when using wide screen resolutions)
+
+`SCREENSHOTS` section:
+* `SavePath` - Path to the folder where screenshots will be saved
+* `ImageFormat` - Screenshots image format. Possible values: `bmp`, `png`, `jpg`
