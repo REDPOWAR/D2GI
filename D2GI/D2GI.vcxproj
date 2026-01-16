@@ -75,16 +75,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>ddraw</TargetName>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(DXSDK_DIR)\Include\;$(IncludePath)</IncludePath>
     <OutDir>$(D2DIR)</OutDir>
-    <LibraryPath>$(DXSDK_DIR)\Lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>ddraw</TargetName>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(DXSDK_DIR)\Include\;$(IncludePath)</IncludePath>
-    <OutDir>$(D2DIR)</OutDir>
-    <LibraryPath>$(DXSDK_DIR)\Lib\$(PlatformTarget);$(LibraryPath)</LibraryPath>
+	<OutDir>$(D2DIR)</OutDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -197,6 +195,7 @@ call echo Shaders compiled.</Command>
     <ClCompile Include="src\d2gi\d2gi_texture.cpp" />
     <ClCompile Include="src\d2gi\d2gi_vb_container.cpp" />
     <ClCompile Include="src\d2gi\d2gi_zbuf_surf.cpp" />
+    <ClCompile Include="src\d2gi\ScreenGrab\ScreenGrab9.cpp" />
     <ClCompile Include="src\d2gi\Utils\Patterns.cpp" />
     <ClCompile Include="src\d3d\d3d_device.cpp" />
     <ClCompile Include="src\d3d\d3d_direct3d.cpp" />
@@ -214,6 +213,7 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\common\logger.h" />
     <ClInclude Include="src\common\m3x4.h" />
     <ClInclude Include="src\common\utils.h" />
+    <ClInclude Include="src\d2gi\CPatch\CPatch.h" />
     <ClInclude Include="src\d2gi\d2gi.h" />
     <ClInclude Include="src\d2gi\d2gi_backbuf_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_blitter_ps.h" />
@@ -242,6 +242,8 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h" />
     <ClInclude Include="src\d2gi\Utils\MemoryMgr.h" />
     <ClInclude Include="src\d2gi\Utils\Patterns.h" />
+    <ClInclude Include="src\d2gi\ScreenGrab\ScreenGrab9.h" />
+    <ClInclude Include="src\d2gi\Utils\ScopedUnprotect.hpp" />
     <ClInclude Include="src\d3d\d3d_direct3d.h" />
     <ClInclude Include="src\d3d\d3d_device.h" />
     <ClInclude Include="src\ddraw\dd_ddraw.h" />
