@@ -107,8 +107,8 @@ void __cdecl D2GIHookInjector::WriteScreenshotFunc(void *a2)
 
 	ComPtr<D3D9::IDirect3DDevice9> device(pD2GI->GetD3D9Device());
 	
-	ComPtr<D3D9::IDirect3DSurface9> backbuffer;
-	if (FAILED(device->GetRenderTarget(0, backbuffer.GetAddressOf())))
+	ComPtr<D3D9::IDirect3DSurface9> backbuffer = pD2GI->GetScreenshotSource();
+	if (!backbuffer)
 	{
 		return;
 	}
@@ -129,14 +129,21 @@ void __cdecl D2GIHookInjector::WriteScreenshotFunc(void *a2)
 	}
 
 	ComPtr<D3D9::IDirect3DSurface9> buffer;
-	if (FAILED(device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3D9::D3DPOOL_SYSTEMMEM, buffer.GetAddressOf(), nullptr)))
+	if ((desc.Usage & D3DUSAGE_RENDERTARGET) != 0)
 	{
-		return;
-	}
+		if (FAILED(device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3D9::D3DPOOL_SYSTEMMEM, buffer.GetAddressOf(), nullptr)))
+		{
+			return;
+		}
 	
-	if (FAILED(device->GetRenderTargetData(backbuffer.Get(), buffer.Get())))
+		if (FAILED(device->GetRenderTargetData(backbuffer.Get(), buffer.Get())))
+		{
+			return;
+		}
+	}
+	else
 	{
-		return;
+		buffer = backbuffer;
 	}
 
 	CreateDirectoryW(D2GIConfig::GetScreenshotsPath(), nullptr);

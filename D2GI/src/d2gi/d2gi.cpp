@@ -22,7 +22,6 @@
 
 #include <shlwapi.h>
 #include <windowsx.h>
-#include <wrl/client.h>
 
 D2GI::D2GI()
 {
@@ -64,6 +63,22 @@ D2GI::~D2GI()
 	FreeLibrary(m_hD3D9Lib);
 }
 
+
+Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() const
+{
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> result;
+	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
+	{
+		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
+		result = pPrimSurf->GetBackBufferSurface()->GetD3D9StreamingSurface();
+	}
+	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
+	{
+		m_pDev->GetRenderTarget(0, result.GetAddressOf());
+	}
+
+	return result;
+}
 
 VOID D2GI::OnDirectDrawReleased()
 {

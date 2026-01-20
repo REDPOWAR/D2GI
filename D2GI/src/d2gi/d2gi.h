@@ -7,6 +7,8 @@
 #include "d2gi_common.h"
 #include "d2gi_ddraw.h"
 
+#include <wrl/client.h>
+
 
 enum RENDERSTATE
 {
@@ -98,6 +100,7 @@ public:
 	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
 
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);
