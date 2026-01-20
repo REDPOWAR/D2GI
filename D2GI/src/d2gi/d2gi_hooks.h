@@ -5,6 +5,7 @@
 
 #include "d2gi_common.h"
 
+struct HookOptions;
 
 class D2GIHookInjector
 {
@@ -34,7 +35,7 @@ class D2GIHookInjector
 	static void D2GIHookInjector::InjectInterfacePatch();
 public:
 	static D2GI* ObtainD2GI();
-	static void InjectHooks();
+	static void InjectHooks(const HookOptions& options);
 
 private:
 	static void (__thiscall *m_origSetupTransform)(void* pThis, MAT3X4* pmView, MAT3X4* pmProj);

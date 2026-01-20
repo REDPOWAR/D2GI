@@ -43,6 +43,7 @@ The `d2gi.ini` file has the following settings.
 * `FixAlpha`- Turn correction of background rendering of translucent objects on or off (`1` and `0` accordingly)
 * `AnisotropyLevel` - Force Anisotropic Filtering on textures to sharpen surfaces viewed at a steep angle, like the roads or terrain (`1` to `16`)
 * `MSAALevel` - Multisample Anti-Aliasing level (`0` - off, `2` to `16`, `max` maximum supported)
+* `AllCoresAffinity` - Patch 8.2 forces all threads to a single core, ruining performance. Setting this option to 1 reverts this change.
 
 `HOOKS` section:
 * `EnableHooks` - Enable game functions hooking (projection matrix correction with any aspect ratio)

@@ -161,15 +161,15 @@ void __cdecl D2GIHookInjector::WriteScreenshotFunc(void *a2)
 	const GUID* imageContainerFormat;
 	switch (D2GIConfig::GetScreenshotsFormat())
 	{
-	case IMG_PNG:
+	case IMG_FORMAT::IMG_PNG:
 		extension = L"png";
 		imageContainerFormat = &GUID_ContainerFormatPng;
 		break;
-	case IMG_JPG:
+	case IMG_FORMAT::IMG_JPG:
 		extension = L"jpg";
 		imageContainerFormat = &GUID_ContainerFormatJpeg;
 		break;
-	case IMG_BMP:
+	case IMG_FORMAT::IMG_BMP:
 	default:
 		extension = L"bmp";
 		imageContainerFormat = &GUID_ContainerFormatBmp;
@@ -575,8 +575,18 @@ namespace TextureNames
 }
 #endif
 
+// ======= Undo patch 8.2's single core affinity changes =======
+namespace AffinityChanges
+{
+	static BOOL WINAPI SetProcessAffinityMask_NOP(HANDLE /*hProcess*/, DWORD_PTR /*dwProcessAffinityMask*/)
+	{
+		// Do nothing
+		return TRUE;
+	}
+	static auto* const pSetProcessAffinityMask_NOP = &SetProcessAffinityMask_NOP;
+}
 
-void D2GIHookInjector::InjectHooks()
+void D2GIHookInjector::InjectHooks(const HookOptions& options)
 {
 	const TCHAR* c_lpszVersionNames[] =
 	{
@@ -593,7 +603,7 @@ void D2GIHookInjector::InjectHooks()
 	static_assert(std::size(c_lpszVersionNames) == NUM_D2VERSIONS + 1);
 	Logger::Log(TEXT("Detected D2 version: %s"), c_lpszVersionNames[s_eCurrentD2Version]);
 
-	if (!D2GIConfig::HooksEnabled())
+	if (!options.m_bEnableHooks)
 	{
 		Logger::Log(TEXT("Hook injection is not enabled."));
 		return;
@@ -624,7 +634,7 @@ void D2GIHookInjector::InjectHooks()
 		Logger::Log(TEXT("Failed to inject hooks, signature scan(s) failed."));
 	}
 
-	
+
 	// Texture UV addressing mode overrides
 	if (bHasTextureFacade) try
 	{
@@ -646,6 +656,17 @@ void D2GIHookInjector::InjectHooks()
 	}
 	TXN_CATCH();
 
+
+	// Undo patch 8.2's single core affinity changes
+	if (options.m_bEnableAffinityHooks) try
+	{
+		auto set_process_affinity_mark = get_pattern("50 FF 15 ? ? ? ? B8 01 00 00 00 C3", 3);
+
+		Patch(set_process_affinity_mark, &AffinityChanges::pSetProcessAffinityMask_NOP);
+	}
+	TXN_CATCH();
+
+
 	Logger::Log(TEXT("Injected common hooks."));
 
 	if (s_eCurrentD2Version != D2V_5_5 && s_eCurrentD2Version != D2V_UNKNOWN) {
@@ -655,7 +676,7 @@ void D2GIHookInjector::InjectHooks()
 		D2GIHookInjector::InjectScreenshotsPatch();
 
 		//Interface aspect fix
-		if (D2GIConfig::UIHooksEnabled())
+		if (options.m_bEnableUIHooks)
 			D2GIHookInjector::InjectInterfacePatch();
 
 	} else {
