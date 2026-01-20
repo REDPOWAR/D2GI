@@ -119,6 +119,15 @@ void __cdecl D2GIHookInjector::WriteScreenshotFunc(void *a2)
 		return;
 	}
 
+	if (desc.MultiSampleType != D3D9::D3DMULTISAMPLE_NONE)
+	{
+		if (FAILED(device->StretchRect(backbuffer.Get(), nullptr, pD2GI->GetBackBufferCopySurface(), nullptr, D3D9::D3DTEXF_NONE)))
+		{
+			return;
+		}
+		backbuffer = pD2GI->GetBackBufferCopySurface();
+	}
+
 	ComPtr<D3D9::IDirect3DSurface9> buffer;
 	if (FAILED(device->CreateOffscreenPlainSurface(desc.Width, desc.Height, desc.Format, D3D9::D3DPOOL_SYSTEMMEM, buffer.GetAddressOf(), nullptr)))
 	{

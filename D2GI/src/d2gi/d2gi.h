@@ -34,6 +34,8 @@ typedef std::vector<BYTE>          ByteBuffer;
 
 class D2GI
 {
+	// Object ownership is inverted here - D2GIDirectDraw owns the outer D2GI,
+	// so DO NOT touch m_pDirectDrawProxy from D2GI's destructor!
 	D2GIDirectDraw* m_pDirectDrawProxy;
 
 	HMODULE m_hD3D9Lib;
@@ -41,6 +43,9 @@ class D2GI
 	D3D9::IDirect3DDevice9* m_pDev;
 	D3D9::IDirect3DTexture9* m_pBackBufferCopy;
 	D3D9::IDirect3DSurface9* m_pBackBufferCopySurf;
+	D3D9::IDirect3DSurface9* m_pDepthStencilSurf = nullptr;
+
+	D3D9::IDirect3DSurface9* m_pMSAASurf = nullptr;
 
 	HWND m_hWnd;
 	WNDPROC m_pfnOriginalWndProc;
@@ -83,14 +88,16 @@ public:
 	D2GI();
 	~D2GI();
 
-	D2GIDirectDraw* GetDirectDrawProxy() { return m_pDirectDrawProxy; }
-	D3D9::IDirect3D9* GetD3D9() { return m_pD3D9; }
-	D3D9::IDirect3DDevice9* GetD3D9Device() { return m_pDev; }
-	DWORD GetOriginalWidth() { return m_dwOriginalWidth; }
-	DWORD GetOriginalHeight() { return m_dwOriginalHeight; }
-	DWORD GetOriginalBPP() { return m_dwOriginalBPP; }
-	DWORD GetForcedWidth() { return m_dwForcedWidth; }
-	DWORD GetForcedHeight() { return m_dwForcedHeight; }
+	D2GIDirectDraw* GetDirectDrawProxy() const { return m_pDirectDrawProxy; }
+	D3D9::IDirect3D9* GetD3D9() const { return m_pD3D9; }
+	D3D9::IDirect3DDevice9* GetD3D9Device() const { return m_pDev; }
+	DWORD GetOriginalWidth() const { return m_dwOriginalWidth; }
+	DWORD GetOriginalHeight() const { return m_dwOriginalHeight; }
+	DWORD GetOriginalBPP() const { return m_dwOriginalBPP; }
+	DWORD GetForcedWidth() const { return m_dwForcedWidth; }
+	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
+
+	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);

@@ -4,11 +4,13 @@
 
 #include "d2gi_config.h"
 
+#include <algorithm>
 #include <shlwapi.h>
 
 WINDOWMODE D2GIConfig::s_eWindowMode    = WINDOWMODE::BORDERLESS;
-DWORD      D2GIConfig::s_dwVideoWidth   = 0, D2GIConfig::s_dwVideoHeight = 0;
-DWORD      D2GIConfig::s_AnisotropyLevel = 1;
+uint32_t   D2GIConfig::s_dwVideoWidth   = 0, D2GIConfig::s_dwVideoHeight = 0;
+uint32_t   D2GIConfig::s_AnisotropyLevel = 1;
+uint32_t   D2GIConfig::s_MSAALevel      = 0;
 bool       D2GIConfig::s_bEnableHooks   = true;
 bool       D2GIConfig::s_bEnableVSync   = false;
 bool       D2GIConfig::s_bFixAlpha      = true;
@@ -16,7 +18,7 @@ bool       D2GIConfig::s_bEnableUIHooks = true;
 wchar_t    D2GIConfig::s_cScreenshotsPath[MAX_PATH];
 IMG_FORMAT D2GIConfig::s_eImgFormat     = IMG_BMP;
 
-DWORD D2GIConfig::GetVideoWidth()
+uint32_t D2GIConfig::GetVideoWidth()
 {
 	if (s_dwVideoWidth == 0)
 		return GetSystemMetrics(SM_CXSCREEN);
@@ -25,7 +27,7 @@ DWORD D2GIConfig::GetVideoWidth()
 }
 
 
-DWORD D2GIConfig::GetVideoHeight()
+uint32_t D2GIConfig::GetVideoHeight()
 {
 	if (s_dwVideoHeight == 0)
 		return GetSystemMetrics(SM_CYSCREEN);
@@ -34,7 +36,7 @@ DWORD D2GIConfig::GetVideoHeight()
 }
 
 
-VOID D2GIConfig::ReadFromFile()
+void D2GIConfig::ReadFromFile()
 {
 	TCHAR szTempBuf[256];
 	TCHAR szConfigFile[MAX_PATH];
@@ -81,9 +83,22 @@ VOID D2GIConfig::ReadFromFile()
 		s_eImgFormat = IMG_BMP;
 	}
 
-	const INT AnisotropyLevel = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("AnisotropyLevel"), 1, szConfigFile);
+	const int AnisotropyLevel = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("AnisotropyLevel"), 1, szConfigFile);
 	if (AnisotropyLevel > 0) // Protect against people trying to set negative values
 	{
 		s_AnisotropyLevel = AnisotropyLevel;
+	}
+
+	GetPrivateProfileString(TEXT("VIDEO"), TEXT("MSAALevel"),
+		TEXT("0"), szTempBuf, ARRAYSIZE(szTempBuf), szConfigFile);
+	if (_tcsicmp(szTempBuf, TEXT("max")) == 0)
+		s_MSAALevel = 16; // Max supported by D3D9
+	else
+	{
+		const int MSAALevel = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("MSAALevel"), 0, szConfigFile);
+		if (MSAALevel >= 2) // Protect against people trying to set negative values or "1x MSAA" (meaningless)
+		{
+			s_MSAALevel = std::min(MSAALevel, 16);
+		}
 	}
 }
