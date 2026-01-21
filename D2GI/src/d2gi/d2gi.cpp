@@ -380,7 +380,7 @@ VOID D2GI::OnFlip()
 			m_pDev->StretchRect(m_pMSAASurf, NULL, pRT.Get(), NULL, D3D9::D3DTEXF_NONE);
 		}
 		Present();
-}
+	}
 }
 
 

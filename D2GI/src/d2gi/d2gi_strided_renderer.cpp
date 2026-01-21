@@ -7,31 +7,28 @@
 #include "d2gi_ib_container.h"
 
 
-D2GIStridedPrimitiveRenderer::D2GIStridedPrimitiveRenderer(D2GI* pD2GI) : D2GIBase(pD2GI)
+D2GIStridedPrimitiveRenderer::D2GIStridedPrimitiveRenderer(D2GI* pD2GI) : D2GIBase(pD2GI),
+	m_VBContainer(pD2GI), m_IBContainer(pD2GI)
 {
-	m_pVBContainer = new D2GIVertexBufferContainer(pD2GI);
-	m_pIBContainer = new D2GIIndexBufferContainer(pD2GI);
 }
 
 
 D2GIStridedPrimitiveRenderer::~D2GIStridedPrimitiveRenderer()
 {
-	DEL(m_pVBContainer);
-	DEL(m_pIBContainer);
 }
 
 
 VOID D2GIStridedPrimitiveRenderer::ReleaseResource()
 {
-	m_pVBContainer->ReleaseResource();
-	m_pIBContainer->ReleaseResource();
+	m_VBContainer.ReleaseResource();
+	m_IBContainer.ReleaseResource();
 }
 
 
 VOID D2GIStridedPrimitiveRenderer::LoadResource()
 {
-	m_pVBContainer->LoadResource();
-	m_pIBContainer->LoadResource();
+	m_VBContainer.LoadResource();
+	m_IBContainer.LoadResource();
 }
 
 
@@ -46,15 +43,15 @@ VOID D2GIStridedPrimitiveRenderer::DrawIndexedPrimitiveStrided(
 
 	SetupVertexStream(dwFVF, pData, dwCount);
 	
-	const auto IBData = m_pIBContainer->LockStreamingSpace(sizeof(UINT16) * dwIdxCount);
+	const auto IBData = m_IBContainer.LockStreamingSpace(sizeof(UINT16) * dwIdxCount);
 
 	if (!IBData)
 		Logger::Error(TEXT("Failed to continue index streaming"));
 
 	CopyMemory(IBData.Buffer, pIdx, sizeof(UINT16) * dwIdxCount);
-	m_pIBContainer->UnlockStreamingSpace();
+	m_IBContainer.UnlockStreamingSpace();
 
-	UINT uIdxOffset = m_pIBContainer->SetAsSource(IBData);
+	UINT uIdxOffset = m_IBContainer.SetAsSource(IBData);
 
 	pDev->DrawIndexedPrimitive((D3D9::D3DPRIMITIVETYPE)pt, 0, 0, dwCount, uIdxOffset, dwIdxCount / 3);
 }
@@ -77,7 +74,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	UINT uCurrentVertexStructOffset = 0;
 	UINT uTextureCount = CalcFVFTextureCount(dwFVF);
 
-	auto VBData = m_pVBContainer->LockStreamingSpace(uVertexStride * dwCount);
+	auto VBData = m_VBContainer.LockStreamingSpace(uVertexStride * dwCount);
 	if(!VBData)
 		Logger::Error(TEXT("Failed to continue vertex streaming"));
 
@@ -125,11 +122,11 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 		uCurrentVertexStructOffset += sizeof(FLOAT) * 2;
 	}
 
-	m_pVBContainer->UnlockStreamingSpace();
+	m_VBContainer.UnlockStreamingSpace();
 
 	pDev->SetFVF(dwFVF);
 
-	m_pVBContainer->SetAsSource(VBData, uVertexStride);
+	m_VBContainer.SetAsSource(VBData, uVertexStride);
 }
 
 
