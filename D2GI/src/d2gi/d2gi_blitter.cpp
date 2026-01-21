@@ -6,8 +6,8 @@
 #include "d2gi.h"
 #include "d2gi_blitter.h"
 
-#include "d2gi_blitter_vs.h"
-#include "d2gi_blitter_ps.h"
+#include "shaders/d2gi_blitter_vs.h"
+#include "shaders/d2gi_blitter_ps.h"
 
 
 using namespace D3D9;
@@ -54,10 +54,10 @@ void D2GIBlitter::LoadResource()
 	m_pVB->Unlock();
 
 
-	if (FAILED(pDev->CreateVertexShader((DWORD*)g_pBlitterVS, &m_pVS)))
+	if (FAILED(pDev->CreateVertexShader(reinterpret_cast<const DWORD*>(g_BlitterVS), &m_pVS)))
 		Logger::Error(TEXT("Failed to create blitter vertex shader"));
 
-	if (FAILED(pDev->CreatePixelShader((DWORD*)g_pBlitterPS, &m_pPS)))
+	if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_BlitterPS), &m_pPS)))
 		Logger::Error(TEXT("Failed to create blitter pixel shader"));
 }
 

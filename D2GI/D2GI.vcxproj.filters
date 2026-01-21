@@ -64,18 +64,15 @@
     <Filter Include="Файлы заголовков\d2gi\CPatch">
       <UniqueIdentifier>{19ccae48-3735-4f72-a610-56ca76bb497b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\d2gi\shaders">
+      <UniqueIdentifier>{7762ab6f-bc07-47f8-bd0a-2ac215e5624f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="d2gi.def">
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="defs.props" />
-    <None Include="src\d2gi\d2gi_blitter_ps.hlsl">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </None>
-    <None Include="src\d2gi\d2gi_blitter_vs.hlsl">
-      <Filter>Исходные файлы\d2gi</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp">
@@ -323,5 +320,13 @@
     <ClInclude Include="src\d2gi\d2gi_game_classes.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="src\d2gi\shaders\d2gi_blitter_ps.hlsl">
+      <Filter>Исходные файлы\d2gi\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\d2gi\shaders\d2gi_blitter_vs.hlsl">
+      <Filter>Исходные файлы\d2gi\shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

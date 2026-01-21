@@ -2,3 +2,4 @@
 Debug/
 Release/
 *.vcxproj.user
+/D2GI/src/d2gi/shaders/*.h
