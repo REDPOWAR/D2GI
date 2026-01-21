@@ -22,8 +22,6 @@ public:
 
 	VOID ReleaseResource();
 	VOID LoadResource();
-	VOID OnPresentationFinished();
-
 
 	VOID DrawIndexedPrimitiveStrided(D3D7::D3DPRIMITIVETYPE, DWORD, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA, DWORD, LPWORD, DWORD, DWORD);
 	VOID DrawPrimitiveStrided(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData, DWORD dwCount, DWORD dwFlags);

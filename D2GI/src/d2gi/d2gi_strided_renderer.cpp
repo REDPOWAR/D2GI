@@ -35,13 +35,6 @@ VOID D2GIStridedPrimitiveRenderer::LoadResource()
 }
 
 
-VOID D2GIStridedPrimitiveRenderer::OnPresentationFinished()
-{
-	m_pVBContainer->Clear();
-	m_pIBContainer->Clear();
-}
-
-
 VOID D2GIStridedPrimitiveRenderer::DrawIndexedPrimitiveStrided(
 	D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData, 
 	DWORD dwCount, LPWORD pIdx, DWORD dwIdxCount, DWORD dwFlags)
@@ -53,16 +46,15 @@ VOID D2GIStridedPrimitiveRenderer::DrawIndexedPrimitiveStrided(
 
 	SetupVertexStream(dwFVF, pData, dwCount);
 	
-	VOID* pIBData;
-	UINT uIdxOffset;
+	const auto IBData = m_pIBContainer->LockStreamingSpace(sizeof(UINT16) * dwIdxCount);
 
-	if ((pIBData = m_pIBContainer->LockStreamingSpace(sizeof(UINT16) * dwIdxCount)) == NULL)
+	if (!IBData)
 		Logger::Error(TEXT("Failed to continue index streaming"));
 
-	CopyMemory(pIBData, pIdx, sizeof(UINT16) * dwIdxCount);
+	CopyMemory(IBData.Buffer, pIdx, sizeof(UINT16) * dwIdxCount);
 	m_pIBContainer->UnlockStreamingSpace();
 
-	uIdxOffset = m_pIBContainer->SetAsSource();
+	UINT uIdxOffset = m_pIBContainer->SetAsSource(IBData);
 
 	pDev->DrawIndexedPrimitive((D3D9::D3DPRIMITIVETYPE)pt, 0, 0, dwCount, uIdxOffset, dwIdxCount / 3);
 }
@@ -81,19 +73,19 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	if (dwFVF & ~(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 | D3DFVF_TEX2 | D3DFVF_DIFFUSE))
 		return;
 
-	VOID* pVBData;
 	INT i, j;
 	UINT uCurrentVertexStructOffset = 0;
 	UINT uTextureCount = CalcFVFTextureCount(dwFVF);
 
-	if((pVBData = m_pVBContainer->LockStreamingSpace(uVertexStride * dwCount)) == NULL)
+	auto VBData = m_pVBContainer->LockStreamingSpace(uVertexStride * dwCount);
+	if(!VBData)
 		Logger::Error(TEXT("Failed to continue vertex streaming"));
 
 	if (dwFVF & D3DFVF_XYZ)
 	{
 		for (i = 0; i < (INT)dwCount; i++)
 		{
-			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->position.lpvData + i * pData->position.dwStride, sizeof(FLOAT) * 3);
 		}
 
@@ -104,7 +96,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	{
 		for (i = 0; i < (INT)dwCount; i++)
 		{
-			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->normal.lpvData + i * pData->normal.dwStride, sizeof(FLOAT) * 3);
 		}
 
@@ -115,7 +107,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	{
 		for (i = 0; i < (INT)dwCount; i++)
 		{
-			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->diffuse.lpvData + i * pData->diffuse.dwStride, sizeof(DWORD));
 		}
 
@@ -126,7 +118,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	{
 		for (j = 0; j < (INT)dwCount; j++)
 		{
-			CopyMemory((BYTE*)pVBData + j * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + j * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->textureCoords[i].lpvData + j * pData->textureCoords[i].dwStride, sizeof(FLOAT) * 2);
 		}
 
@@ -137,7 +129,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 
 	pDev->SetFVF(dwFVF);
 
-	m_pVBContainer->SetAsSource(uVertexStride);
+	m_pVBContainer->SetAsSource(VBData, uVertexStride);
 }
 
 

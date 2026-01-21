@@ -380,7 +380,7 @@ VOID D2GI::OnFlip()
 			m_pDev->StretchRect(m_pMSAASurf, NULL, pRT.Get(), NULL, D3D9::D3DTEXF_NONE);
 		}
 		Present();
-	}
+}
 }
 
 
@@ -805,7 +805,6 @@ VOID D2GI::OnClipStatusSet(D3D7::LPD3DCLIPSTATUS pStatus)
 VOID D2GI::Present()
 {
 	const HRESULT hr = m_pDev->Present(NULL, NULL, NULL, NULL);
-	m_pStridedRenderer->OnPresentationFinished();
 
 	if (hr == D3DERR_DEVICELOST)
 		ResetD3D9Device();
