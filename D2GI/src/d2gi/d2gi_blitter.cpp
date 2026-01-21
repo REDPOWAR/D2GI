@@ -85,7 +85,7 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 	DWORD dwAlphaBlending, dwAlphaOp, dwAlphaSrc, dwAlphaDst;
 	DWORD dwZEnable, dwZWriteEnable;
 	DWORD dwFogEnable;
-	D3DVIEWPORT9 sOriginalVP, sUsedVP;
+	D3DVIEWPORT9 sOriginalVP;
 
 	pDst->GetDesc(&sDstDesc);
 	pSrc->GetLevelDesc(0, &sSrcDesc);
@@ -137,16 +137,7 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 	vScreenPosRect.z = (-1.0f + rtDst.fLeft + rtDst.fRight) / (FLOAT)sDstDesc.Width - 1.0f;
 	vScreenPosRect.w = -(-1.0f + rtDst.fTop + rtDst.fBottom) / (FLOAT)sDstDesc.Height + 1.0f;
 
-	sUsedVP.X = 0;
-	sUsedVP.Y = 0;
-	sUsedVP.Width = sDstDesc.Width;
-	sUsedVP.Height = sDstDesc.Height;
-	sUsedVP.MinZ = 0.0;
-	sUsedVP.MaxZ = 1.0f;
-
-	if (pDst != pOriginalRT.Get())
-		pDev->SetRenderTarget(0, pDst);
-	pDev->SetViewport(&sUsedVP);
+	pDev->SetRenderTarget(0, pDst);
 
 	pDev->SetVertexDeclaration(m_pVDecl.Get());
 	pDev->SetStreamSource(0, m_pVB.Get(), 0, sizeof(FLOAT) * 4);
@@ -181,7 +172,6 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 	pDev->SetPixelShader(NULL);
 	pDev->SetVertexShader(NULL);
 	pDev->SetTexture(0, pCurrentTexture.Get());
-	pDev->SetViewport(&sOriginalVP);
 	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, dwMinFilter);
 	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, dwMagFilter);
 	pDev->SetRenderState(D3DRS_ZENABLE, dwZEnable);
@@ -196,6 +186,6 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 		pDev->SetRenderState(D3DRS_SRCBLEND, dwAlphaSrc);
 		pDev->SetRenderState(D3DRS_DESTBLEND, dwAlphaDst);
 	}
-	if (pDst != pOriginalRT.Get())
-		pDev->SetRenderTarget(0, pOriginalRT.Get());
+	pDev->SetRenderTarget(0, pOriginalRT.Get());
+	pDev->SetViewport(&sOriginalVP);
 }
