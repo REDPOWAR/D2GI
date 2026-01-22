@@ -177,6 +177,9 @@
     <ClCompile Include="src\d2gi\ScreenGrab\ScreenGrab9.cpp">
       <Filter>Исходные файлы\d2gi\ScreenGrab</Filter>
     </ClCompile>
+    <ClCompile Include="src\d2gi\d2gi_minimap.cpp">
+      <Filter>Исходные файлы\d2gi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\d2gi\d2gi_ddraw.h">
@@ -317,12 +320,21 @@
     <ClInclude Include="src\d2gi\d2gi_game_classes.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_minimap.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\d2gi\shaders\d2gi_blitter_ps.hlsl">
       <Filter>Исходные файлы\d2gi\shaders</Filter>
     </FxCompile>
     <FxCompile Include="src\d2gi\shaders\d2gi_blitter_vs.hlsl">
+      <Filter>Исходные файлы\d2gi\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\d2gi\shaders\d2gi_minimap_vs.hlsl">
+      <Filter>Исходные файлы\d2gi\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="src\d2gi\shaders\d2gi_minimap_ps.hlsl">
       <Filter>Исходные файлы\d2gi\shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -24,6 +24,7 @@
 #include <windowsx.h>
 
 D2GI::D2GI()
+	: m_MinimapRenderer(this)
 {
 	m_hD3D9Lib = NULL;
 	m_pD3D9 = NULL;
@@ -39,7 +40,6 @@ D2GI::D2GI()
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pClearRects = new D3D9RECTVector();
-	m_p2DBuffer = new ByteBuffer();
 
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
@@ -137,6 +137,8 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 
 VOID D2GI::ReleaseResources()
 {
+	m_MinimapRenderer.ReleaseResources();
+
 	m_pDirectDrawProxy->ReleaseResources();
 	m_pBlitter->ReleaseResource();
 	m_pStridedRenderer->ReleaseResource();
@@ -154,6 +156,8 @@ VOID D2GI::LoadResources()
 	m_pDirectDrawProxy->LoadResources();
 	m_pBlitter->LoadResource();
 	m_pStridedRenderer->LoadResource();
+
+	m_MinimapRenderer.LoadResources();
 }
 
 
@@ -830,25 +834,28 @@ VOID D2GI::OnPrimitiveStridedDraw(
 
 VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
 {
+	void* vertexMemory = nullptr;
 	if (dwFVF & D3DFVF_XYZRHW)
 	{
 		UINT uStride = CalcFVFStride(dwFVF);
 		UINT uSize = uStride * dwVertCount;
-		INT i;
 
-		m_p2DBuffer->clear();
-		m_p2DBuffer->insert(m_p2DBuffer->begin(), (BYTE*)pVerts, (BYTE*)pVerts + uSize);
-		for (i = 0; i < (INT)dwVertCount; i++)
+		vertexMemory = _malloca(uSize);
+		memcpy(vertexMemory, pVerts, uSize);
+
+		FLOAT* pV = static_cast<FLOAT*>(vertexMemory);
+		for (DWORD i = 0; i < dwVertCount; i++)
 		{
-			FLOAT* pV = (FLOAT*)(m_p2DBuffer->data() + i * uStride);
-			
 			pV[0] *= m_fWidthScale;
 			pV[1] *= m_fHeightScale;
+
+			pV = reinterpret_cast<FLOAT*>(reinterpret_cast<char*>(pV) + uStride);
 		}
-		pVerts = m_p2DBuffer->data();
+		pVerts = vertexMemory;
 	}
 
 	DrawPrimitive(pt, dwFVF, FALSE, pVerts, dwVertCount, NULL, 0, dwFlags);
+	_freea(vertexMemory);
 }
 
 

@@ -586,6 +586,70 @@ namespace AffinityChanges
 	static auto* const pSetProcessAffinityMask_NOP = &SetProcessAffinityMask_NOP;
 }
 
+#pragma comment(lib, "d3d9.lib")
+
+// ======= Batched minimap draws =======
+namespace BatchedMinimap
+{
+	// GraphicsData::GetWindowRect, but we don't bother defining the class
+	static RECT* (__thiscall* GraphicsData_GetWindowRect)(const void* _this, RECT* rect);
+
+	static void (__thiscall* orgMapDraw)(void* _this, void* graphics, void* a3);
+	static void __fastcall MapDraw_SaveViewport(void* _this, void*, void* graphics, void* a3)
+	{
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+
+		RECT rect;
+		pD2GI->OnMapDrawSetViewport(*GraphicsData_GetWindowRect(graphics, &rect));
+
+		orgMapDraw(_this, graphics, a3);
+	}
+
+	static void (*orgBeginScene)();
+	static void BeginScene_BeginMinimapDraw()
+	{
+		orgBeginScene();
+
+		D3DPERF_BeginEvent(D3DCOLOR_RGBA(255, 0, 0, 255), L"Minimap");
+
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+
+		pD2GI->OnBeginMinimapDraw();
+	}
+
+	static void (*orgEndScene)();
+	static void EndScene_EndMinimapDraw()
+	{
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+		pD2GI->OnEndMinimapDraw();
+
+		D3DPERF_EndEvent();
+
+		orgEndScene();
+	}
+
+	static void DrawMinimapLine(void* graphics, int x1, int y1, int x2, int y2, DWORD color, BOOL dontUsePalette)
+	{
+		RECT rect;
+		GraphicsData_GetWindowRect(graphics, &rect);
+
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+		pD2GI->OnAddMinimapLine(rect.left, rect.top, x1, y1, x2, y2, color);
+
+	}
+
+	static DWORD ConvertRGB_32Bit(DWORD r, DWORD g, DWORD b)
+	{
+		// Pack in a D3DCOLOR-friendly format right away, without compressing to 16-bit
+		return D3DCOLOR_RGBA(r, g, b, 0xFF);
+	}
+}
+
+
 void D2GIHookInjector::InjectHooks(const HookOptions& options)
 {
 	const TCHAR* c_lpszVersionNames[] =
@@ -663,6 +727,61 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		auto set_process_affinity_mark = get_pattern("50 FF 15 ? ? ? ? B8 01 00 00 00 C3", 3);
 
 		Patch(set_process_affinity_mark, &AffinityChanges::pSetProcessAffinityMask_NOP);
+	}
+	TXN_CATCH();
+
+
+	// Batched minimap draws
+	try
+	{
+		using namespace BatchedMinimap;
+
+		auto begin_scene = get_pattern("E8 ? ? ? ? 85 FF 0F 84 ? ? ? ? B8");
+		auto end_scene = get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 54 24 ? A1 ? ? ? ? 83 C4 ? 3B D0 0F 84");
+
+		std::array<void*, 5> draw_line = {
+
+			// Borders
+			get_pattern("E8 ? ? ? ? 8B 44 24 ? 83 C4 ? 2B C6"),
+			get_pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8 ? ? ? ? 83 C4"),
+			get_pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8 ? ? ? ? 8B 4C 24"),
+			get_pattern("E8 ? ? ? ? 8B 74 24 ? 83 C4 ? 8B 5C 24"),
+
+			// Map segments
+			get_pattern("55 57 52 E8 ? ? ? ? 83 C4 1C 5F", 3),
+		};
+
+		std::array<void*, 5> convert_rgb_32bit = {
+
+			// Borders
+			get_pattern("E8 ? ? ? ? 8B 4D ? 83 C4 ? 50"),
+			get_pattern("E8 ? ? ? ? 8B 54 24 ? 83 C4 ? 50 8B 45"),
+			get_pattern("E8 ? ? ? ? 83 C4 ? 50 8B 44 24 ? 50 57"),
+			get_pattern("E8 ? ? ? ? 8B 4C 24 ? 83 C4 ? 50 56"),
+
+			// Map segments
+			get_pattern("E8 ? ? ? ? 8B 54 24 ? 83 C4 ? 50 56"),
+		};
+
+		auto map_draw = get_pattern("E8 ? ? ? ? 8B 15 ? ? ? ? 39 BA ? ? ? ? 0F 84");
+
+		auto get_window_rect = get_pattern("8B 44 24 ? 33 D2 66 8B 51 ? 33 F6", -8);
+		GraphicsData_GetWindowRect = reinterpret_cast<decltype(GraphicsData_GetWindowRect)>(get_window_rect);
+
+		InterceptCall(begin_scene, orgBeginScene, BeginScene_BeginMinimapDraw);
+		InterceptCall(end_scene, orgEndScene, EndScene_EndMinimapDraw);
+
+		for (void* addr : draw_line)
+		{
+			InjectHook(addr, DrawMinimapLine);
+		}
+
+		for (void* addr : convert_rgb_32bit)
+		{
+			InjectHook(addr, ConvertRGB_32Bit);
+		}
+
+		InterceptCall(map_draw, orgMapDraw, MapDraw_SaveViewport);
 	}
 	TXN_CATCH();
 

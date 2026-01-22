@@ -10,6 +10,8 @@
 #include "d2gi_common.h"
 #include "d2gi_ddraw.h"
 
+#include "d2gi_minimap.h"
+
 #include <wrl/client.h>
 
 
@@ -34,7 +36,6 @@ struct MAT3X4;
 struct FRECT;
 
 typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
-typedef std::vector<BYTE>          ByteBuffer;
 
 
 class D2GI
@@ -65,12 +66,13 @@ class D2GI
 	D2GITexture* m_lpCurrentTextures[8];
 
 	D3D9RECTVector* m_pClearRects;
-	ByteBuffer*     m_p2DBuffer;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
 	std::optional<std::pair<D3D9::D3DTEXTUREADDRESS, D3D9::D3DTEXTUREADDRESS>> m_UVOverride;
+
+	D2GIMinimapRenderer m_MinimapRenderer;
 
 	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
 
@@ -103,12 +105,19 @@ public:
 	DWORD GetOriginalBPP() const { return m_dwOriginalBPP; }
 	DWORD GetForcedWidth() const { return m_dwForcedWidth; }
 	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
+	float GetWidthScale() const { return m_fWidthScale; }
+	float GetHeightScale() const { return m_fHeightScale; }
 
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;
 
 	void EnableUVOverride(D3D9::D3DTEXTUREADDRESS AddressU, D3D9::D3DTEXTUREADDRESS AddressV) { m_UVOverride.emplace(AddressU, AddressV); }
 	void DisableUVOverride() { m_UVOverride.reset(); }
+
+	void OnMapDrawSetViewport(const RECT& viewport) { m_MinimapRenderer.SetViewport(viewport); }
+	void OnBeginMinimapDraw() { m_MinimapRenderer.BeginMinimapDraw(); }
+	void OnEndMinimapDraw() { m_MinimapRenderer.EndMinimapDraw(); }
+	void OnAddMinimapLine(int left, int top, int x1, int y1, int x2, int y2, DWORD color) { m_MinimapRenderer.AddMinimapLine(left, top, x1, y1, x2, y2, color); }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);

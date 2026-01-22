@@ -130,6 +130,7 @@
     <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
     <ClCompile Include="src\d2gi\d2gi_hooks.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ib_container.cpp" />
+    <ClCompile Include="src\d2gi\d2gi_minimap.cpp" />
     <ClCompile Include="src\d2gi\d2gi_mipmap_surf.cpp" />
     <ClCompile Include="src\d2gi\d2gi_palette.cpp" />
     <ClCompile Include="src\d2gi\d2gi_prim_flip_surf.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="src\d2gi\d2gi_game_classes.h" />
     <ClInclude Include="src\d2gi\d2gi_hooks.h" />
     <ClInclude Include="src\d2gi\d2gi_ib_container.h" />
+    <ClInclude Include="src\d2gi\d2gi_minimap.h" />
     <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h" />
     <ClInclude Include="src\d2gi\d2gi_palette.h" />
     <ClInclude Include="src\d2gi\d2gi_blitter.h" />
@@ -210,6 +212,18 @@
       <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">g_BlitterVS</VariableName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="src\d2gi\shaders\d2gi_minimap_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">g_MinimapPS</VariableName>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">g_MinimapPS</VariableName>
+    </FxCompile>
+    <FxCompile Include="src\d2gi\shaders\d2gi_minimap_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">g_MinimapVS</VariableName>
+      <VariableName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">g_MinimapVS</VariableName>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
