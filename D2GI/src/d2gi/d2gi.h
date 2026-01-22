@@ -105,8 +105,6 @@ public:
 	DWORD GetOriginalBPP() const { return m_dwOriginalBPP; }
 	DWORD GetForcedWidth() const { return m_dwForcedWidth; }
 	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
-	float GetWidthScale() const { return m_fWidthScale; }
-	float GetHeightScale() const { return m_fHeightScale; }
 
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;

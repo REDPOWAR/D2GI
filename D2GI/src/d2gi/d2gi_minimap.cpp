@@ -1,15 +1,40 @@
 #include "d2gi_minimap.h"
 
+#include "../common/logger.h"
 #include "d2gi.h"
+
+#include "shaders/d2gi_minimap_ps.h"
+#include "shaders/d2gi_minimap_vs.h"
+
+#include "DirectXMath.h"
+
+using namespace D3D9;
 
 void D2GIMinimapRenderer::LoadResources()
 {
+	const D3DVERTEXELEMENT9 asVertexElements[] =
+	{
+		{0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
+		{0, 8, D3DDECLTYPE_D3DCOLOR, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_COLOR, 0},
+		D3DDECL_END()
+	};
+	IDirect3DDevice9* pDev = GetD3D9Device();
 
+	if (FAILED(pDev->CreateVertexDeclaration(asVertexElements, &m_VDecl)))
+		Logger::Error(TEXT("Failed to create minimap vertex declaration"));
+
+	if (FAILED(pDev->CreateVertexShader(reinterpret_cast<const DWORD*>(g_MinimapVS), &m_VS)))
+		Logger::Error(TEXT("Failed to create minimap vertex shader"));
+
+	if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_MinimapPS), &m_PS)))
+		Logger::Error(TEXT("Failed to create minimap pixel shader"));
 }
 
 void D2GIMinimapRenderer::ReleaseResources()
 {
-
+	m_VDecl.Reset();
+	m_VS.Reset();
+	m_PS.Reset();
 }
 
 void D2GIMinimapRenderer::BeginMinimapDraw()
@@ -21,32 +46,26 @@ void D2GIMinimapRenderer::BeginMinimapDraw()
 void D2GIMinimapRenderer::EndMinimapDraw()
 {
 	Flush();
+
+	if (m_DrawSetup)
+	{
+		D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
+		pDev->SetVertexShader(nullptr);
+		pDev->SetPixelShader(nullptr);
+	}
 }
 
 void D2GIMinimapRenderer::AddMinimapLine(int left, int top, int x1, int y1, int x2, int y2, DWORD color)
 {
-	using namespace D3D9;
-
-	const float WidthScale = m_pD2GI->GetWidthScale();
-	const float HeightScale = m_pD2GI->GetHeightScale();
-
 	auto& vert1 = m_LineVertexCache[m_NumVertices++];
-	vert1.XYZRHW[0] = (left + x1) * WidthScale;
-	vert1.XYZRHW[1] = (top + y1) * HeightScale;
-	vert1.XYZRHW[2] = 0.0f;
-	vert1.XYZRHW[3] = 1.0f;
+	vert1.XYZRHW[0] = x1;
+	vert1.XYZRHW[1] = y1;
 	vert1.Color = color;
 
-	//vert1.Specular = D3DCOLOR_RGBA(0, 0, 0, 255);
-
 	auto& vert2 = m_LineVertexCache[m_NumVertices++];
-	vert2.XYZRHW[0] = (left + x2) * WidthScale;
-	vert2.XYZRHW[1] = (top + y2) * HeightScale;
-	vert2.XYZRHW[2] = 0.0f;
-	vert2.XYZRHW[3] = 1.0f;
+	vert2.XYZRHW[0] = x2;
+	vert2.XYZRHW[1] = y2;
 	vert2.Color = color;
-
-	//vert2.Specular = D3DCOLOR_RGBA(0, 0, 0, 255);
 
 	if (m_NumVertices >= m_LineVertexCache.size())
 	{
@@ -56,17 +75,34 @@ void D2GIMinimapRenderer::AddMinimapLine(int left, int top, int x1, int y1, int 
 
 void D2GIMinimapRenderer::Flush()
 {
-	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
-	if (!m_DrawSetup)
+	if (m_NumVertices > 0)
 	{
-		pDev->SetRenderState(D3D9::D3DRS_ALPHABLENDENABLE, FALSE);
-		pDev->SetRenderState(D3D9::D3DRS_FOGENABLE, FALSE);
-		pDev->SetTexture(0, nullptr);
+		D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
+		if (!m_DrawSetup)
+		{
+			pDev->SetRenderState(D3D9::D3DRS_ALPHABLENDENABLE, FALSE);
+			pDev->SetRenderState(D3D9::D3DRS_FOGENABLE, FALSE);
 
-		pDev->SetFVF(D3DFVF_XYZRHW | D3DFVF_DIFFUSE);
+			pDev->SetVertexDeclaration(m_VDecl.Get());
+			pDev->SetVertexShader(m_VS.Get());
+			pDev->SetPixelShader(m_PS.Get());
 
-		m_DrawSetup = true;
+			// We need the full viewport dimensions, not just the rect used currently
+			const LONG Width = m_Viewport.right;
+			const LONG Height = m_Viewport.bottom;
+
+			// Builds a matrix to transform screen-space vertex coordinates to clip-space inside the vertex shader
+			const DirectX::XMMATRIX transform = DirectX::XMMatrixSet(
+				2.0f / Width, 0.0f,           0.0f, 0.0f,
+				0.0f,         -2.0f / Height, 0.0f, 0.0f,
+				0.0f,         0.0f,           1.0f, 0.0f,
+				-1.0f - 2.0f * (m_Viewport.left - 0.5f) / Width, 1.0f - 2.0f * (m_Viewport.top - 0.5f) / Height, 0.0f, 1.0f
+			);
+			pDev->SetVertexShaderConstantF(0, reinterpret_cast<const float*>(&transform), 4);
+
+			m_DrawSetup = true;
+		}
+		pDev->DrawPrimitiveUP(D3D9::D3DPT_LINELIST, m_NumVertices / 2, m_LineVertexCache.data(), sizeof(decltype(m_LineVertexCache)::value_type));
+		m_NumVertices = 0;
 	}
-	pDev->DrawPrimitiveUP(D3D9::D3DPT_LINELIST, m_NumVertices / 2, m_LineVertexCache.data(), sizeof(decltype(m_LineVertexCache)::value_type));
-	m_NumVertices = 0;
 }

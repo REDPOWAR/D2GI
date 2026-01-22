@@ -34,8 +34,8 @@ private:
 
 	struct LineFVFData
 	{
-		float XYZRHW[4];
+		float XYZRHW[2];
 		D3D9::D3DCOLOR Color;
 	};
-	std::array<LineFVFData, 6144> m_LineVertexCache; // Arbitrary number
+	std::array<LineFVFData, 8192> m_LineVertexCache; // Arbitrary number
 };
