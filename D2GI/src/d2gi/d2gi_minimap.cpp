@@ -28,6 +28,9 @@ void D2GIMinimapRenderer::LoadResources()
 
 	if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_MinimapPS), &m_PS)))
 		Logger::Error(TEXT("Failed to create minimap pixel shader"));
+
+	if (FAILED(pDev->CreateVertexBuffer(MAX_NUM_VERTICES * sizeof(*m_LockedVertexData), D3DUSAGE_DYNAMIC|D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &m_VB, nullptr)))
+		Logger::Error(TEXT("Failed to create minimap vertex buffer"));
 }
 
 void D2GIMinimapRenderer::ReleaseResources()
@@ -35,12 +38,15 @@ void D2GIMinimapRenderer::ReleaseResources()
 	m_VDecl.Reset();
 	m_VS.Reset();
 	m_PS.Reset();
+	m_VB.Reset();
 }
 
 void D2GIMinimapRenderer::BeginMinimapDraw()
 {
 	m_NumVertices = 0;
 	m_DrawSetup = false;
+
+	m_VB->Lock(0, 0, reinterpret_cast<void**>(&m_LockedVertexData), D3DLOCK_DISCARD|D3DLOCK_NOSYSLOCK);
 }
 
 void D2GIMinimapRenderer::EndMinimapDraw()
@@ -57,24 +63,28 @@ void D2GIMinimapRenderer::EndMinimapDraw()
 
 void D2GIMinimapRenderer::AddMinimapLine(int left, int top, int x1, int y1, int x2, int y2, DWORD color)
 {
-	auto& vert1 = m_LineVertexCache[m_NumVertices++];
+	auto& vert1 = m_LockedVertexData[m_NumVertices++];
 	vert1.XYZRHW[0] = x1;
 	vert1.XYZRHW[1] = y1;
 	vert1.Color = color;
 
-	auto& vert2 = m_LineVertexCache[m_NumVertices++];
+	auto& vert2 = m_LockedVertexData[m_NumVertices++];
 	vert2.XYZRHW[0] = x2;
 	vert2.XYZRHW[1] = y2;
 	vert2.Color = color;
 
-	if (m_NumVertices >= m_LineVertexCache.size())
+	if (m_NumVertices >= MAX_NUM_VERTICES)
 	{
 		Flush();
+
+		m_VB->Lock(0, 0, reinterpret_cast<void**>(&m_LockedVertexData), D3DLOCK_DISCARD|D3DLOCK_NOSYSLOCK);
 	}
 }
 
 void D2GIMinimapRenderer::Flush()
 {
+	m_VB->Unlock();
+
 	if (m_NumVertices > 0)
 	{
 		D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
@@ -86,6 +96,8 @@ void D2GIMinimapRenderer::Flush()
 			pDev->SetVertexDeclaration(m_VDecl.Get());
 			pDev->SetVertexShader(m_VS.Get());
 			pDev->SetPixelShader(m_PS.Get());
+
+			pDev->SetStreamSource(0, m_VB.Get(), 0, sizeof(*m_LockedVertexData));
 
 			// We need the full viewport dimensions, not just the rect used currently
 			const LONG Width = m_Viewport.right;
@@ -102,7 +114,7 @@ void D2GIMinimapRenderer::Flush()
 
 			m_DrawSetup = true;
 		}
-		pDev->DrawPrimitiveUP(D3D9::D3DPT_LINELIST, m_NumVertices / 2, m_LineVertexCache.data(), sizeof(decltype(m_LineVertexCache)::value_type));
+		pDev->DrawPrimitive(D3D9::D3DPT_LINELIST, 0, m_NumVertices / 2);
 		m_NumVertices = 0;
 	}
 }
