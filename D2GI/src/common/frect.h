@@ -9,16 +9,16 @@ struct FRECT
 
 	FRECT(){}
 	FRECT(FLOAT l, FLOAT t, FLOAT r, FLOAT b)
+		: fLeft(l), fTop(t), fRight(r), fBottom(b)
 	{
-		fLeft = l; fTop = t; fRight = r; fBottom = b;
 	}
-	FRECT(CONST RECT& rt)
+	FRECT(const RECT& rt)
+		: fLeft((FLOAT)rt.left), fTop((FLOAT)rt.top), fRight((FLOAT)rt.right), fBottom((FLOAT)rt.bottom)
 	{
-		fLeft = (FLOAT)rt.left; fTop = (FLOAT)rt.top; fRight = (FLOAT)rt.right; fBottom = (FLOAT)rt.bottom;
 	}
 
-	FLOAT GetWidth() { return fRight - fLeft; };
-	FLOAT GetHeight() { return fBottom - fTop; };
-	FLOAT GetXCenter() { return 0.5f * (fLeft + fRight);  }
-	FLOAT GetYCenter() { return 0.5f * (fTop + fBottom); }
+	FLOAT GetWidth() const { return fRight - fLeft; };
+	FLOAT GetHeight() const { return fBottom - fTop; };
+	FLOAT GetXCenter() const { return 0.5f * (fLeft + fRight);  }
+	FLOAT GetYCenter() const { return 0.5f * (fTop + fBottom); }
 };

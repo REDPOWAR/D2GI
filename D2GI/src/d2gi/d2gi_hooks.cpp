@@ -586,8 +586,6 @@ namespace AffinityChanges
 	static auto* const pSetProcessAffinityMask_NOP = &SetProcessAffinityMask_NOP;
 }
 
-#pragma comment(lib, "d3d9.lib")
-
 // ======= Batched minimap draws =======
 namespace BatchedMinimap
 {
@@ -604,14 +602,15 @@ namespace BatchedMinimap
 		pD2GI->OnMapDrawSetViewport(*GraphicsData_GetWindowRect(graphics, &rect));
 
 		orgMapDraw(_this, graphics, a3);
+
+		// Reset the minimap offsets
+		D2GI::m_LastBltX = D2GI::m_LastBltY = 0.0f;
 	}
 
 	static void (*orgBeginScene)();
 	static void BeginScene_BeginMinimapDraw()
 	{
 		orgBeginScene();
-
-		D3DPERF_BeginEvent(D3DCOLOR_RGBA(255, 0, 0, 255), L"Minimap");
 
 		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
 		assert(pD2GI != nullptr);
@@ -625,8 +624,6 @@ namespace BatchedMinimap
 		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
 		assert(pD2GI != nullptr);
 		pD2GI->OnEndMinimapDraw();
-
-		D3DPERF_EndEvent();
 
 		orgEndScene();
 	}
@@ -650,6 +647,7 @@ namespace BatchedMinimap
 		return D3DCOLOR_RGBA(r, g, b, 0xFF);
 	}
 
+	// Subpixel minimap scrolling
 	static __declspec(naked) void ftol_Fake()
 	{
 		_asm
@@ -670,6 +668,41 @@ namespace BatchedMinimap
 	}
 
 	HOOK_EACH_INIT(MapBoundsCheck, orgAreNotCoordsOnMapGraphicsData, AreNotCoordsOnMapGraphicsData_Float);
+
+
+	// Subpixel minimap icon scrolling
+	template<std::size_t Index>
+	static void* orgftol_StoreX;
+
+	template<std::size_t Index>
+	static __declspec(naked) void ftol_StoreX()
+	{
+		static void** const func = &orgftol_StoreX<Index>;
+		_asm
+		{
+			fst		[D2GI::m_LastBltX]
+			mov		eax, [func]
+			jmp		dword ptr [eax]
+		}
+	}
+
+	template<std::size_t Index>
+	static void* orgftol_StoreY;
+
+	template<std::size_t Index>
+	static __declspec(naked) void ftol_StoreY()
+	{
+		static void** const func = &orgftol_StoreY<Index>;
+		_asm
+		{
+			fst		[D2GI::m_LastBltY]
+			mov		eax, [func]
+			jmp		dword ptr [eax]
+		}
+	}
+
+	HOOK_EACH_INIT(StoreFloatX, orgftol_StoreX, ftol_StoreX);
+	HOOK_EACH_INIT(StoreFloatY, orgftol_StoreY, ftol_StoreY);
 }
 
 
@@ -762,12 +795,13 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		auto begin_scene = get_pattern("E8 ? ? ? ? 85 FF 0F 84 ? ? ? ? B8");
 		auto end_scene = get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 54 24 ? A1 ? ? ? ? 83 C4 ? 3B D0 0F 84");
 
+		auto draw_border_line1 = pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8").count(2);
 		std::array<void*, 4> draw_line_int = {
 
 			// Borders
 			get_pattern("E8 ? ? ? ? 8B 44 24 ? 83 C4 ? 2B C6"),
-			get_pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8 ? ? ? ? 83 C4"),
-			get_pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8 ? ? ? ? 8B 4C 24"),
+			draw_border_line1.get(0).get<void>(0),
+			draw_border_line1.get(1).get<void>(0),
 			get_pattern("E8 ? ? ? ? 8B 74 24 ? 83 C4 ? 8B 5C 24"),
 		};
 
@@ -802,6 +836,50 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		};
 
 		auto get_window_rect = get_pattern("8B 44 24 ? 33 D2 66 8B 51 ? 33 F6", -8);
+
+		// Smooth minimap icon scrolling
+		// Separate try...catch, as it is completely optional and other minimap changes will work without it.
+		try
+		{
+			auto town_icons = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F8 DC 44 24 ? E8").count(2);
+			auto obstacles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(2);
+			auto circuit = pattern("E8 ? ? ? ? DD 44 24 ? DC 0D ? ? ? ? 8B F0 DC 44 24 ? E8").get_one();
+			auto repair_shops = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(3);
+			auto player_marker = pattern("E8 ? ? ? ? DD 44 24 ? DC ? ? ? ? ? 50 E8").count(2);
+
+			std::array<void*, 11> store_icon_posx = {
+				get_pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? DC 25"), // Other vehicles
+				town_icons.get(0).get<void>(0), // Town/gas station icons
+				town_icons.get(1).get<void>(0), // Selected hired driver
+				obstacles.get(0).get<void>(0), // Obstacles/road works
+				obstacles.get(1).get<void>(0), // Town names
+				circuit.get<void>(0), // Circuit icon and text
+				repair_shops.get(0).get<void>(0), // Repair shops and parkings
+				repair_shops.get(1).get<void>(0), // Other players and hired drivers
+				repair_shops.get(2).get<void>(0), // Cargo destination masks
+				player_marker.get(0).get<void>(0x10), // Player icon
+				player_marker.get(1).get<void>(0x10), // Player name
+			};
+
+			std::array<void*, 11> store_icon_posy = {
+				get_pattern("E8 ? ? ? ? 8B F8 8B 45 ? 3B C3"), // Other vehicles
+				town_icons.get(0).get<void>(0x13), // Town/gas station icons
+				town_icons.get(1).get<void>(0x13), // Selected hired driver
+				obstacles.get(0).get<void>(0xF), // Obstacles/road works
+				obstacles.get(1).get<void>(0xF), // Town names
+				circuit.get<void>(0x15), // Circuit icon and text
+				repair_shops.get(0).get<void>(0x13), // Repair shops and parkings
+				repair_shops.get(1).get<void>(0x13), // Other players and hired drivers
+				repair_shops.get(2).get<void>(0x13), // Cargo destination masks
+				player_marker.get(0).get<void>(0), // Player icon
+				player_marker.get(1).get<void>(0), // Player name
+			};
+
+			HookEach_StoreFloatX(store_icon_posx, InterceptCall);
+			HookEach_StoreFloatY(store_icon_posy, InterceptCall);
+		}
+		TXN_CATCH();
+
 		GraphicsData_GetWindowRect = reinterpret_cast<decltype(GraphicsData_GetWindowRect)>(get_window_rect);
 
 		InterceptCall(begin_scene, orgBeginScene, BeginScene_BeginMinimapDraw);

@@ -23,6 +23,8 @@
 #include <shlwapi.h>
 #include <windowsx.h>
 
+float D2GI::m_LastBltX, D2GI::m_LastBltY;
+
 D2GI::D2GI()
 	: m_MinimapRenderer(this)
 {
@@ -450,13 +452,26 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 
 	pSrc->GetD3D9Texture()->GetLevelDesc(0, &sSrcDesc);
 	pRT->GetDesc(&sDstDesc);
-	if (pSrcRT != NULL)
+	if (pSrcRT != nullptr)
 		frtSrc = FRECT(*pSrcRT);
 	else
 		frtSrc = FRECT(0, 0, (FLOAT)sSrcDesc.Width, (FLOAT)sSrcDesc.Height);
 
-	if (pDstRT != NULL)
+	if (pDstRT != nullptr)
+	{
 		frtDst = FRECT(*pDstRT);
+
+		// If we have any cached floating point X/Y values, add them before scaling.
+		// This is useful for smooth scrolling minimap icons.
+		float integralX, integralY;
+		const float fracX = std::modf(m_LastBltX, &integralX);
+		const float fracY = std::modf(m_LastBltY, &integralY);
+
+		frtDst.fLeft += fracX;
+		frtDst.fRight += fracX;
+		frtDst.fTop += fracY;
+		frtDst.fBottom += fracY;
+	}
 	else
 		frtDst = FRECT(0, 0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 

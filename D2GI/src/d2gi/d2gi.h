@@ -146,4 +146,8 @@ public:
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
 	VOID OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
 	VOID OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback);
+
+public:
+	// These are public and static so the assembly hooks can write here easily.
+	static float m_LastBltX, m_LastBltY;
 };
