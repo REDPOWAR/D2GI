@@ -61,16 +61,16 @@ void D2GIMinimapRenderer::EndMinimapDraw()
 	}
 }
 
-void D2GIMinimapRenderer::AddMinimapLine(int left, int top, int x1, int y1, int x2, int y2, DWORD color)
+void D2GIMinimapRenderer::AddMinimapLine(float x1, float y1, float x2, float y2, DWORD color)
 {
 	auto& vert1 = m_LockedVertexData[m_NumVertices++];
-	vert1.XYZRHW[0] = x1;
-	vert1.XYZRHW[1] = y1;
+	vert1.XY[0] = x1;
+	vert1.XY[1] = y1;
 	vert1.Color = color;
 
 	auto& vert2 = m_LockedVertexData[m_NumVertices++];
-	vert2.XYZRHW[0] = x2;
-	vert2.XYZRHW[1] = y2;
+	vert2.XY[0] = x2;
+	vert2.XY[1] = y2;
 	vert2.Color = color;
 
 	if (m_NumVertices >= MAX_NUM_VERTICES)

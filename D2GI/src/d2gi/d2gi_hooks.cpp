@@ -631,15 +631,17 @@ namespace BatchedMinimap
 		orgEndScene();
 	}
 
-	static void DrawMinimapLine(void* graphics, int x1, int y1, int x2, int y2, DWORD color, BOOL dontUsePalette)
+	static void DrawMinimapLine_Float(void* graphics, float x1, float y1, float x2, float y2, DWORD color, BOOL dontUsePalette)
 	{
-		RECT rect;
-		GraphicsData_GetWindowRect(graphics, &rect);
-
 		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
 		assert(pD2GI != nullptr);
-		pD2GI->OnAddMinimapLine(rect.left, rect.top, x1, y1, x2, y2, color);
+		pD2GI->OnAddMinimapLine(x1, y1, x2, y2, color);
 
+	}
+
+	static void DrawMinimapLine_Int(void* graphics, int x1, int y1, int x2, int y2, DWORD color, BOOL dontUsePalette)
+	{
+		DrawMinimapLine_Float(graphics, static_cast<float>(x1), static_cast<float>(y1), static_cast<float>(x2), static_cast<float>(y2), color, dontUsePalette);
 	}
 
 	static DWORD ConvertRGB_32Bit(DWORD r, DWORD g, DWORD b)
@@ -647,6 +649,27 @@ namespace BatchedMinimap
 		// Pack in a D3DCOLOR-friendly format right away, without compressing to 16-bit
 		return D3DCOLOR_RGBA(r, g, b, 0xFF);
 	}
+
+	static __declspec(naked) void ftol_Fake()
+	{
+		_asm
+		{
+			sub		esp, 4
+			fstp	dword ptr [esp]
+			pop		eax
+			ret
+		}
+	}
+
+	template<std::size_t Index>
+	static BOOL (*orgAreNotCoordsOnMapGraphicsData)(void* graphics, int x, int y);
+	template<std::size_t Index>
+	static BOOL AreNotCoordsOnMapGraphicsData_Float(void* graphics, float x, float y)
+	{
+		return orgAreNotCoordsOnMapGraphicsData<Index>(graphics, static_cast<int>(x), static_cast<int>(y));
+	}
+
+	HOOK_EACH_INIT(MapBoundsCheck, orgAreNotCoordsOnMapGraphicsData, AreNotCoordsOnMapGraphicsData_Float);
 }
 
 
@@ -739,17 +762,16 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		auto begin_scene = get_pattern("E8 ? ? ? ? 85 FF 0F 84 ? ? ? ? B8");
 		auto end_scene = get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 54 24 ? A1 ? ? ? ? 83 C4 ? 3B D0 0F 84");
 
-		std::array<void*, 5> draw_line = {
+		std::array<void*, 4> draw_line_int = {
 
 			// Borders
 			get_pattern("E8 ? ? ? ? 8B 44 24 ? 83 C4 ? 2B C6"),
 			get_pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8 ? ? ? ? 83 C4"),
 			get_pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8 ? ? ? ? 8B 4C 24"),
 			get_pattern("E8 ? ? ? ? 8B 74 24 ? 83 C4 ? 8B 5C 24"),
-
-			// Map segments
-			get_pattern("55 57 52 E8 ? ? ? ? 83 C4 1C 5F", 3),
 		};
+
+		auto draw_line_float = get_pattern("55 57 52 E8 ? ? ? ? 83 C4 1C 5F", 3);
 
 		std::array<void*, 5> convert_rgb_32bit = {
 
@@ -765,16 +787,31 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 		auto map_draw = get_pattern("E8 ? ? ? ? 8B 15 ? ? ? ? 39 BA ? ? ? ? 0F 84");
 
+		auto map_segment_draw_ftol = pattern("E8 ? ? ? ? DD 44 24 ? DC 4E ? 8B F8 DC 44 24 ? E8 ? ? ? ? DD 44 24 ? DC 4E ? 8B D8 DC 44 24 ? E8 ? ? ? ? DD 44 24 ? DC 4E ? 8B E8 DC 44 24 ? E8").get_one();
+		std::array<void*, 4> map_segment_draw_ftol_calls = {
+			map_segment_draw_ftol.get<void>(0),
+			map_segment_draw_ftol.get<void>(0x12),
+			map_segment_draw_ftol.get<void>(0x24),
+			map_segment_draw_ftol.get<void>(0x36),
+		};
+
+		auto coords_map_bounds_check = pattern("E8 ? ? ? ? 83 C4 ? 85 C0 75 ? 8B 4C 24 ? 56 53 51 E8").get_one();
+		std::array<void*, 2> coords_map_bounds_check_calls = {
+			coords_map_bounds_check.get<void>(0),
+			coords_map_bounds_check.get<void>(0x13),
+		};
+
 		auto get_window_rect = get_pattern("8B 44 24 ? 33 D2 66 8B 51 ? 33 F6", -8);
 		GraphicsData_GetWindowRect = reinterpret_cast<decltype(GraphicsData_GetWindowRect)>(get_window_rect);
 
 		InterceptCall(begin_scene, orgBeginScene, BeginScene_BeginMinimapDraw);
 		InterceptCall(end_scene, orgEndScene, EndScene_EndMinimapDraw);
 
-		for (void* addr : draw_line)
+		for (void* addr : draw_line_int)
 		{
-			InjectHook(addr, DrawMinimapLine);
+			InjectHook(addr, DrawMinimapLine_Int);
 		}
+		InjectHook(draw_line_float, DrawMinimapLine_Float);
 
 		for (void* addr : convert_rgb_32bit)
 		{
@@ -782,6 +819,14 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		}
 
 		InterceptCall(map_draw, orgMapDraw, MapDraw_SaveViewport);
+
+		// Change GraphicsData::DrawLine arguments inside MapSegment::Draw from int to float to preserve precision
+		for (void* addr : map_segment_draw_ftol_calls)
+		{
+			InjectHook(addr, ftol_Fake);
+		}
+
+		HookEach_MapBoundsCheck(coords_map_bounds_check_calls, InterceptCall);
 	}
 	TXN_CATCH();
 

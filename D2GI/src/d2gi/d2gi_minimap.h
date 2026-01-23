@@ -12,7 +12,7 @@ public:
 	void SetViewport(const RECT& viewport) { m_Viewport = viewport; }
 	void BeginMinimapDraw();
 	void EndMinimapDraw();
-	void AddMinimapLine(int left, int top, int x1, int y1, int x2, int y2, DWORD color);
+	void AddMinimapLine(float x1, float y1, float x2, float y2, DWORD color);
 
 	void LoadResources();
 	void ReleaseResources();
@@ -35,7 +35,7 @@ private:
 
 	struct LineFVFData
 	{
-		float XYZRHW[2];
+		float XY[2];
 		D3D9::D3DCOLOR Color;
 	};
 	LineFVFData* m_LockedVertexData = nullptr;

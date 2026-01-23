@@ -115,7 +115,7 @@ public:
 	void OnMapDrawSetViewport(const RECT& viewport) { m_MinimapRenderer.SetViewport(viewport); }
 	void OnBeginMinimapDraw() { m_MinimapRenderer.BeginMinimapDraw(); }
 	void OnEndMinimapDraw() { m_MinimapRenderer.EndMinimapDraw(); }
-	void OnAddMinimapLine(int left, int top, int x1, int y1, int x2, int y2, DWORD color) { m_MinimapRenderer.AddMinimapLine(left, top, x1, y1, x2, y2, color); }
+	void OnAddMinimapLine(float x1, float y1, float x2, float y2, DWORD color) { m_MinimapRenderer.AddMinimapLine(x1, y1, x2, y2, color); }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);
