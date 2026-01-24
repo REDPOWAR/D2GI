@@ -36,7 +36,6 @@ D2GI::D2GI()
 	m_pfnOriginalWndProc = NULL;
 
 	m_eRenderState = RS_UNKNOWN;
-	m_bSceneBegun = FALSE;
 	m_bColorKeyEnabled = FALSE;
 
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
@@ -348,21 +347,14 @@ VOID D2GI::OnBackBufferLock(BOOL bRead)
 {
 	if(bRead)
 	{
-		D3D9::IDirect3DSurface9* pRT;
-		D2GIBackBufferSurface* pBackBuf;
+		auto SceneScope = BeginSceneScope();
 
-		if (!m_bSceneBegun)
-			m_pDev->BeginScene();
+		D2GIBackBufferSurface* pBackBuf = m_pDirectDrawProxy->GetPrimaryFlippableSurface()->GetBackBufferSurface();
 
-		pBackBuf = m_pDirectDrawProxy->GetPrimaryFlippableSurface()->GetBackBufferSurface();
-
-		m_pDev->GetRenderTarget(0, &pRT);
-		m_pDev->StretchRect(pRT, NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
+		Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
+		m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
+		m_pDev->StretchRect(pRT.Get(), NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
 		m_pBlitter->Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
-		pRT->Release();
-
-		if (!m_bSceneBegun)
-			m_pDev->EndScene();
 	}else
 		m_eRenderState = RS_BACKBUFFER_STREAMING;
 }
@@ -442,16 +434,15 @@ VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
 
 VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
 {
-	D3D9::IDirect3DSurface9* pRT = NULL;
 	D3D9::D3DSURFACE_DESC sSrcDesc, sDstDesc;
 	FRECT frtSrc, frtDst;
 	FRECT frtScaledDst;
 
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
+	auto SceneScope = BeginSceneScope();
 
-	m_pDev->GetRenderTarget(0, &pRT);
-	if(!m_bSceneBegun)
-		m_pDev->BeginScene();
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
+	m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
 
 
 	pSrc->GetD3D9Texture()->GetLevelDesc(0, &sSrcDesc);
@@ -480,13 +471,8 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 		frtDst = FRECT(0, 0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
 	ScaleFRect(&frtDst, &frtScaledDst);
-	m_pBlitter->Blit(pRT, &frtScaledDst,
+	m_pBlitter->Blit(pRT.Get(), &frtScaledDst,
 		pSrc->GetD3D9Texture(), &frtSrc, pSrc->HasColorKeyConversion());
-
-	if (!m_bSceneBegun)
-		m_pDev->EndScene();
-
-	pRT->Release();
 }
 
 
@@ -500,16 +486,15 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 VOID D2GI::OnSceneBegin()
 {
 	m_eRenderState = RS_3D_RENDERING;
-	BeginScene();
+	TryBeginScene();
 }
 
 
-VOID D2GI::BeginScene()
+VOID D2GI::TryBeginScene()
 {
-	if (!m_bSceneBegun)
+	if (m_SceneBeginCount++ == 0)
 	{
 		m_pDev->BeginScene();
-		m_bSceneBegun = TRUE;
 	}
 }
 
@@ -517,16 +502,15 @@ VOID D2GI::BeginScene()
 VOID D2GI::OnSceneEnd()
 {
 	m_eRenderState = RS_3D_RENDERING;
-	EndScene();
+	TryEndScene();
 }
 
 
-VOID D2GI::EndScene()
+VOID D2GI::TryEndScene()
 {
-	if (m_bSceneBegun)
+	if (--m_SceneBeginCount == 0)
 	{
 		m_pDev->EndScene();
-		m_bSceneBegun = FALSE;
 	}
 }
 
@@ -964,12 +948,8 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		}
 		else
 		{
-			// TODO: think about this scene begin/end fix
-			if (!m_bSceneBegun)
-				m_pDev->BeginScene();
+			auto SceneScope = BeginSceneScope();
 			m_pDev->DrawPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, uPrimCount, pVertexData, uVertexStride);
-			if (!m_bSceneBegun)
-				m_pDev->EndScene();
 		}
 	}
 

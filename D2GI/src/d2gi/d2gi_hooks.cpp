@@ -598,6 +598,9 @@ namespace BatchedMinimap
 		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
 		assert(pD2GI != nullptr);
 
+		// With this scene scope, the blitter won't start/end scene for every single minimap icon
+		auto SceneScope = pD2GI->BeginSceneScope();
+
 		RECT rect;
 		pD2GI->OnMapDrawSetViewport(*GraphicsData_GetWindowRect(graphics, &rect));
 

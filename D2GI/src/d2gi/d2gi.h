@@ -61,7 +61,7 @@ class D2GI
 	FLOAT m_fAspectRatioScale, m_fWidthScale, m_fHeightScale;
 
 	RENDERSTATE m_eRenderState;
-	BOOL m_bSceneBegun;
+	DWORD m_SceneBeginCount = 0;
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
 
@@ -82,8 +82,8 @@ class D2GI
 	VOID ResetD3D9Device();
 	VOID ReleaseResources();
 	VOID LoadResources();
-	VOID BeginScene();
-	VOID EndScene();
+	VOID TryBeginScene();
+	VOID TryEndScene();
 	VOID Present();
 	VOID DrawPrimitive(D3D7::D3DPRIMITIVETYPE, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
 		DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags);
@@ -95,6 +95,26 @@ class D2GI
 	VOID DetachWndProc();
 	VOID ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
 	VOID SetupWindow();
+
+	// Scoped Begin/EndScene for internal use (+ minimap)
+	class SceneScope
+	{
+	public:
+		SceneScope(D2GI* pD2GI)
+			: m_pD2GI(pD2GI)
+		{
+			pD2GI->TryBeginScene();
+		}
+
+		~SceneScope()
+		{
+			m_pD2GI->TryEndScene();
+		}
+
+	private:
+		D2GI* const m_pD2GI;
+	};
+
 public:
 	D2GI();
 	~D2GI();
@@ -107,6 +127,8 @@ public:
 	DWORD GetOriginalBPP() const { return m_dwOriginalBPP; }
 	DWORD GetForcedWidth() const { return m_dwForcedWidth; }
 	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
+
+	SceneScope BeginSceneScope() { return SceneScope(this); }
 
 	DWORD GetMaxPrimitiveCount() const { return m_MaxPrimitiveCount; }
 
