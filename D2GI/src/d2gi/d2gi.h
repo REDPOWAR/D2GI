@@ -44,7 +44,6 @@ class D2GI
 	// so DO NOT touch m_pDirectDrawProxy from D2GI's destructor!
 	D2GIDirectDraw* m_pDirectDrawProxy;
 
-	HMODULE m_hD3D9Lib;
 	D3D9::IDirect3D9* m_pD3D9;
 	D3D9::IDirect3DDevice9* m_pDev;
 	D3D9::IDirect3DTexture9* m_pBackBufferCopy;
@@ -78,7 +77,6 @@ class D2GI
 
 	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
 
-	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
 	VOID ReleaseResources();
 	VOID LoadResources();

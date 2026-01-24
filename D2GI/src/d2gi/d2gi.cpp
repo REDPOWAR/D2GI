@@ -23,13 +23,16 @@
 #include <shlwapi.h>
 #include <windowsx.h>
 
+#pragma comment(lib, "d3d9.lib")
+
 float D2GI::m_LastBltX, D2GI::m_LastBltY;
 
 D2GI::D2GI()
-	: m_MinimapRenderer(this)
+	: m_pD3D9(D3D9::Direct3DCreate9(D3D_SDK_VERSION)), m_MinimapRenderer(this)
 {
-	m_hD3D9Lib = NULL;
-	m_pD3D9 = NULL;
+	if (m_pD3D9 == nullptr)
+		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
+
 	m_pDev = NULL;
 	m_pBackBufferCopy = NULL;
 	m_pBackBufferCopySurf = NULL;
@@ -45,8 +48,6 @@ D2GI::D2GI()
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
-
-	LoadD3D9Library();
 }
 
 
@@ -61,7 +62,6 @@ D2GI::~D2GI()
 
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
-	FreeLibrary(m_hD3D9Lib);
 }
 
 
@@ -84,30 +84,6 @@ Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() cons
 VOID D2GI::OnDirectDrawReleased()
 {
 	delete this;
-}
-
-
-VOID D2GI::LoadD3D9Library()
-{
-	typedef D3D9::IDirect3D9* (WINAPI* DIRECT3DCREATE9)(UINT);
-
-	m_hD3D9Lib = LoadLibrary(TEXT("d3d9"));
-	if (m_hD3D9Lib == NULL)
-	{
-		Logger::Error(TEXT("Failed to load D3D9 library"));
-		return;
-	}
-
-	DIRECT3DCREATE9 pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
-	if (pfnDirect3DCreate9 == NULL)
-	{
-		Logger::Error(TEXT("Failed to get Direct3DCreate9 address"));
-		return;
-	}
-
-	m_pD3D9 = pfnDirect3DCreate9(D3D_SDK_VERSION);
-	if (m_pD3D9 == NULL)
-		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
 }
 
 
