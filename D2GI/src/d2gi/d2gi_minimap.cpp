@@ -114,7 +114,19 @@ void D2GIMinimapRenderer::Flush()
 
 			m_DrawSetup = true;
 		}
-		pDev->DrawPrimitive(D3D9::D3DPT_LINELIST, 0, m_NumVertices / 2);
+
+		const DWORD MaxPrimitiveCount = GetD2GI()->GetMaxPrimitiveCount();
+		DWORD PrimitiveCount = m_NumVertices / 2;
+		DWORD StartVertex = 0;
+		while (PrimitiveCount > MaxPrimitiveCount)
+		{
+			pDev->DrawPrimitive(D3D9::D3DPT_LINELIST, StartVertex, MaxPrimitiveCount);
+
+			PrimitiveCount -= MaxPrimitiveCount;
+			StartVertex += 2 * MaxPrimitiveCount;
+		}
+
+		pDev->DrawPrimitive(D3D9::D3DPT_LINELIST, StartVertex, PrimitiveCount);
 		m_NumVertices = 0;
 	}
 }

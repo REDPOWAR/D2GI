@@ -74,6 +74,8 @@ class D2GI
 
 	D2GIMinimapRenderer m_MinimapRenderer;
 
+	DWORD m_MaxPrimitiveCount = 0;
+
 	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
 
 	VOID LoadD3D9Library();
@@ -105,6 +107,8 @@ public:
 	DWORD GetOriginalBPP() const { return m_dwOriginalBPP; }
 	DWORD GetForcedWidth() const { return m_dwForcedWidth; }
 	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
+
+	DWORD GetMaxPrimitiveCount() const { return m_MaxPrimitiveCount; }
 
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;

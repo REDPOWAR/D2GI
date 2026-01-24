@@ -291,18 +291,22 @@ VOID D2GI::ResetD3D9Device()
 
 	bool MinFilterAnisotropic = false, MagFilterAnisotropic = false;
 	D3D9::D3DCAPS9 DeviceCaps;
-	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)) && (DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
+	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)))
 	{
-		const uint32_t MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1u, static_cast<uint32_t>(DeviceCaps.MaxAnisotropy));
-		if (MaxAnisotropy > 1)
+		if ((DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
 		{
-			MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
-			MagFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
-			for (DWORD Stage = 0; Stage < 8; Stage++)
+			const uint32_t MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1u, static_cast<uint32_t>(DeviceCaps.MaxAnisotropy));
+			if (MaxAnisotropy > 1)
 			{
-				m_pDev->SetSamplerState(Stage, D3D9::D3DSAMP_MAXANISOTROPY, MaxAnisotropy);
+				MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
+				MagFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
+				for (DWORD Stage = 0; Stage < 8; Stage++)
+				{
+					m_pDev->SetSamplerState(Stage, D3D9::D3DSAMP_MAXANISOTROPY, MaxAnisotropy);
+				}
 			}
 		}
+		m_MaxPrimitiveCount = DeviceCaps.MaxPrimitiveCount;
 	}
 	m_MinFilterAnisotropic = MinFilterAnisotropic;
 	m_MagFilterAnisotropic = MagFilterAnisotropic;
