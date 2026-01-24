@@ -2,7 +2,6 @@
 
 #include <optional>
 #include <utility>
-#include <vector>
 
 #define NOMINMAX
 #include <windows.h>
@@ -35,8 +34,6 @@ class D2GIStridedPrimitiveRenderer;
 struct MAT3X4;
 struct FRECT;
 
-typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
-
 
 class D2GI
 {
@@ -64,8 +61,6 @@ class D2GI
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
 
-	D3D9RECTVector* m_pClearRects;
-
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
@@ -91,7 +86,7 @@ class D2GI
 	LRESULT WndProc(HWND, UINT, WPARAM, LPARAM);
 	VOID AttachWndProc();
 	VOID DetachWndProc();
-	VOID ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
+	VOID ScaleD3D9Rect(const D3D7::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
 	VOID SetupWindow();
 
 	// Scoped Begin/EndScene for internal use (+ minimap)

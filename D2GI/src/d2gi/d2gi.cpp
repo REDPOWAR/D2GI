@@ -43,8 +43,6 @@ D2GI::D2GI()
 
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
-	m_pClearRects = new D3D9RECTVector();
-
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
@@ -58,7 +56,6 @@ D2GI::~D2GI()
 	DetachWndProc();
 	DEL(m_pStridedRenderer);
 	DEL(m_pBlitter);
-	DEL(m_pClearRects);
 
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
@@ -386,19 +383,16 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT pRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
 {
-	INT i;
+	D3D9::D3DRECT* pScaledRects = static_cast<D3D9::D3DRECT*>(_malloca(dwCount * sizeof(*pScaledRects)));
 
-	m_pClearRects->clear();
-
-	for (i = 0; i < (INT)dwCount; i++)
+	for (DWORD i = 0; i < dwCount; i++)
 	{
-		D3D9::D3DRECT sRect;
-
-		ScaleD3D9Rect((D3D9::D3DRECT*)pRects + i, &sRect);
-		m_pClearRects->push_back(sRect);
+		ScaleD3D9Rect(&pRects[i], &pScaledRects[i]);
 	}
 
-	m_pDev->Clear(dwCount, m_pClearRects->data(), dwFlags, col, z, dwStencil);
+	m_pDev->Clear(dwCount, pScaledRects, dwFlags, col, z, dwStencil);
+
+	_freea(pScaledRects);
 }
 
 
@@ -1035,9 +1029,9 @@ LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
+VOID D2GI::ScaleD3D9Rect(const D3D7::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
 {
-	if (pSrc == NULL)
+	if (pSrc == nullptr)
 	{
 		pOut->x1 = pOut->y1 = 0;
 		pOut->x2 = m_dwForcedWidth;
