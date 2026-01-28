@@ -317,5 +317,11 @@
     <ClInclude Include="src\d2gi\Utils\Patterns.h">
       <Filter>Файлы заголовков\d2gi\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\d2gi\Utils\Facade.hpp">
+      <Filter>Файлы заголовков\d2gi\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\d2gi\d2gi_game_classes.h">
+      <Filter>Файлы заголовков\d2gi</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

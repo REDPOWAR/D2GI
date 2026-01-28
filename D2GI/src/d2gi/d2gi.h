@@ -1,6 +1,9 @@
 #pragma once
 
+#include <optional>
+#include <utility>
 #include <vector>
+
 #define NOMINMAX
 #include <windows.h>
 
@@ -67,6 +70,8 @@ class D2GI
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
+	std::optional<std::pair<D3D9::D3DTEXTUREADDRESS, D3D9::D3DTEXTUREADDRESS>> m_UVOverride;
+
 	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
 
 	VOID LoadD3D9Library();
@@ -101,6 +106,9 @@ public:
 
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;
+
+	void EnableUVOverride(D3D9::D3DTEXTUREADDRESS AddressU, D3D9::D3DTEXTUREADDRESS AddressV) { m_UVOverride.emplace(AddressU, AddressV); }
+	void DisableUVOverride() { m_UVOverride.reset(); }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);

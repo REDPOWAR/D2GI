@@ -641,6 +641,45 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			break;
 
 		case D3D7::D3DTSS_ADDRESS:
+			if (m_UVOverride.has_value())
+			{
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, m_UVOverride->first);
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, m_UVOverride->second);
+				break;
+			}
+
+			// UV debug - press Shift+T to paint all out-of-bounds UV coordinates purple,
+			// then look for 1px seams in the vegetation.
+#ifdef _DEBUG
+			if (dwValue == D3D9::D3DTADDRESS_WRAP)
+			{
+				using namespace D3D9;
+				static bool bDebugEnabled = false;
+				static bool bHotkeyPressed = false;
+				if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0 && (GetAsyncKeyState(0x54) & 0x8000) != 0)
+				{
+					if (!bHotkeyPressed)
+					{
+						bDebugEnabled = !bDebugEnabled;
+						bHotkeyPressed = true;
+					}
+				}
+				else
+				{
+					bHotkeyPressed = false;
+				}
+
+				if (bDebugEnabled)
+				{
+					using namespace D3D9;
+					m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, D3D9::D3DTADDRESS_BORDER);
+					m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, D3D9::D3DTADDRESS_BORDER);
+					m_pDev->SetSamplerState(i, D3D9::D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 0, 255, 255));
+					break;
+				}
+			}
+#endif
+
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, dwValue);
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, dwValue);
 			break;

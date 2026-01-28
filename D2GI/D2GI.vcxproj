@@ -226,6 +226,7 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\d2gi\d2gi_device.h" />
     <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
     <ClInclude Include="src\d2gi\d2gi_enums.h" />
+    <ClInclude Include="src\d2gi\d2gi_game_classes.h" />
     <ClInclude Include="src\d2gi\d2gi_hooks.h" />
     <ClInclude Include="src\d2gi\d2gi_ib_container.h" />
     <ClInclude Include="src\d2gi\d2gi_mipmap_surf.h" />
@@ -240,6 +241,7 @@ call echo Shaders compiled.</Command>
     <ClInclude Include="src\d2gi\d2gi_texture.h" />
     <ClInclude Include="src\d2gi\d2gi_vb_container.h" />
     <ClInclude Include="src\d2gi\d2gi_zbuf_surf.h" />
+    <ClInclude Include="src\d2gi\Utils\Facade.hpp" />
     <ClInclude Include="src\d2gi\Utils\MemoryMgr.h" />
     <ClInclude Include="src\d2gi\Utils\Patterns.h" />
     <ClInclude Include="src\d2gi\ScreenGrab\ScreenGrab9.h" />

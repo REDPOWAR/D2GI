@@ -21,7 +21,6 @@ class D2GIHookInjector
 	
 	static D2VERSION s_eCurrentD2Version;
 
-	static D2GI* ObtainD2GI();
 	static void __fastcall SetupTransforms(void* pThis, void*, MAT3X4* pmView, MAT3X4* pmProj);
 
 	static D2VERSION DetectD2Version();
@@ -34,6 +33,7 @@ class D2GIHookInjector
 	static void D2GIHookInjector::OnInitClusters();
 	static void D2GIHookInjector::InjectInterfacePatch();
 public:
+	static D2GI* ObtainD2GI();
 	static void InjectHooks();
 
 private:

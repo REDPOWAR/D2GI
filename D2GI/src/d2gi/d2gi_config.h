@@ -2,7 +2,7 @@
 
 
 #include <cstdint>
-
+#include <string>
 
 enum class WINDOWMODE
 {
@@ -43,4 +43,6 @@ public:
 	static bool UIHooksEnabled() { return s_bEnableUIHooks; }
 	static wchar_t* GetScreenshotsPath() { return s_cScreenshotsPath; }
 	static IMG_FORMAT GetScreenshotsFormat() { return s_eImgFormat; }
+
+	static std::basic_string<TCHAR> GetConfigFilePath();
 };

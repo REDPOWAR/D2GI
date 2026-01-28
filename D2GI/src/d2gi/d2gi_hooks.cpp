@@ -6,11 +6,13 @@
 #include "d2gi_device.h"
 #include "d2gi_hooks.h"
 #include "d2gi_config.h"
+#include "d2gi_game_classes.h"
 
+#include "Utils/HookEach.hpp"
 #include "Utils/MemoryMgr.h"
 #include "Utils/Patterns.h"
 
-
+#include "../common/DelimStringReader.hpp"
 #include "CPatch/CPatch.h"
 
 // Normally a bad practice, but wincodec.h expects some D3D9 types in the global scope, so provide them.
@@ -20,6 +22,11 @@ using namespace D3D9;
 #include <wincodec.h>
 
 #include <wrl/client.h>
+
+#include <map>
+#include <string>
+#include <string_view>
+#include <utility>
 
 
 void (__thiscall *D2GIHookInjector::m_origSetupTransform)(void* pThis, MAT3X4* pmView, MAT3X4* pmProj);
@@ -380,6 +387,155 @@ void D2GIHookInjector::InjectInterfacePatch() {
 }
 
 
+// ======= Texture UV addressing mode overrides =======
+namespace TextureUVFixes
+{
+	static std::string WcharToUTF8(std::wstring_view str)
+	{
+		std::string result;
+
+		const int count = WideCharToMultiByte(CP_UTF8, 0, str.data(), str.size(), nullptr, 0, nullptr, nullptr);
+		if (count != 0)
+		{
+			result.resize(count);
+			WideCharToMultiByte(CP_UTF8, 0, str.data(), str.size(), result.data(), count, nullptr, nullptr);
+		}
+
+		return result;
+	}
+
+	static std::map<std::string, std::pair<D3D9::D3DTEXTUREADDRESS, D3D9::D3DTEXTUREADDRESS>, std::less<>> s_UVOverrides;
+	static bool LoadOverridesData()
+	{
+		bool bHasOverrides = false;
+
+		constexpr size_t SCRATCH_PAD_SIZE = 32767;
+		WideDelimStringReader reader(SCRATCH_PAD_SIZE);
+		GetPrivateProfileSection(TEXT("TEXTUREUVOVERRIDES"), reader.PutBuffer(), reader.GetSize(), D2GIConfig::GetConfigFilePath().c_str());
+
+		auto StringToTextureAddress = [](const TCHAR* str)
+			{
+				if (_tcsicmp(str, TEXT("WRAP")) == 0)
+				{
+					return D3D9::D3DTADDRESS_WRAP;
+				}
+				if (_tcsicmp(str, TEXT("CLAMP")) == 0)
+				{
+					return D3D9::D3DTADDRESS_CLAMP;
+				}
+				if (_tcsicmp(str, TEXT("MIRROR")) == 0)
+				{
+					return D3D9::D3DTADDRESS_MIRROR;
+				}
+				return D3D9::D3DTEXTUREADDRESS(0); // Invalid enum value
+			};
+
+		size_t strLength = 0;
+		while (const TCHAR* str = reader.GetString(&strLength))
+		{
+			// Each line should have a format of texName, addressU, addressV
+			std::unique_ptr<TCHAR[]> line(_tcsdup(str));
+
+			const TCHAR* separators = TEXT(" ,\t\n");
+			TCHAR* context = nullptr;
+
+			TCHAR* texName = _tcstok_s(line.get(), separators, &context);
+			const TCHAR* addressUStr = _tcstok_s(nullptr, separators, &context);
+			const TCHAR* addressVStr = _tcstok_s(nullptr, separators, &context);
+			if (texName == nullptr || addressUStr == nullptr || addressVStr == nullptr)
+			{
+				continue;
+			}
+
+			// Convert the texture name to lowercase
+			TCHAR* texCh = texName;
+			while (*texCh != '\0')
+			{
+				*texCh = _totlower(*texCh);
+				texCh++;
+			}
+
+			const D3D9::D3DTEXTUREADDRESS addressU = StringToTextureAddress(addressUStr);
+			const D3D9::D3DTEXTUREADDRESS addressV = StringToTextureAddress(addressVStr);
+			if (addressU != D3D9::D3DTEXTUREADDRESS(0) && addressV != D3D9::D3DTEXTUREADDRESS(0))
+			{
+				s_UVOverrides.try_emplace(WcharToUTF8(texName), addressU, addressV);
+				bHasOverrides = true;
+			}
+		}
+		return bHasOverrides;
+	}
+
+	static std::string_view GetTextureLookupName(std::string_view moduleName, std::string_view texturePath, char* outResult, std::size_t outResultLen)
+	{
+		// We want to look up by strings in format 'moduleName.textureName', where textureName is a 'filename' part of texturePath
+
+		// Strip the path part
+		const auto lastSlashPos = texturePath.find_last_of('\\');
+		if (lastSlashPos != texturePath.npos)
+		{
+			texturePath.remove_prefix(lastSlashPos + 1);
+		}
+
+		// Strip the extension
+		const auto dotPos = texturePath.find_last_of('.');
+		if (dotPos != texturePath.npos)
+		{
+			texturePath.remove_suffix(texturePath.length() - dotPos);
+		}
+
+		if (moduleName.length() + 1 + texturePath.length() > outResultLen) // +1 for the dot, we don't need the null terminator
+		{
+			return std::string_view();
+		}
+
+		size_t totalLength = moduleName.copy(outResult, moduleName.length());
+		outResult[totalLength++] = '.';
+		totalLength += texturePath.copy(outResult + totalLength, texturePath.length());
+
+		return std::string_view(outResult, totalLength);;
+	}
+
+	static void TryOverrideUV_Internal(D2GI* pD2GI, D3DRenderData* renderData, ResMaterial* mat1)
+	{
+		if (mat1 != nullptr)
+		{
+			ResTexture* texture = ResMaterialFacade(mat1).m_texture;
+			if (texture != nullptr)
+			{
+				const char* textureName = ResTextureFacade(texture).m_path;
+				const char* moduleName = GameModuleFacade(D3DRenderDataFacade(renderData).m_currentGameModule).m_name;
+				if (textureName != nullptr && moduleName != nullptr)
+				{
+					// Don't use std::string, this is quite a hot code path so avoid allocations
+					char textureLookupNameStorage[128];
+					const auto it = s_UVOverrides.find(GetTextureLookupName(moduleName, textureName, textureLookupNameStorage, std::size(textureLookupNameStorage)));
+					if (it != s_UVOverrides.end())
+					{
+						pD2GI->EnableUVOverride(it->second.first, it->second.second);
+					}
+				}
+			}
+		}
+	}
+
+	template<std::size_t Index>
+	static void* (__thiscall* orgSetupMaterialsWithBlending)(D3DRenderData* _this, ResMaterial* mat1, void* mat2, void* a3);
+	template<std::size_t Index>
+	static void* __fastcall SetupMaterialsWithBlending_OverrideUV(D3DRenderData* _this, void*, ResMaterial* mat1, void* mat2, void* a3)
+	{
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		TryOverrideUV_Internal(pD2GI, _this, mat1);
+
+		void* result = orgSetupMaterialsWithBlending<Index>(_this, mat1, mat2, a3);
+		pD2GI->DisableUVOverride();
+
+		return result;
+	}
+
+	HOOK_EACH_INIT(OverrideUV, orgSetupMaterialsWithBlending, SetupMaterialsWithBlending_OverrideUV);
+}
+
 void D2GIHookInjector::InjectHooks()
 {
 	const TCHAR* c_lpszVersionNames[] =
@@ -417,8 +573,29 @@ void D2GIHookInjector::InjectHooks()
 	catch (const hook::txn_exception&)
 	{
 		Logger::Log(TEXT("Failed to inject hooks, signature scan(s) failed."));
-		return;
 	}
+
+	
+	// Texture UV addressing mode overrides
+	try
+	{
+		using namespace TextureUVFixes;
+
+		std::array<void*, 2> setup_materials_with_blending = {
+			get_pattern("E8 ? ? ? ? 8B F8 A1"),
+			get_pattern("E8 ? ? ? ? A1 ? ? ? ? 6A ? 6A ? 50 8B 08 FF 51 ? 8B C6"),
+		};
+
+		FACADE_SET_MEMBER_OFFSET(ResMaterialFacade, m_texture, *get_pattern<uint8_t>("8B 4D ? BB ? ? ? ? 39 59", 2));
+		FACADE_SET_MEMBER_OFFSET(D3DRenderDataFacade, m_currentGameModule, *get_pattern<uint32_t>("8B 81 ? ? ? ? 85 C0 74 ? 8B 80 ? ? ? ? 85 C0 74 ? 51", 2));
+		FACADE_SET_MEMBER_OFFSET(GameModuleFacade, m_name, *get_pattern<uint8_t>("8B 46 ? 85 C0 74 ? 50 E8 ? ? ? ? 83 C4 ? 8B 46 ? 85 C0 74 ? 8B 48", 2));
+
+		if (LoadOverridesData())
+		{
+			HookEach_OverrideUV(setup_materials_with_blending, InterceptCall);
+		}
+	}
+	TXN_CATCH();
 
 	Logger::Log(TEXT("Injected common hooks."));
 
