@@ -7,6 +7,8 @@
 #include "d2gi_sysmem_surf.h"
 #include "d2gi.h"
 
+#include <d3dcommon.h>
+
 
 D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight, 
 	D2GIPIXELFORMAT eFormat, DWORD dwMipMapCount) 
@@ -105,8 +107,23 @@ HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 	else
 		m_bColorKeySet = FALSE;
 
+	// Keep the texture name
+#ifdef _DEBUG
+	char textureName[256];
+	DWORD len = std::size(textureName);
+	const HRESULT getNameHresult = m_pTexture->GetPrivateData(WKPDID_D3DDebugObjectName, textureName, &len);
+#endif
+
 	ReleaseResource();
 	LoadResource();
+
+#ifdef _DEBUG
+	if (SUCCEEDED(getNameHresult))
+	{
+		m_pTexture->SetPrivateData(WKPDID_D3DDebugObjectName, textureName, len, 0);
+	}
+#endif
+
 	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		m_lpMipMapLevels[i]->UpdateSurface();
 
@@ -212,4 +229,19 @@ BOOL D2GITexture::CopyFrom(D2GITexture* pSrc)
 	m_lpMipMapLevels[0]->GetD3D9Surface()->UnlockRect();
 
 	return TRUE;
+}
+
+IFACEMETHODIMP D2GITexture::SetPrivateData(REFGUID refguid, LPVOID pData, DWORD SizeOfData, DWORD Flags)
+{
+	return m_pTexture->SetPrivateData(refguid, pData, SizeOfData, Flags);
+}
+
+IFACEMETHODIMP D2GITexture::GetPrivateData(REFGUID refguid, LPVOID pData, LPDWORD pSizeOfData)
+{
+	return m_pTexture->GetPrivateData(refguid, pData, pSizeOfData);
+}
+
+IFACEMETHODIMP D2GITexture::FreePrivateData(REFGUID refguid)
+{
+	return m_pTexture->FreePrivateData(refguid);
 }

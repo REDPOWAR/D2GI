@@ -23,6 +23,8 @@ using namespace D3D9;
 
 #include <wrl/client.h>
 
+#include <d3dcommon.h>
+
 #include <map>
 #include <string>
 #include <string_view>
@@ -536,6 +538,44 @@ namespace TextureUVFixes
 	HOOK_EACH_INIT(OverrideUV, orgSetupMaterialsWithBlending, SetupMaterialsWithBlending_OverrideUV);
 }
 
+
+// ======= Texture names injection =======
+#ifdef _DEBUG
+
+#pragma comment(lib, "dxguid.lib")
+
+namespace TextureNames
+{
+	static void SetTextureName(ResTexture* texture)
+	{
+		ResTextureFacade textureF(texture);
+
+		const char* texName = textureF.m_path;
+		D2GISurface* d2giSurface = textureF.m_d3dSurface;
+
+		if (texName != nullptr && d2giSurface != nullptr)
+		{
+			const size_t texNameLen = std::strlen(texName);
+			d2giSurface->SetPrivateData(WKPDID_D3DDebugObjectName, const_cast<char*>(texName), texNameLen, 0);
+		}
+	}
+
+	template<std::size_t Index>
+	static void* (__thiscall* orgTextureInit)(ResTexture* _this, void* a1);
+	template<std::size_t Index>
+	static void* __fastcall TextureInit_SetName(ResTexture* _this, void*, void* a1)
+	{
+		void* result = orgTextureInit<Index>(_this, a1);
+		SetTextureName(_this);
+
+		return result;
+	}
+
+	HOOK_EACH_INIT(SetName, orgTextureInit, TextureInit_SetName);
+}
+#endif
+
+
 void D2GIHookInjector::InjectHooks()
 {
 	const TCHAR* c_lpszVersionNames[] =
@@ -562,6 +602,15 @@ void D2GIHookInjector::InjectHooks()
 	using namespace Memory::VP;
 	using namespace hook::txn;
 
+	bool bHasTextureFacade = false;
+	try
+	{
+		FACADE_SET_MEMBER_OFFSET(ResTextureFacade, m_d3dSurface, *get_pattern<uint8_t>("89 45 ? E8 ? ? ? ? 8B 45 ? 89 45", 2));
+
+		bHasTextureFacade = true;
+	}
+	TXN_CATCH();
+
 	try
 	{
 		auto device_address_ptr = get_pattern<D3D7::IDirect3DDevice7**>("8B 0D ? ? ? ? 8D 54 24 ? 51 6A ? 52 68 ? ? ? ? 68 ? ? ? ? C7 44 24", 2);
@@ -577,7 +626,7 @@ void D2GIHookInjector::InjectHooks()
 
 	
 	// Texture UV addressing mode overrides
-	try
+	if (bHasTextureFacade) try
 	{
 		using namespace TextureUVFixes;
 
@@ -612,4 +661,20 @@ void D2GIHookInjector::InjectHooks()
 	} else {
 		Logger::Log(TEXT("Interface and screenshot hooks don't support this version of the game."));
 	}
+
+	// Texture names injection
+#ifdef _DEBUG
+	if (bHasTextureFacade) try
+	{
+		using namespace TextureNames;
+
+		std::array<void*, 3> texture_init = {
+			get_pattern("E8 ? ? ? ? 8B 45 ? 46 3B F0 7C ? 8B 0D"),
+			get_pattern("E8 ? ? ? ? 85 C0 75 ? 8B 4C 24 ? 51"),
+			get_pattern("E8 ? ? ? ? 8B 45 ? 46 3B F0 7C ? 68"),
+		};
+		HookEach_SetName(texture_init, InterceptCall);
+	}
+	TXN_CATCH();
+#endif
 }

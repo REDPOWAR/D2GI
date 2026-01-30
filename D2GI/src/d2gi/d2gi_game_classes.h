@@ -21,10 +21,12 @@ class ResTextureFacade
 public:
 	ResTextureFacade(ResTexture* obj)
 		: FACADE_INIT_MEMBER(obj, m_path)
+		, FACADE_INIT_MEMBER(obj, m_d3dSurface)
 	{}
 
 public:
 	FACADE_STABLE_MEMBER(const char*, m_path, 4); // 0x4 in 8.2 - first class member so assume it doesn't change
+	FACADE_MEMBER(D2GISurface*, m_d3dSurface); // 0x48 in 8.2
 };
 
 class D3DRenderData;
