@@ -58,13 +58,27 @@ D2GI::~D2GI()
 	DEL(m_pBlitter);
 	DEL(m_pClearRects);
 
-	RELEASE(m_pBackBufferCopySurf);
-	RELEASE(m_pBackBufferCopy);
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
 	FreeLibrary(m_hD3D9Lib);
 }
 
+
+Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() const
+{
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> result;
+	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
+	{
+		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
+		result = pPrimSurf->GetBackBufferSurface()->GetD3D9StreamingSurface();
+	}
+	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
+	{
+		m_pDev->GetRenderTarget(0, result.GetAddressOf());
+	}
+
+	return result;
+}
 
 VOID D2GI::OnDirectDrawReleased()
 {
@@ -126,6 +140,12 @@ VOID D2GI::ReleaseResources()
 	m_pDirectDrawProxy->ReleaseResources();
 	m_pBlitter->ReleaseResource();
 	m_pStridedRenderer->ReleaseResource();
+
+	RELEASE(m_pDepthStencilSurf);
+	RELEASE(m_pMSAASurf);
+
+	RELEASE(m_pBackBufferCopySurf);
+	RELEASE(m_pBackBufferCopy);
 }
 
 
@@ -148,12 +168,10 @@ VOID D2GI::ResetD3D9Device()
 	}
 
 	ReleaseResources();
-	RELEASE(m_pBackBufferCopySurf);
-	RELEASE(m_pBackBufferCopy);
 
 	ZeroMemory(&sParams, sizeof(sParams));
-	sParams.AutoDepthStencilFormat     = D3D9::D3DFMT_D24X8;
-	sParams.EnableAutoDepthStencil     = TRUE;
+	sParams.AutoDepthStencilFormat     = D3D9::D3DFMT_UNKNOWN;
+	sParams.EnableAutoDepthStencil     = FALSE;
 	sParams.BackBufferCount            = 1;
 	sParams.BackBufferWidth            = m_dwForcedWidth;
 	sParams.BackBufferHeight           = m_dwForcedHeight;
@@ -217,18 +235,59 @@ VOID D2GI::ResetD3D9Device()
 		sParams.BackBufferWidth, sParams.BackBufferHeight,
 		sParams.Windowed ? TEXT("off") : TEXT("on"));
 
-	if (FAILED(m_pDev->CreateTexture(m_dwForcedWidth, m_dwOriginalHeight, 1, D3DUSAGE_RENDERTARGET,
-		D3D9::D3DFMT_A8R8G8B8, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL)))
+	// If MSAA is requested, find the max supported value
+	D3D9::D3DMULTISAMPLE_TYPE MSAAToUse = D3D9::D3DMULTISAMPLE_NONE;
+
+	const DWORD MSAALevel = D2GIConfig::MSAALevel();
+	if (MSAALevel > 1)
+	{
+		for (D3D9::D3DMULTISAMPLE_TYPE MSAA = static_cast<D3D9::D3DMULTISAMPLE_TYPE>(MSAALevel); MSAA >= D3D9::D3DMULTISAMPLE_2_SAMPLES;
+				MSAA = static_cast<D3D9::D3DMULTISAMPLE_TYPE>(static_cast<int>(MSAA) - 1))
+		{
+			if (SUCCEEDED(m_pD3D9->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT, D3D9::D3DDEVTYPE_HAL, sParams.BackBufferFormat, sParams.Windowed,
+				MSAA, nullptr)))
+			{
+				MSAAToUse = MSAA;
+				break;
+			}
+		}
+	}
+
+	if (FAILED(m_pDev->CreateTexture(sParams.BackBufferWidth, sParams.BackBufferHeight, 1, D3DUSAGE_RENDERTARGET,
+		sParams.BackBufferFormat, D3D9::D3DPOOL_DEFAULT, &m_pBackBufferCopy, NULL)))
 		Logger::Error(TEXT("Failed to create backbuffer copy texture"));
 
 	if (FAILED(m_pBackBufferCopy->GetSurfaceLevel(0, &m_pBackBufferCopySurf)))
 		Logger::Error(TEXT("Failed to get backbuffer copy surface"));
 
+	if (MSAAToUse != D3D9::D3DMULTISAMPLE_NONE)
+	{
+		if (SUCCEEDED(m_pDev->CreateRenderTarget(sParams.BackBufferWidth, sParams.BackBufferHeight, sParams.BackBufferFormat, MSAAToUse, 0, FALSE, &m_pMSAASurf, nullptr)))
+		{
+			m_pDev->SetRenderState(D3D9::D3DRS_MULTISAMPLEANTIALIAS, TRUE);
+			m_pDev->SetRenderState(D3D9::D3DRS_ANTIALIASEDLINEENABLE, TRUE);
+			m_pDev->SetRenderTarget(0, m_pMSAASurf);
+		}
+		else
+		{
+			Logger::Error(TEXT("Failed to create the MSAA surface"));
+		}
+	}
+
+	if (SUCCEEDED(m_pDev->CreateDepthStencilSurface(sParams.BackBufferWidth, sParams.BackBufferHeight, D3D9::D3DFMT_D24X8, MSAAToUse, 0, TRUE, &m_pDepthStencilSurf, nullptr)))
+	{
+		m_pDev->SetDepthStencilSurface(m_pDepthStencilSurf);
+	}
+	else
+	{
+		Logger::Error(TEXT("Failed to create the depth/stencil surface"));
+	}
+
 	bool MinFilterAnisotropic = false, MagFilterAnisotropic = false;
 	D3D9::D3DCAPS9 DeviceCaps;
 	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)) && (DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
 	{
-		const DWORD MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1ul, DeviceCaps.MaxAnisotropy);
+		const uint32_t MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1u, static_cast<uint32_t>(DeviceCaps.MaxAnisotropy));
 		if (MaxAnisotropy > 1)
 		{
 			MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
@@ -305,16 +364,23 @@ VOID D2GI::OnFlip()
 	{
 		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
 		D3D9::IDirect3DSurface9* pSurf = pPrimSurf->GetBackBufferSurface()->GetD3D9StreamingSurface();
-		D3D9::IDirect3DSurface9* pRT;
 
-		m_pDev->GetRenderTarget(0, &pRT);
-		m_pDev->StretchRect(pSurf, NULL, pRT, NULL, D3D9::D3DTEXF_LINEAR);
-		pRT->Release();
+		Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
+		m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, pRT.GetAddressOf());
+		m_pDev->StretchRect(pSurf, NULL, pRT.Get(), NULL, D3D9::D3DTEXF_LINEAR);
 
 		Present();
 	}
 	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
+	{
+		if (m_pMSAASurf)
+		{
+			Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
+			m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, pRT.GetAddressOf());
+			m_pDev->StretchRect(m_pMSAASurf, NULL, pRT.Get(), NULL, D3D9::D3DTEXF_NONE);
+		}
 		Present();
+	}
 }
 
 
@@ -331,7 +397,7 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 		ScaleRect(pDstRT, &sScaledRect);
 
 		pSrc->UpdateWithPalette(pDst->GetPalette());
-		m_pDev->GetRenderTarget(0, &pRT);
+		m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, &pRT);
 		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, &sScaledRect, D3D9::D3DTEXF_LINEAR);
 		pRT->Release();
 
@@ -575,6 +641,45 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			break;
 
 		case D3D7::D3DTSS_ADDRESS:
+			if (m_UVOverride.has_value())
+			{
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, m_UVOverride->first);
+				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, m_UVOverride->second);
+				break;
+			}
+
+			// UV debug - press Shift+T to paint all out-of-bounds UV coordinates purple,
+			// then look for 1px seams in the vegetation.
+#ifdef _DEBUG
+			if (dwValue == D3D9::D3DTADDRESS_WRAP)
+			{
+				using namespace D3D9;
+				static bool bDebugEnabled = false;
+				static bool bHotkeyPressed = false;
+				if ((GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0 && (GetAsyncKeyState(0x54) & 0x8000) != 0)
+				{
+					if (!bHotkeyPressed)
+					{
+						bDebugEnabled = !bDebugEnabled;
+						bHotkeyPressed = true;
+					}
+				}
+				else
+				{
+					bHotkeyPressed = false;
+				}
+
+				if (bDebugEnabled)
+				{
+					using namespace D3D9;
+					m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, D3D9::D3DTADDRESS_BORDER);
+					m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, D3D9::D3DTADDRESS_BORDER);
+					m_pDev->SetSamplerState(i, D3D9::D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 0, 255, 255));
+					break;
+				}
+			}
+#endif
+
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSU, dwValue);
 			m_pDev->SetSamplerState(i, D3D9::D3DSAMP_ADDRESSV, dwValue);
 			break;
@@ -699,10 +804,10 @@ VOID D2GI::OnClipStatusSet(D3D7::LPD3DCLIPSTATUS pStatus)
 
 VOID D2GI::Present()
 {
-	m_pDev->Present(NULL, NULL, NULL, NULL);
+	const HRESULT hr = m_pDev->Present(NULL, NULL, NULL, NULL);
 	m_pStridedRenderer->OnPresentationFinished();
 
-	if (FAILED(m_pDev->TestCooperativeLevel()))
+	if (hr == D3DERR_DEVICELOST)
 		ResetD3D9Device();
 }
 

@@ -33,6 +33,10 @@ public:
 	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
 	STDMETHOD(GetSurfaceDesc)(D3D7::LPDDSURFACEDESC2);
 
+	IFACEMETHOD(SetPrivateData)(REFGUID, LPVOID, DWORD, DWORD) override;
+	IFACEMETHOD(GetPrivateData)(REFGUID, LPVOID, LPDWORD) override;
+	IFACEMETHOD(FreePrivateData)(REFGUID) override;
+
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }

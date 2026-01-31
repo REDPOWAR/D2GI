@@ -13,18 +13,18 @@ class D2GIBackBufferSurface : public D2GISurface
 
 public:
 	D2GIBackBufferSurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
-	virtual ~D2GIBackBufferSurface();
+	virtual ~D2GIBackBufferSurface() override;
 
-	virtual SURFACETYPE GetType() { return ST_BACKBUFFER; }
-	virtual VOID ReleaseResource();
-	virtual VOID LoadResource();
+	virtual SURFACETYPE GetType() override { return ST_BACKBUFFER; }
+	virtual VOID ReleaseResource() override;
+	virtual VOID LoadResource() override;
 
-	STDMETHOD(Lock)(LPRECT, D3D7::LPDDSURFACEDESC2, DWORD, HANDLE);
-	STDMETHOD(Unlock)(LPRECT);
-	STDMETHOD(IsLost)();
-	STDMETHOD(AddAttachedSurface)(D3D7::LPDIRECTDRAWSURFACE7);
-	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX);
+	STDMETHOD(Lock)(LPRECT, D3D7::LPDDSURFACEDESC2, DWORD, HANDLE) override;
+	STDMETHOD(Unlock)(LPRECT) override;
+	STDMETHOD(IsLost)() override;
+	STDMETHOD(AddAttachedSurface)(D3D7::LPDIRECTDRAWSURFACE7) override;
+	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX) override;
 
-	D3D9::IDirect3DSurface9* GetD3D9StreamingSurface() { return m_pStreamingSurface; }
-	D3D9::IDirect3DSurface9* GetD3D9ReadingSurface() { return m_pReadingSurface; }
+	D3D9::IDirect3DSurface9* GetD3D9StreamingSurface() const { return m_pStreamingSurface; }
+	D3D9::IDirect3DSurface9* GetD3D9ReadingSurface() const  { return m_pReadingSurface; }
 };

@@ -13,6 +13,7 @@
 * 3 modes: windowed, borderless, fullscreen
 * 32-bit color rendering
 * An option to enable Anisotropic Filtering
+* Support for Multisample Anti-Aliasing (MSAA)
 * Compatibility with vanilla 8.1 or King of the Road 1.3 game versions (digital releases) and probably with some old versions
 * Compatibility with [SEMod 1.2](https://vk.com/rnr_mods?w=page-157113673_53889819)
 * Works stable, without freezes or crashes
@@ -41,6 +42,7 @@ The `d2gi.ini` file has the following settings.
 * `EnableVSync` - Turn vertical sync on or off (`1` and `0` accordingly)
 * `FixAlpha`- Turn correction of background rendering of translucent objects on or off (`1` and `0` accordingly)
 * `AnisotropyLevel` - Force Anisotropic Filtering on textures to sharpen surfaces viewed at a steep angle, like the roads or terrain (`1` to `16`)
+* `MSAALevel` - Multisample Anti-Aliasing level (`0` - off, `2` to `16`, `max` maximum supported)
 
 `HOOKS` section:
 * `EnableHooks` - Enable game functions hooking (projection matrix correction with any aspect ratio)
