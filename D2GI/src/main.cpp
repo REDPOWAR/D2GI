@@ -62,8 +62,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		Logger::Log(TEXT("D2GI %s module loaded"), D2GI_VERSION);
-		D2GIConfig::ReadFromFile();
-		D2GIHookInjector::InjectHooks();
+		const HookOptions hookOptions = D2GIConfig::ReadFromFile();
+		D2GIHookInjector::InjectHooks(hookOptions);
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
 		Logger::Log(TEXT("D2GI module unloaded\n"));

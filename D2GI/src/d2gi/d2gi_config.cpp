@@ -11,12 +11,10 @@ WINDOWMODE D2GIConfig::s_eWindowMode    = WINDOWMODE::BORDERLESS;
 uint32_t   D2GIConfig::s_dwVideoWidth   = 0, D2GIConfig::s_dwVideoHeight = 0;
 uint32_t   D2GIConfig::s_AnisotropyLevel = 1;
 uint32_t   D2GIConfig::s_MSAALevel      = 0;
-bool       D2GIConfig::s_bEnableHooks   = true;
 bool       D2GIConfig::s_bEnableVSync   = false;
 bool       D2GIConfig::s_bFixAlpha      = true;
-bool       D2GIConfig::s_bEnableUIHooks = true;
 wchar_t    D2GIConfig::s_cScreenshotsPath[MAX_PATH];
-IMG_FORMAT D2GIConfig::s_eImgFormat     = IMG_BMP;
+IMG_FORMAT D2GIConfig::s_eImgFormat     = IMG_FORMAT::IMG_BMP;
 
 uint32_t D2GIConfig::GetVideoWidth()
 {
@@ -43,8 +41,10 @@ std::basic_string<TCHAR> D2GIConfig::GetConfigFilePath()
 	return szConfigFile;
 }
 
-void D2GIConfig::ReadFromFile()
+HookOptions D2GIConfig::ReadFromFile()
 {
+	HookOptions result;
+
 	const std::basic_string<TCHAR> configFilePath = GetConfigFilePath();
 	TCHAR szTempBuf[256];
 
@@ -66,8 +66,9 @@ void D2GIConfig::ReadFromFile()
 	s_dwVideoWidth   = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Width"), 0, configFilePath.c_str());
 	s_dwVideoHeight  = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("Height"), 0, configFilePath.c_str());
 	s_bEnableVSync   = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("EnableVSync"), FALSE, configFilePath.c_str());
-	s_bEnableHooks   = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableHooks"), TRUE, configFilePath.c_str());
-	s_bEnableUIHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableUIFix"), TRUE, configFilePath.c_str());
+	result.m_bEnableHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableHooks"), result.m_bEnableHooks, configFilePath.c_str());
+	result.m_bEnableUIHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableUIFix"), result.m_bEnableUIHooks, configFilePath.c_str());
+	result.m_bEnableAffinityHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("AllCoresAffinity"), !result.m_bEnableAffinityHooks, configFilePath.c_str());
 	s_bFixAlpha      = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("FixAlpha"), TRUE, configFilePath.c_str());
 
 	GetPrivateProfileStringW(L"SCREENSHOTS", L"SavePath", L".\\screenshots",
@@ -77,15 +78,15 @@ void D2GIConfig::ReadFromFile()
 		TEXT("bmp"), szTempBuf, ARRAYSIZE(szTempBuf), configFilePath.c_str());
 
 	if (_tcsicmp(szTempBuf, TEXT("png")) == 0)
-		s_eImgFormat = IMG_PNG;
+		s_eImgFormat = IMG_FORMAT::IMG_PNG;
 	else if (_tcsicmp(szTempBuf, TEXT("bmp")) == 0)
-		s_eImgFormat = IMG_BMP;
+		s_eImgFormat = IMG_FORMAT::IMG_BMP;
 	else if (_tcsicmp(szTempBuf, TEXT("jpg")) == 0)
-		s_eImgFormat = IMG_JPG;
+		s_eImgFormat = IMG_FORMAT::IMG_JPG;
 	else
 	{
 		Logger::Warning(TEXT("Unknown image format \"%s\", setting it to BMP"), szTempBuf);
-		s_eImgFormat = IMG_BMP;
+		s_eImgFormat = IMG_FORMAT::IMG_BMP;
 	}
 
 	const int AnisotropyLevel = GetPrivateProfileInt(TEXT("VIDEO"), TEXT("AnisotropyLevel"), 1, configFilePath.c_str());
@@ -106,4 +107,6 @@ void D2GIConfig::ReadFromFile()
 			s_MSAALevel = std::min(MSAALevel, 16);
 		}
 	}
+
+	return result;
 }
