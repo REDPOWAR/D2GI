@@ -13,18 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Debug|x64.ActiveCfg = Debug|x64
-		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Debug|x64.Build.0 = Debug|x64
 		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Debug|x86.ActiveCfg = Debug|Win32
 		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Debug|x86.Build.0 = Debug|Win32
-		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Release|x64.ActiveCfg = Release|x64
-		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Release|x64.Build.0 = Release|x64
 		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Release|x86.ActiveCfg = Release|Win32
 		{D32A70F2-AADF-4E5B-B11B-D78C75EC98B4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
