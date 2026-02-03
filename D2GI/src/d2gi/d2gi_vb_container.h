@@ -3,13 +3,11 @@
 #include "d2gi_buffer_container.h"
 
 
-class D2GIVertexBufferContainer : public D2GIBufferContainer<VERTEX_STREAMING_BUFFER>
+class D2GIVertexBufferContainer : public D2GIBufferContainer<D2GIVertexBufferContainer, D3D9::IDirect3DVertexBuffer9>
 {
-protected:
-	virtual VERTEX_STREAMING_BUFFER* AllocNewBuffer(UINT);
 public:
-	D2GIVertexBufferContainer(D2GI*);
-	~D2GIVertexBufferContainer();
+	using D2GIBufferContainer::D2GIBufferContainer;
 
-	VOID SetAsSource(UINT);
+	void SetAsSource(const LockData& Data, UINT);
+	void AllocNewBuffer(UINT uSize);
 };

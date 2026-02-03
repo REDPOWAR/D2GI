@@ -162,9 +162,6 @@
     <ClCompile Include="src\d2gi\d2gi_hooks.cpp">
       <Filter>Исходные файлы\d2gi</Filter>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_buffer_container.cpp">
-      <Filter>Исходные файлы\d2gi\g-streaming</Filter>
-    </ClCompile>
     <ClCompile Include="src\d2gi\d2gi_ib_container.cpp">
       <Filter>Исходные файлы\d2gi\g-streaming</Filter>
     </ClCompile>

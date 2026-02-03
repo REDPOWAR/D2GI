@@ -3,13 +3,11 @@
 #include "d2gi_buffer_container.h"
 
 
-class D2GIIndexBufferContainer : public D2GIBufferContainer<INDEX_STREAMING_BUFFER>
+class D2GIIndexBufferContainer : public D2GIBufferContainer<D2GIIndexBufferContainer, D3D9::IDirect3DIndexBuffer9>
 {
-protected:
-	virtual INDEX_STREAMING_BUFFER* AllocNewBuffer(UINT);
 public:
-	D2GIIndexBufferContainer(D2GI*);
-	~D2GIIndexBufferContainer();
+	using D2GIBufferContainer::D2GIBufferContainer;
 
-	UINT SetAsSource();
+	UINT SetAsSource(const LockData& Data);
+	void AllocNewBuffer(UINT uSize);
 };

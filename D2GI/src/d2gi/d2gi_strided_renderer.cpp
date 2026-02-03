@@ -7,38 +7,28 @@
 #include "d2gi_ib_container.h"
 
 
-D2GIStridedPrimitiveRenderer::D2GIStridedPrimitiveRenderer(D2GI* pD2GI) : D2GIBase(pD2GI)
+D2GIStridedPrimitiveRenderer::D2GIStridedPrimitiveRenderer(D2GI* pD2GI) : D2GIBase(pD2GI),
+	m_VBContainer(pD2GI), m_IBContainer(pD2GI)
 {
-	m_pVBContainer = new D2GIVertexBufferContainer(pD2GI);
-	m_pIBContainer = new D2GIIndexBufferContainer(pD2GI);
 }
 
 
 D2GIStridedPrimitiveRenderer::~D2GIStridedPrimitiveRenderer()
 {
-	DEL(m_pVBContainer);
-	DEL(m_pIBContainer);
 }
 
 
 VOID D2GIStridedPrimitiveRenderer::ReleaseResource()
 {
-	m_pVBContainer->ReleaseResource();
-	m_pIBContainer->ReleaseResource();
+	m_VBContainer.ReleaseResource();
+	m_IBContainer.ReleaseResource();
 }
 
 
 VOID D2GIStridedPrimitiveRenderer::LoadResource()
 {
-	m_pVBContainer->LoadResource();
-	m_pIBContainer->LoadResource();
-}
-
-
-VOID D2GIStridedPrimitiveRenderer::OnPresentationFinished()
-{
-	m_pVBContainer->Clear();
-	m_pIBContainer->Clear();
+	m_VBContainer.LoadResource();
+	m_IBContainer.LoadResource();
 }
 
 
@@ -53,16 +43,15 @@ VOID D2GIStridedPrimitiveRenderer::DrawIndexedPrimitiveStrided(
 
 	SetupVertexStream(dwFVF, pData, dwCount);
 	
-	VOID* pIBData;
-	UINT uIdxOffset;
+	const auto IBData = m_IBContainer.LockStreamingSpace(sizeof(UINT16) * dwIdxCount);
 
-	if ((pIBData = m_pIBContainer->LockStreamingSpace(sizeof(UINT16) * dwIdxCount)) == NULL)
+	if (!IBData)
 		Logger::Error(TEXT("Failed to continue index streaming"));
 
-	CopyMemory(pIBData, pIdx, sizeof(UINT16) * dwIdxCount);
-	m_pIBContainer->UnlockStreamingSpace();
+	CopyMemory(IBData.Buffer, pIdx, sizeof(UINT16) * dwIdxCount);
+	m_IBContainer.UnlockStreamingSpace();
 
-	uIdxOffset = m_pIBContainer->SetAsSource();
+	UINT uIdxOffset = m_IBContainer.SetAsSource(IBData);
 
 	pDev->DrawIndexedPrimitive((D3D9::D3DPRIMITIVETYPE)pt, 0, 0, dwCount, uIdxOffset, dwIdxCount / 3);
 }
@@ -81,19 +70,19 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	if (dwFVF & ~(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 | D3DFVF_TEX2 | D3DFVF_DIFFUSE))
 		return;
 
-	VOID* pVBData;
 	INT i, j;
 	UINT uCurrentVertexStructOffset = 0;
 	UINT uTextureCount = CalcFVFTextureCount(dwFVF);
 
-	if((pVBData = m_pVBContainer->LockStreamingSpace(uVertexStride * dwCount)) == NULL)
+	auto VBData = m_VBContainer.LockStreamingSpace(uVertexStride * dwCount);
+	if(!VBData)
 		Logger::Error(TEXT("Failed to continue vertex streaming"));
 
 	if (dwFVF & D3DFVF_XYZ)
 	{
 		for (i = 0; i < (INT)dwCount; i++)
 		{
-			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->position.lpvData + i * pData->position.dwStride, sizeof(FLOAT) * 3);
 		}
 
@@ -104,7 +93,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	{
 		for (i = 0; i < (INT)dwCount; i++)
 		{
-			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->normal.lpvData + i * pData->normal.dwStride, sizeof(FLOAT) * 3);
 		}
 
@@ -115,7 +104,7 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	{
 		for (i = 0; i < (INT)dwCount; i++)
 		{
-			CopyMemory((BYTE*)pVBData + i * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + i * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->diffuse.lpvData + i * pData->diffuse.dwStride, sizeof(DWORD));
 		}
 
@@ -126,18 +115,18 @@ VOID D2GIStridedPrimitiveRenderer::SetupVertexStream(
 	{
 		for (j = 0; j < (INT)dwCount; j++)
 		{
-			CopyMemory((BYTE*)pVBData + j * uVertexStride + uCurrentVertexStructOffset,
+			CopyMemory((BYTE*)VBData.Buffer + j * uVertexStride + uCurrentVertexStructOffset,
 				(BYTE*)pData->textureCoords[i].lpvData + j * pData->textureCoords[i].dwStride, sizeof(FLOAT) * 2);
 		}
 
 		uCurrentVertexStructOffset += sizeof(FLOAT) * 2;
 	}
 
-	m_pVBContainer->UnlockStreamingSpace();
+	m_VBContainer.UnlockStreamingSpace();
 
 	pDev->SetFVF(dwFVF);
 
-	m_pVBContainer->SetAsSource(uVertexStride);
+	m_VBContainer.SetAsSource(VBData, uVertexStride);
 }
 
 

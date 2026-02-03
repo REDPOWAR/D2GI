@@ -4,16 +4,14 @@
 #include "../common/d3d7.h"
 
 #include "d2gi_common.h"
-
-
-class D2GIVertexBufferContainer;
-class D2GIIndexBufferContainer;
+#include "d2gi_ib_container.h"
+#include "d2gi_vb_container.h"
 
 
 class D2GIStridedPrimitiveRenderer : public D2GIBase
 {
-	D2GIVertexBufferContainer* m_pVBContainer;
-	D2GIIndexBufferContainer* m_pIBContainer;
+	D2GIVertexBufferContainer m_VBContainer;
+	D2GIIndexBufferContainer m_IBContainer;
 
 	VOID SetupVertexStream(DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData, DWORD dwCount);
 public:
@@ -22,8 +20,6 @@ public:
 
 	VOID ReleaseResource();
 	VOID LoadResource();
-	VOID OnPresentationFinished();
-
 
 	VOID DrawIndexedPrimitiveStrided(D3D7::D3DPRIMITIVETYPE, DWORD, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA, DWORD, LPWORD, DWORD, DWORD);
 	VOID DrawPrimitiveStrided(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData, DWORD dwCount, DWORD dwFlags);

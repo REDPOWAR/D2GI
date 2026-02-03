@@ -1,81 +1,71 @@
 #pragma once
 
-#include <vector>
-
 #include "../common/common.h"
 
 #include "d2gi_common.h"
 
+#include <utility>
+#include <wrl/client.h>
 
-template<typename BufferType>
-struct STREAMING_BUFFER
-{
-	UINT uTotalSize, uCurrentlyFreeSize;
-	BufferType* pBuffer;
-
-	STREAMING_BUFFER(BufferType* pBuffer, UINT uSize)
-	{
-		uTotalSize = uSize; uCurrentlyFreeSize = uSize; this->pBuffer = pBuffer;
-		pBuffer->AddRef();
-	};
-
-	STREAMING_BUFFER(CONST STREAMING_BUFFER& other)
-	{
-		uTotalSize = other.uTotalSize; uCurrentlyFreeSize = other.uCurrentlyFreeSize; pBuffer = other.pBuffer;
-		pBuffer->AddRef();
-	}
-
-	STREAMING_BUFFER& operator = (CONST STREAMING_BUFFER& other)
-	{
-		if (&other == this) return;
-		uTotalSize = other.uTotalSize; uCurrentlyFreeSize = other.uCurrentlyFreeSize; pBuffer = other.pBuffer;
-		pBuffer->AddRef();
-	}
-
-	~STREAMING_BUFFER() { RELEASE(pBuffer); }
-
-	VOID Clear() { uCurrentlyFreeSize = uTotalSize; }
-
-	VOID* Lock(UINT uSize, UINT* pOffset)
-	{
-		if (uSize > uCurrentlyFreeSize)
-			return NULL;
-
-		VOID* pData;
-
-		*pOffset = uTotalSize - uCurrentlyFreeSize;
-		pBuffer->Lock(*pOffset, uSize, &pData,
-			uCurrentlyFreeSize == uTotalSize ? D3DLOCK_DISCARD : D3DLOCK_NOOVERWRITE);
-
-		uCurrentlyFreeSize -= uSize;
-
-		return pData;
-	}
-
-	VOID Unlock() { pBuffer->Unlock(); }
-};
-
-
-typedef STREAMING_BUFFER<D3D9::IDirect3DVertexBuffer9> VERTEX_STREAMING_BUFFER;
-typedef STREAMING_BUFFER<D3D9::IDirect3DIndexBuffer9> INDEX_STREAMING_BUFFER;
-
-
-template<typename StreamingBufferType>
-class D2GIBufferContainer : protected std::vector<StreamingBufferType>, public D2GIBase
+template<typename ContainerType, typename BufferT>
+class D2GIBufferContainer : public D2GIBase
 {
 protected:
-	StreamingBufferType* m_pLastLockBuffer;
-	UINT m_uLastLockOffset, m_uLastLockSize;
+	using BufferType = BufferT;
 
-	virtual StreamingBufferType* AllocNewBuffer(UINT) = 0;
+	Microsoft::WRL::ComPtr<BufferType> m_pBuffer;
+	UINT m_TotalSpace = 0, m_UsedSpace = 0;
+
 public:
-	D2GIBufferContainer(D2GI*);
-	~D2GIBufferContainer();
+	struct LockData
+	{
+		void* Buffer;
+		UINT Offset;
 
-	VOID ReleaseResource();
-	VOID LoadResource();
-	VOID Clear();
+		explicit operator bool() const noexcept { return Buffer != nullptr; }
+	};
 
-	VOID* LockStreamingSpace(UINT);
-	VOID UnlockStreamingSpace();
+	using D2GIBase::D2GIBase;
+
+	void ReleaseResource()
+	{
+		m_pBuffer.Reset();
+		m_TotalSpace = m_UsedSpace = 0;
+	}
+
+	void LoadResource()
+	{
+		static_cast<ContainerType*>(this)->AllocNewBuffer(0);
+	}
+
+	LockData LockStreamingSpace(UINT uSize)
+	{
+		if (uSize > m_TotalSpace)
+			static_cast<ContainerType*>(this)->AllocNewBuffer(uSize);
+
+		return Lock(uSize);
+	}
+
+	void UnlockStreamingSpace()
+	{
+		m_pBuffer->Unlock();
+	}
+
+protected:
+	LockData Lock(UINT uSize)
+	{
+		DWORD Flags = D3DLOCK_NOOVERWRITE|D3DLOCK_NOSYSLOCK;
+		if (m_UsedSpace + uSize > m_TotalSpace)
+		{
+			Flags = D3DLOCK_DISCARD|D3DLOCK_NOSYSLOCK;
+			m_UsedSpace = 0;
+		}
+
+		LockData data;
+		m_pBuffer->Lock(m_UsedSpace, uSize, &data.Buffer, Flags);
+		data.Offset = std::exchange(m_UsedSpace, m_UsedSpace + uSize);
+		return data;
+	}
+
+	void Unlock() { m_pBuffer->Unlock(); }
 };

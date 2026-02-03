@@ -1,43 +1,27 @@
 
 #include "../common/logger.h"
-
 #include "d2gi_vb_container.h"
 
+#include <algorithm>
 
-#define DEFAULT_VB_SIZE  (32u * 256u * 256u)
+static constexpr UINT DEFAULT_VB_SIZE = 32u * 256u * 256u;
 
-
-D2GIVertexBufferContainer::D2GIVertexBufferContainer(D2GI* pD2GI) 
-	: D2GIBufferContainer<VERTEX_STREAMING_BUFFER>(pD2GI)
+void D2GIVertexBufferContainer::AllocNewBuffer(UINT uRequiredSize)
 {
-
-}
-
-
-D2GIVertexBufferContainer::~D2GIVertexBufferContainer()
-{
-
-}
-
-
-VERTEX_STREAMING_BUFFER* D2GIVertexBufferContainer::AllocNewBuffer(UINT uRequiredSize)
-{
-	UINT uSelectedSize = std::max(uRequiredSize, DEFAULT_VB_SIZE);
+	uRequiredSize = std::max(uRequiredSize, DEFAULT_VB_SIZE);
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
-	D3D9::IDirect3DVertexBuffer9* pVB;
 
-	if (FAILED(pDev->CreateVertexBuffer(uSelectedSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
-		0, D3D9::D3DPOOL_DEFAULT, &pVB, NULL)))
+	if (FAILED(pDev->CreateVertexBuffer(uRequiredSize, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+		0, D3D9::D3DPOOL_DEFAULT, &m_pBuffer, nullptr)))
 		Logger::Error(TEXT("Failed to alloc new vertex buffer for streaming"));
 
-	push_back(VERTEX_STREAMING_BUFFER(pVB, uSelectedSize));
-	pVB->Release();
 
-	return data() + size() - 1;
+	m_UsedSpace = 0;
+	m_TotalSpace = uRequiredSize;
 }
 
 
-VOID D2GIVertexBufferContainer::SetAsSource(UINT uStride)
+void D2GIVertexBufferContainer::SetAsSource(const LockData& Data, UINT uStride)
 {
-	GetD3D9Device()->SetStreamSource(0, m_pLastLockBuffer->pBuffer, m_uLastLockOffset, uStride);
+	GetD3D9Device()->SetStreamSource(0, m_pBuffer.Get(), Data.Offset, uStride);
 }
