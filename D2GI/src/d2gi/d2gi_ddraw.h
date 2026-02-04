@@ -13,9 +13,10 @@
 
 class D2GIDirectDraw : public ImplementsProxy<DDrawProxy, D3DProxy>, public D2GIBase
 {
-	D2GIResourceContainer* m_pResourceContainer;
-	D2GIPrimaryFlippableSurface* m_pPrimaryFlippableSurf;
-	D2GIPrimarySingleSurface* m_pPrimarySingleSurf;
+private:
+	D2GIResourceContainer m_resourceContainer;
+	D2GIPrimaryFlippableSurface* m_pPrimaryFlippableSurf = nullptr;
+	D2GIPrimarySingleSurface* m_pPrimarySingleSurf = nullptr;
 public:
 	D2GIDirectDraw(D2GI*);
 	virtual ~D2GIDirectDraw() override;
@@ -38,6 +39,6 @@ public:
 
 	VOID ReleaseResources();
 	VOID LoadResources();
-	D2GIPrimaryFlippableSurface* GetPrimaryFlippableSurface() { return m_pPrimaryFlippableSurf; }
-	D2GIPrimarySingleSurface* GetPrimarySingleSurface() { return m_pPrimarySingleSurf; }
+	D2GIPrimaryFlippableSurface* GetPrimaryFlippableSurface() const { return m_pPrimaryFlippableSurf; }
+	D2GIPrimarySingleSurface* GetPrimarySingleSurface() const { return m_pPrimarySingleSurf; }
 };

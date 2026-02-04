@@ -21,14 +21,12 @@ using namespace D3D7;
 
 D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : D2GIBase(pD2GI)
 {
-	m_pResourceContainer = new D2GIResourceContainer(m_pD2GI);
 }
 
 
 D2GIDirectDraw::~D2GIDirectDraw()
 {
 	m_pD2GI->OnDirectDrawReleased();
-	DEL(m_pResourceContainer);
 }
 
 
@@ -41,7 +39,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		m_pPrimaryFlippableSurf = new D2GIPrimaryFlippableSurface(m_pD2GI, 
 			m_pD2GI->GetOriginalWidth(), m_pD2GI->GetOriginalHeight(), eStdPF);
 
-		m_pResourceContainer->Add((D2GIResource*)m_pPrimaryFlippableSurf);
+		m_resourceContainer.Add((D2GIResource*)m_pPrimaryFlippableSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimaryFlippableSurf;
 
 		return DD_OK;
@@ -53,7 +51,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		D2GISystemMemorySurface* pSurf = new D2GISystemMemorySurface(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, 
 			(lpDesc->dwFlags & DDSD_PIXELFORMAT) ? DD7PF_To_D2GIPF(&lpDesc->ddpfPixelFormat) : eStdPF);
 
-		m_pResourceContainer->Add((D2GIResource*)pSurf);
+		m_resourceContainer.Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
 
 		return DD_OK;
@@ -64,7 +62,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		m_pPrimarySingleSurf = new D2GIPrimarySingleSurface(m_pD2GI,
 			m_pD2GI->GetOriginalWidth(), m_pD2GI->GetOriginalHeight(), eStdPF);
 
-		m_pResourceContainer->Add((D2GIResource*)m_pPrimarySingleSurf);
+		m_resourceContainer.Add((D2GIResource*)m_pPrimarySingleSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pPrimarySingleSurf;
 
 		return DD_OK;
@@ -75,7 +73,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		D2GIZBufferSurface* pSurf = new D2GIZBufferSurface(m_pD2GI,
 			m_pD2GI->GetOriginalWidth(), m_pD2GI->GetOriginalHeight(), D2GIPF_16_DEPTH);
 
-		m_pResourceContainer->Add((D2GIResource*)pSurf);
+		m_resourceContainer.Add((D2GIResource*)pSurf);
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pSurf;
 
 		return DD_OK;
@@ -90,7 +88,7 @@ HRESULT D2GIDirectDraw::CreateSurface(D3D7::LPDDSURFACEDESC2 lpDesc, D3D7::LPDIR
 		D2GITexture* pTex = new D2GITexture(m_pD2GI, lpDesc->dwWidth, lpDesc->dwHeight, 
 			DD7PF_To_D2GIPF(&lpDesc->ddpfPixelFormat), dwMipMapCount);
 
-		m_pResourceContainer->Add((D2GIResource*)pTex); // MT-safe
+		m_resourceContainer.Add((D2GIResource*)pTex); // MT-safe
 		*lpSurf = (D3D7::IDirectDrawSurface7*)pTex;
 
 		return DD_OK;
@@ -154,13 +152,13 @@ HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpHALCaps, D3D7::LPDDCAPS lpHELCa
 
 VOID D2GIDirectDraw::ReleaseResources()
 {
-	m_pResourceContainer->ReleaseResources();
+	m_resourceContainer.ReleaseResources();
 }
 
 
 VOID D2GIDirectDraw::LoadResources()
 {
-	m_pResourceContainer->LoadResources();
+	m_resourceContainer.LoadResources();
 }
 
 
@@ -184,7 +182,7 @@ HRESULT D2GIDirectDraw::CreatePalette(DWORD dwFlags, LPPALETTEENTRY pEntries, D3
 	{
 		D2GIPalette* pPalette = new D2GIPalette(m_pD2GI, pEntries);
 
-		m_pResourceContainer->Add((D2GIResource*)pPalette);
+		m_resourceContainer.Add((D2GIResource*)pPalette);
 		*lpPalette = (D3D7::IDirectDrawPalette*)pPalette;
 
 		return DD_OK;
