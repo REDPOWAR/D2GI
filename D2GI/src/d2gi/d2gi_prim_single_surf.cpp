@@ -3,6 +3,7 @@
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_enums.h"
 
+#include "../common/common.h"
 
 D2GIPrimarySingleSurface::D2GIPrimarySingleSurface(D2GI* pD2GI,
 	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat)

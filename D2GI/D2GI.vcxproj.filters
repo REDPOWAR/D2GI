@@ -317,6 +317,9 @@
     <ClInclude Include="src\d2gi\d2gi_minimap.h">
       <Filter>Файлы заголовков\d2gi</Filter>
     </ClInclude>
+    <ClInclude Include="src\common\implements_proxy.hpp">
+      <Filter>Файлы заголовков\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\d2gi\shaders\d2gi_blitter_ps.hlsl">

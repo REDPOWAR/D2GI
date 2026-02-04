@@ -1,5 +1,4 @@
 
-#define INITGUID
 #include "../common/common.h"
 #include "../common/utils.h"
 #include "../common/logger.h"
@@ -15,7 +14,6 @@
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_palette.h"
-#include "d2gi_surface.h"
 #include "d2gi_zbuf_surf.h"
 #include "d2gi_texture.h"
 
@@ -31,22 +29,6 @@ D2GIDirectDraw::~D2GIDirectDraw()
 {
 	m_pD2GI->OnDirectDrawReleased();
 	DEL(m_pResourceContainer);
-}
-
-
-HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
-{
-	if (IsEqualIID(riid, D3D7::IID_IDirect3D7))
-	{
-		D3D7::IDirect3D7* d3d7 = static_cast<D3D7::IDirect3D7*>(this);
-		d3d7->AddRef();
-		*ppvObj = d3d7;
-
-		return S_OK;
-	}
-
-	Logger::Warning(TEXT("Requested unknown interface from DDraw"));
-	return DDERR_GENERIC;
 }
 
 

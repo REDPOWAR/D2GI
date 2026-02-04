@@ -5,8 +5,9 @@
 #include "d2gi_common.h"
 #include "d2gi_resource.h"
 
+#include "../common/implements_proxy.hpp"
 
-class D2GIPalette : public PaletteProxy, public D2GIResource
+class D2GIPalette : public ImplementsProxy<PaletteProxy>, public D2GIResource
 {
 	PALETTEENTRY m_asEntries[256];
 	UINT16 m_auEntries16[256];

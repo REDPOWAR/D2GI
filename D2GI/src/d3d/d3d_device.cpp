@@ -1,22 +1,8 @@
 
-#include "../common/common.h"
-
 #include "d3d_device.h"
 
 
 using namespace D3D7;
-
-
-DeviceProxy::DeviceProxy() 
-{
-
-}
-
-
-DeviceProxy::~DeviceProxy()
-{
-}
-
 
 
 HRESULT DeviceProxy::GetCaps(LPD3DDEVICEDESC7 lpDesc)

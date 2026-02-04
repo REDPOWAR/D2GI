@@ -2,18 +2,6 @@
 #include "dd_palette.h"
 
 
-PaletteProxy::PaletteProxy() : Unknown()
-{
-
-}
-
-
-PaletteProxy::~PaletteProxy()
-{
-
-}
-
-
 HRESULT PaletteProxy::GetCaps(LPDWORD)
 {
 	return DDERR_GENERIC;

@@ -6,6 +6,8 @@
 #include "d2gi_resource.h"
 #include "d2gi_enums.h"
 
+#include "../common/implements_proxy.hpp"
+
 
 enum SURFACETYPE
 {
@@ -19,7 +21,7 @@ enum SURFACETYPE
 };
 
 
-class D2GISurface : public SurfaceProxy, public D2GIResource
+class D2GISurface : public ImplementsProxy<SurfaceProxy>, public D2GIResource
 {
 protected:
 	DWORD m_dwWidth, m_dwHeight, m_dwBPP;

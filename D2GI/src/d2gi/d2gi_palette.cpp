@@ -3,7 +3,7 @@
 
 
 D2GIPalette::D2GIPalette(D2GI* pD2GI, PALETTEENTRY* pEntries) 
-	: PaletteProxy(), D2GIResource(pD2GI)
+	: D2GIResource(pD2GI)
 {
 	CopyMemory(m_asEntries, pEntries, sizeof(m_asEntries));
 	UpdateEntries16(0, 256);

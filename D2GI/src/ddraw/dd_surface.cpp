@@ -1,22 +1,8 @@
 
-#include "../common/common.h"
-
 #include "dd_surface.h"
 
 
 using namespace D3D7;
-
-
-SurfaceProxy::SurfaceProxy() : Unknown()
-{
-
-}
-
-
-SurfaceProxy::~SurfaceProxy()
-{
-
-}
 
 
 HRESULT SurfaceProxy::AddAttachedSurface(LPDIRECTDRAWSURFACE7 lpSurf)

@@ -152,6 +152,7 @@
     <ClInclude Include="src\common\d3d9.h" />
     <ClInclude Include="src\common\dir.h" />
     <ClInclude Include="src\common\frect.h" />
+    <ClInclude Include="src\common\implements_proxy.hpp" />
     <ClInclude Include="src\common\logger.h" />
     <ClInclude Include="src\common\m3x4.h" />
     <ClInclude Include="src\common\utils.h" />
