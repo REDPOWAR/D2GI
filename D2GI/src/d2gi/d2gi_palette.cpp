@@ -5,8 +5,7 @@
 D2GIPalette::D2GIPalette(D2GI* pD2GI, PALETTEENTRY* pEntries) 
 	: D2GIResource(pD2GI)
 {
-	CopyMemory(m_asEntries, pEntries, sizeof(m_asEntries));
-	UpdateEntries16(0, 256);
+	UpdateEntries16(pEntries, 0, 256);
 }
 
 
@@ -17,22 +16,19 @@ D2GIPalette::~D2GIPalette()
 
 HRESULT D2GIPalette::SetEntries(DWORD, DWORD dwIdx, DWORD dwCount, LPPALETTEENTRY pEntries)
 {
-	CopyMemory(m_asEntries + dwIdx, pEntries, sizeof(PALETTEENTRY) * dwCount);
-	UpdateEntries16(dwIdx, dwCount);
+	UpdateEntries16(pEntries, dwIdx, dwCount);
 
 	return DD_OK;
 }
 
 
-VOID D2GIPalette::UpdateEntries16(DWORD dwIdx, DWORD dwCount)
+void D2GIPalette::UpdateEntries16(const PALETTEENTRY* pEntries, DWORD dwIdx, DWORD dwCount)
 {
-	DWORD i;
-
-	for (i = dwIdx; i < dwIdx + dwCount; i++)
+	for (DWORD i = dwIdx; i < dwIdx + dwCount; i++)
 	{
-		BYTE bR = (BYTE)((INT)m_asEntries[i].peRed * 31 / 255);
-		BYTE bG = (BYTE)((INT)m_asEntries[i].peGreen * 63 / 255);
-		BYTE bB = (BYTE)((INT)m_asEntries[i].peBlue * 31 / 255);
+		BYTE bR = (BYTE)((INT)pEntries[i].peRed * 31 / 255);
+		BYTE bG = (BYTE)((INT)pEntries[i].peGreen * 63 / 255);
+		BYTE bB = (BYTE)((INT)pEntries[i].peBlue * 31 / 255);
 
 		m_auEntries16[i] = (UINT16)((bR << 11) | (bG << 5) | (bB));
 	}

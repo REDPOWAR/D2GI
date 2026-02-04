@@ -9,19 +9,19 @@
 
 class D2GIPalette : public ImplementsProxy<PaletteProxy>, public D2GIResource
 {
-	PALETTEENTRY m_asEntries[256];
+private:
 	UINT16 m_auEntries16[256];
 
-	VOID UpdateEntries16(DWORD dwIdx, DWORD dwCount);
+	void UpdateEntries16(const PALETTEENTRY* pEntries, DWORD dwIdx, DWORD dwCount);
+
 public:
 	D2GIPalette(D2GI*, PALETTEENTRY*);
-	virtual ~D2GIPalette();
+	virtual ~D2GIPalette() override;
 
-	virtual VOID ReleaseResource() {};
-	virtual VOID LoadResource() {};
+	virtual VOID ReleaseResource() override {};
+	virtual VOID LoadResource() override {};
 
-	STDMETHOD(SetEntries)(DWORD, DWORD, DWORD, LPPALETTEENTRY);
+	STDMETHOD(SetEntries)(DWORD, DWORD, DWORD, LPPALETTEENTRY) override;
 
-	PALETTEENTRY* GetEntries() { return m_asEntries; }
-	UINT16* GetEntries16() { return m_auEntries16; }
+	const UINT16* GetEntries16() const { return m_auEntries16; }
 };
