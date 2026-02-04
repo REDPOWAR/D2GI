@@ -9,17 +9,19 @@
 
 #include "d2gi.h"
 #include "d2gi_ddraw.h"
-#include "d2gi_direct3d.h"
+#include "d2gi_device.h"
 #include "d2gi_enums.h"
 #include "d2gi_prim_flip_surf.h"
 #include "d2gi_sysmem_surf.h"
 #include "d2gi_prim_single_surf.h"
 #include "d2gi_palette.h"
+#include "d2gi_surface.h"
 #include "d2gi_zbuf_surf.h"
 #include "d2gi_texture.h"
 
+using namespace D3D7;
 
-D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : DDrawProxy(), D2GIBase(pD2GI)
+D2GIDirectDraw::D2GIDirectDraw(D2GI* pD2GI) : D2GIBase(pD2GI)
 {
 	m_pResourceContainer = new D2GIResourceContainer(m_pD2GI);
 }
@@ -36,9 +38,11 @@ HRESULT D2GIDirectDraw::QueryInterface(REFIID riid, LPVOID FAR* ppvObj)
 {
 	if (IsEqualIID(riid, D3D7::IID_IDirect3D7))
 	{
-		*ppvObj = (D3D7::IDirect3D7*)new D2GIDirect3D(m_pD2GI);
+		D3D7::IDirect3D7* d3d7 = static_cast<D3D7::IDirect3D7*>(this);
+		d3d7->AddRef();
+		*ppvObj = d3d7;
 
-		return DD_OK;
+		return S_OK;
 	}
 
 	Logger::Warning(TEXT("Requested unknown interface from DDraw"));
@@ -206,4 +210,39 @@ HRESULT D2GIDirectDraw::CreatePalette(DWORD dwFlags, LPPALETTEENTRY pEntries, D3
 
 	Logger::Warning(TEXT("Requested unknown palette creation"));
 	return DDERR_GENERIC;
+}
+
+HRESULT D2GIDirectDraw::CreateDevice(REFCLSID iid, LPDIRECTDRAWSURFACE7 lpSurf, LPDIRECT3DDEVICE7* lpDev)
+{
+	*lpDev = new D2GIDevice(m_pD2GI);
+
+	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::EnumDevices(LPD3DENUMDEVICESCALLBACK7 pCallback, LPVOID pArg)
+{
+	INT i;
+
+	for (i = 0; i < (INT)g_uDeviceCount; i++)
+	{
+		if (pCallback(g_lpszDeviceDescs[i], g_lpszDeviceNames[i], g_asDeviceDescs + i, pArg) == DDENUMRET_CANCEL)
+			break;
+	}
+
+	return DD_OK;
+}
+
+
+HRESULT D2GIDirectDraw::EnumZBufferFormats(REFCLSID, D3D7::LPD3DENUMPIXELFORMATSCALLBACK pCallback, LPVOID lpArg)
+{
+	INT i;
+
+	for (i = 0; i < (INT)g_uZBufferFormatsCount; i++)
+	{
+		if (pCallback(g_asZBufferFormats + i, lpArg) == DDENUMRET_CANCEL)
+			break;
+	}
+
+	return DD_OK;
 }

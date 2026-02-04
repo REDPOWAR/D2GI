@@ -7,7 +7,7 @@
 using namespace D3D7;
 
 
-D3DProxy::D3DProxy() : Unknown()
+D3DProxy::D3DProxy()
 {
 
 }

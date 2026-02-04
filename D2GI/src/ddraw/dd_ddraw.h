@@ -4,15 +4,11 @@
 #include "../common/d3d7.h"
 
 
-class DDrawProxy : public D3D7::IDirectDraw7, public Unknown
+class DDrawProxy : public D3D7::IDirectDraw7
 {
 public:
 	DDrawProxy();
 	virtual ~DDrawProxy();
-
-	STDMETHOD(QueryInterface) (REFIID riid, LPVOID FAR* ppvObj) { return Unknown::QueryInterface(riid, ppvObj); };
-	STDMETHOD_(ULONG, AddRef) () { return Unknown::AddRef(); };
-	STDMETHOD_(ULONG, Release) () { return Unknown::Release(); };
 
 	STDMETHOD(Compact)();
 	STDMETHOD(CreateClipper)(DWORD, D3D7::LPDIRECTDRAWCLIPPER FAR*, IUnknown FAR*) ;
