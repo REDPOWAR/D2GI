@@ -586,6 +586,129 @@ namespace AffinityChanges
 	static auto* const pSetProcessAffinityMask_NOP = &SetProcessAffinityMask_NOP;
 }
 
+// ======= Batched minimap draws =======
+namespace BatchedMinimap
+{
+	// GraphicsData::GetWindowRect, but we don't bother defining the class
+	static RECT* (__thiscall* GraphicsData_GetWindowRect)(const void* _this, RECT* rect);
+
+	static void (__thiscall* orgMapDraw)(void* _this, void* graphics, void* a3);
+	static void __fastcall MapDraw_SaveViewport(void* _this, void*, void* graphics, void* a3)
+	{
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+
+		// With this scene scope, the blitter won't start/end scene for every single minimap icon
+		auto SceneScope = pD2GI->BeginSceneScope();
+
+		RECT rect;
+		pD2GI->OnMapDrawSetViewport(*GraphicsData_GetWindowRect(graphics, &rect));
+
+		orgMapDraw(_this, graphics, a3);
+
+		// Reset the minimap offsets
+		D2GI::m_LastBltX = D2GI::m_LastBltY = 0.0f;
+	}
+
+	static void (*orgBeginScene)();
+	static void BeginScene_BeginMinimapDraw()
+	{
+		orgBeginScene();
+
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+
+		pD2GI->OnBeginMinimapDraw();
+	}
+
+	static void (*orgEndScene)();
+	static void EndScene_EndMinimapDraw()
+	{
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+		pD2GI->OnEndMinimapDraw();
+
+		orgEndScene();
+	}
+
+	static void DrawMinimapLine_Float(void* graphics, float x1, float y1, float x2, float y2, DWORD color, BOOL dontUsePalette)
+	{
+		D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+		assert(pD2GI != nullptr);
+		pD2GI->OnAddMinimapLine(x1, y1, x2, y2, color);
+
+	}
+
+	static void DrawMinimapLine_Int(void* graphics, int x1, int y1, int x2, int y2, DWORD color, BOOL dontUsePalette)
+	{
+		DrawMinimapLine_Float(graphics, static_cast<float>(x1), static_cast<float>(y1), static_cast<float>(x2), static_cast<float>(y2), color, dontUsePalette);
+	}
+
+	static DWORD ConvertRGB_32Bit(DWORD r, DWORD g, DWORD b)
+	{
+		// Pack in a D3DCOLOR-friendly format right away, without compressing to 16-bit
+		return D3DCOLOR_RGBA(r, g, b, 0xFF);
+	}
+
+	// Subpixel minimap scrolling
+	static __declspec(naked) void ftol_Fake()
+	{
+		_asm
+		{
+			sub		esp, 4
+			fstp	dword ptr [esp]
+			pop		eax
+			ret
+		}
+	}
+
+	template<std::size_t Index>
+	static BOOL (*orgAreNotCoordsOnMapGraphicsData)(void* graphics, int x, int y);
+	template<std::size_t Index>
+	static BOOL AreNotCoordsOnMapGraphicsData_Float(void* graphics, float x, float y)
+	{
+		return orgAreNotCoordsOnMapGraphicsData<Index>(graphics, static_cast<int>(x), static_cast<int>(y));
+	}
+
+	HOOK_EACH_INIT(MapBoundsCheck, orgAreNotCoordsOnMapGraphicsData, AreNotCoordsOnMapGraphicsData_Float);
+
+
+	// Subpixel minimap icon scrolling
+	template<std::size_t Index>
+	static void* orgftol_StoreX;
+
+	template<std::size_t Index>
+	static __declspec(naked) void ftol_StoreX()
+	{
+		static void** const func = &orgftol_StoreX<Index>;
+		_asm
+		{
+			fst		[D2GI::m_LastBltX]
+			mov		eax, [func]
+			jmp		dword ptr [eax]
+		}
+	}
+
+	template<std::size_t Index>
+	static void* orgftol_StoreY;
+
+	template<std::size_t Index>
+	static __declspec(naked) void ftol_StoreY()
+	{
+		static void** const func = &orgftol_StoreY<Index>;
+		_asm
+		{
+			fst		[D2GI::m_LastBltY]
+			mov		eax, [func]
+			jmp		dword ptr [eax]
+		}
+	}
+
+	HOOK_EACH_INIT(StoreFloatX, orgftol_StoreX, ftol_StoreX);
+	HOOK_EACH_INIT(StoreFloatY, orgftol_StoreY, ftol_StoreY);
+}
+
+
 void D2GIHookInjector::InjectHooks(const HookOptions& options)
 {
 	const TCHAR* c_lpszVersionNames[] =
@@ -663,6 +786,128 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		auto set_process_affinity_mark = get_pattern("50 FF 15 ? ? ? ? B8 01 00 00 00 C3", 3);
 
 		Patch(set_process_affinity_mark, &AffinityChanges::pSetProcessAffinityMask_NOP);
+	}
+	TXN_CATCH();
+
+
+	// Batched minimap draws
+	try
+	{
+		using namespace BatchedMinimap;
+
+		auto begin_scene = get_pattern("E8 ? ? ? ? 85 FF 0F 84 ? ? ? ? B8");
+		auto end_scene = get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 54 24 ? A1 ? ? ? ? 83 C4 ? 3B D0 0F 84");
+
+		auto draw_border_line1 = pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8").count(2);
+		std::array<void*, 4> draw_line_int = {
+
+			// Borders
+			get_pattern("E8 ? ? ? ? 8B 44 24 ? 83 C4 ? 2B C6"),
+			draw_border_line1.get(0).get<void>(0),
+			draw_border_line1.get(1).get<void>(0),
+			get_pattern("E8 ? ? ? ? 8B 74 24 ? 83 C4 ? 8B 5C 24"),
+		};
+
+		auto draw_line_float = get_pattern("55 57 52 E8 ? ? ? ? 83 C4 1C 5F", 3);
+
+		std::array<void*, 5> convert_rgb_32bit = {
+
+			// Borders
+			get_pattern("E8 ? ? ? ? 8B 4D ? 83 C4 ? 50"),
+			get_pattern("E8 ? ? ? ? 8B 54 24 ? 83 C4 ? 50 8B 45"),
+			get_pattern("E8 ? ? ? ? 83 C4 ? 50 8B 44 24 ? 50 57"),
+			get_pattern("E8 ? ? ? ? 8B 4C 24 ? 83 C4 ? 50 56"),
+
+			// Map segments
+			get_pattern("E8 ? ? ? ? 8B 54 24 ? 83 C4 ? 50 56"),
+		};
+
+		auto map_draw = get_pattern("E8 ? ? ? ? 8B 15 ? ? ? ? 39 BA ? ? ? ? 0F 84");
+
+		auto map_segment_draw_ftol = pattern("E8 ? ? ? ? DD 44 24 ? DC 4E ? 8B F8 DC 44 24 ? E8 ? ? ? ? DD 44 24 ? DC 4E ? 8B D8 DC 44 24 ? E8 ? ? ? ? DD 44 24 ? DC 4E ? 8B E8 DC 44 24 ? E8").get_one();
+		std::array<void*, 4> map_segment_draw_ftol_calls = {
+			map_segment_draw_ftol.get<void>(0),
+			map_segment_draw_ftol.get<void>(0x12),
+			map_segment_draw_ftol.get<void>(0x24),
+			map_segment_draw_ftol.get<void>(0x36),
+		};
+
+		auto coords_map_bounds_check = pattern("E8 ? ? ? ? 83 C4 ? 85 C0 75 ? 8B 4C 24 ? 56 53 51 E8").get_one();
+		std::array<void*, 2> coords_map_bounds_check_calls = {
+			coords_map_bounds_check.get<void>(0),
+			coords_map_bounds_check.get<void>(0x13),
+		};
+
+		auto get_window_rect = get_pattern("8B 44 24 ? 33 D2 66 8B 51 ? 33 F6", -8);
+
+		// Smooth minimap icon scrolling
+		// Separate try...catch, as it is completely optional and other minimap changes will work without it.
+		try
+		{
+			auto town_icons = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F8 DC 44 24 ? E8").count(2);
+			auto obstacles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(2);
+			auto circuit = pattern("E8 ? ? ? ? DD 44 24 ? DC 0D ? ? ? ? 8B F0 DC 44 24 ? E8").get_one();
+			auto repair_shops = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(3);
+			auto player_marker = pattern("E8 ? ? ? ? DD 44 24 ? DC ? ? ? ? ? 50 E8").count(2);
+
+			std::array<void*, 11> store_icon_posx = {
+				get_pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? DC 25"), // Other vehicles
+				town_icons.get(0).get<void>(0), // Town/gas station icons
+				town_icons.get(1).get<void>(0), // Selected hired driver
+				obstacles.get(0).get<void>(0), // Obstacles/road works
+				obstacles.get(1).get<void>(0), // Town names
+				circuit.get<void>(0), // Circuit icon and text
+				repair_shops.get(0).get<void>(0), // Repair shops and parkings
+				repair_shops.get(1).get<void>(0), // Other players and hired drivers
+				repair_shops.get(2).get<void>(0), // Cargo destination masks
+				player_marker.get(0).get<void>(0x10), // Player icon
+				player_marker.get(1).get<void>(0x10), // Player name
+			};
+
+			std::array<void*, 11> store_icon_posy = {
+				get_pattern("E8 ? ? ? ? 8B F8 8B 45 ? 3B C3"), // Other vehicles
+				town_icons.get(0).get<void>(0x13), // Town/gas station icons
+				town_icons.get(1).get<void>(0x13), // Selected hired driver
+				obstacles.get(0).get<void>(0xF), // Obstacles/road works
+				obstacles.get(1).get<void>(0xF), // Town names
+				circuit.get<void>(0x15), // Circuit icon and text
+				repair_shops.get(0).get<void>(0x13), // Repair shops and parkings
+				repair_shops.get(1).get<void>(0x13), // Other players and hired drivers
+				repair_shops.get(2).get<void>(0x13), // Cargo destination masks
+				player_marker.get(0).get<void>(0), // Player icon
+				player_marker.get(1).get<void>(0), // Player name
+			};
+
+			HookEach_StoreFloatX(store_icon_posx, InterceptCall);
+			HookEach_StoreFloatY(store_icon_posy, InterceptCall);
+		}
+		TXN_CATCH();
+
+		GraphicsData_GetWindowRect = reinterpret_cast<decltype(GraphicsData_GetWindowRect)>(get_window_rect);
+
+		InterceptCall(begin_scene, orgBeginScene, BeginScene_BeginMinimapDraw);
+		InterceptCall(end_scene, orgEndScene, EndScene_EndMinimapDraw);
+
+		for (void* addr : draw_line_int)
+		{
+			InjectHook(addr, DrawMinimapLine_Int);
+		}
+		InjectHook(draw_line_float, DrawMinimapLine_Float);
+
+		for (void* addr : convert_rgb_32bit)
+		{
+			InjectHook(addr, ConvertRGB_32Bit);
+		}
+
+		InterceptCall(map_draw, orgMapDraw, MapDraw_SaveViewport);
+
+		// Change GraphicsData::DrawLine arguments inside MapSegment::Draw from int to float to preserve precision
+		for (void* addr : map_segment_draw_ftol_calls)
+		{
+			InjectHook(addr, ftol_Fake);
+		}
+
+		HookEach_MapBoundsCheck(coords_map_bounds_check_calls, InterceptCall);
 	}
 	TXN_CATCH();
 

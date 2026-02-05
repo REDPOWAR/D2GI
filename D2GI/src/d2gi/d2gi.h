@@ -2,13 +2,14 @@
 
 #include <optional>
 #include <utility>
-#include <vector>
 
 #define NOMINMAX
 #include <windows.h>
 
 #include "d2gi_common.h"
 #include "d2gi_ddraw.h"
+
+#include "d2gi_minimap.h"
 
 #include <wrl/client.h>
 
@@ -33,9 +34,6 @@ class D2GIStridedPrimitiveRenderer;
 struct MAT3X4;
 struct FRECT;
 
-typedef std::vector<D3D9::D3DRECT> D3D9RECTVector;
-typedef std::vector<BYTE>          ByteBuffer;
-
 
 class D2GI
 {
@@ -43,7 +41,6 @@ class D2GI
 	// so DO NOT touch m_pDirectDrawProxy from D2GI's destructor!
 	D2GIDirectDraw* m_pDirectDrawProxy;
 
-	HMODULE m_hD3D9Lib;
 	D3D9::IDirect3D9* m_pD3D9;
 	D3D9::IDirect3DDevice9* m_pDev;
 	D3D9::IDirect3DTexture9* m_pBackBufferCopy;
@@ -60,26 +57,26 @@ class D2GI
 	FLOAT m_fAspectRatioScale, m_fWidthScale, m_fHeightScale;
 
 	RENDERSTATE m_eRenderState;
-	BOOL m_bSceneBegun;
+	DWORD m_SceneBeginCount = 0;
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
-
-	D3D9RECTVector* m_pClearRects;
-	ByteBuffer*     m_p2DBuffer;
 
 	D2GIBlitter* m_pBlitter;
 	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
 
 	std::optional<std::pair<D3D9::D3DTEXTUREADDRESS, D3D9::D3DTEXTUREADDRESS>> m_UVOverride;
 
+	D2GIMinimapRenderer m_MinimapRenderer;
+
+	DWORD m_MaxPrimitiveCount = 0;
+
 	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
 
-	VOID LoadD3D9Library();
 	VOID ResetD3D9Device();
 	VOID ReleaseResources();
 	VOID LoadResources();
-	VOID BeginScene();
-	VOID EndScene();
+	VOID TryBeginScene();
+	VOID TryEndScene();
 	VOID Present();
 	VOID DrawPrimitive(D3D7::D3DPRIMITIVETYPE, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
 		DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags);
@@ -89,8 +86,28 @@ class D2GI
 	LRESULT WndProc(HWND, UINT, WPARAM, LPARAM);
 	VOID AttachWndProc();
 	VOID DetachWndProc();
-	VOID ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
+	VOID ScaleD3D9Rect(const D3D7::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
 	VOID SetupWindow();
+
+	// Scoped Begin/EndScene for internal use (+ minimap)
+	class SceneScope
+	{
+	public:
+		SceneScope(D2GI* pD2GI)
+			: m_pD2GI(pD2GI)
+		{
+			pD2GI->TryBeginScene();
+		}
+
+		~SceneScope()
+		{
+			m_pD2GI->TryEndScene();
+		}
+
+	private:
+		D2GI* const m_pD2GI;
+	};
+
 public:
 	D2GI();
 	~D2GI();
@@ -104,11 +121,20 @@ public:
 	DWORD GetForcedWidth() const { return m_dwForcedWidth; }
 	DWORD GetForcedHeight() const { return m_dwForcedHeight; }
 
+	SceneScope BeginSceneScope() { return SceneScope(this); }
+
+	DWORD GetMaxPrimitiveCount() const { return m_MaxPrimitiveCount; }
+
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;
 
 	void EnableUVOverride(D3D9::D3DTEXTUREADDRESS AddressU, D3D9::D3DTEXTUREADDRESS AddressV) { m_UVOverride.emplace(AddressU, AddressV); }
 	void DisableUVOverride() { m_UVOverride.reset(); }
+
+	void OnMapDrawSetViewport(const RECT& viewport) { m_MinimapRenderer.SetViewport(viewport); }
+	void OnBeginMinimapDraw() { m_MinimapRenderer.BeginMinimapDraw(); }
+	void OnEndMinimapDraw() { m_MinimapRenderer.EndMinimapDraw(); }
+	void OnAddMinimapLine(float x1, float y1, float x2, float y2, DWORD color) { m_MinimapRenderer.AddMinimapLine(x1, y1, x2, y2, color); }
 
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);
@@ -139,4 +165,8 @@ public:
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
 	VOID OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
 	VOID OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback);
+
+public:
+	// These are public and static so the assembly hooks can write here easily.
+	static float m_LastBltX, m_LastBltY;
 };

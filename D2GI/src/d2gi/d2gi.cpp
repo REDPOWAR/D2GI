@@ -23,29 +23,29 @@
 #include <shlwapi.h>
 #include <windowsx.h>
 
+#pragma comment(lib, "d3d9.lib")
+
+float D2GI::m_LastBltX, D2GI::m_LastBltY;
+
 D2GI::D2GI()
+	: m_pD3D9(D3D9::Direct3DCreate9(D3D_SDK_VERSION)), m_MinimapRenderer(this)
 {
-	m_hD3D9Lib = NULL;
-	m_pD3D9 = NULL;
+	if (m_pD3D9 == nullptr)
+		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
+
 	m_pDev = NULL;
 	m_pBackBufferCopy = NULL;
 	m_pBackBufferCopySurf = NULL;
 	m_pfnOriginalWndProc = NULL;
 
 	m_eRenderState = RS_UNKNOWN;
-	m_bSceneBegun = FALSE;
 	m_bColorKeyEnabled = FALSE;
 
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
-	m_pClearRects = new D3D9RECTVector();
-	m_p2DBuffer = new ByteBuffer();
-
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
 	m_pBlitter = new D2GIBlitter(this);
 	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
-
-	LoadD3D9Library();
 }
 
 
@@ -56,11 +56,9 @@ D2GI::~D2GI()
 	DetachWndProc();
 	DEL(m_pStridedRenderer);
 	DEL(m_pBlitter);
-	DEL(m_pClearRects);
 
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
-	FreeLibrary(m_hD3D9Lib);
 }
 
 
@@ -83,30 +81,6 @@ Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() cons
 VOID D2GI::OnDirectDrawReleased()
 {
 	delete this;
-}
-
-
-VOID D2GI::LoadD3D9Library()
-{
-	typedef D3D9::IDirect3D9* (WINAPI* DIRECT3DCREATE9)(UINT);
-
-	m_hD3D9Lib = LoadLibrary(TEXT("d3d9"));
-	if (m_hD3D9Lib == NULL)
-	{
-		Logger::Error(TEXT("Failed to load D3D9 library"));
-		return;
-	}
-
-	DIRECT3DCREATE9 pfnDirect3DCreate9 = (DIRECT3DCREATE9)GetProcAddress(m_hD3D9Lib, "Direct3DCreate9");
-	if (pfnDirect3DCreate9 == NULL)
-	{
-		Logger::Error(TEXT("Failed to get Direct3DCreate9 address"));
-		return;
-	}
-
-	m_pD3D9 = pfnDirect3DCreate9(D3D_SDK_VERSION);
-	if (m_pD3D9 == NULL)
-		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
 }
 
 
@@ -137,6 +111,8 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 
 VOID D2GI::ReleaseResources()
 {
+	m_MinimapRenderer.ReleaseResources();
+
 	m_pDirectDrawProxy->ReleaseResources();
 	m_pBlitter->ReleaseResource();
 	m_pStridedRenderer->ReleaseResource();
@@ -154,6 +130,8 @@ VOID D2GI::LoadResources()
 	m_pDirectDrawProxy->LoadResources();
 	m_pBlitter->LoadResource();
 	m_pStridedRenderer->LoadResource();
+
+	m_MinimapRenderer.LoadResources();
 }
 
 
@@ -285,18 +263,22 @@ VOID D2GI::ResetD3D9Device()
 
 	bool MinFilterAnisotropic = false, MagFilterAnisotropic = false;
 	D3D9::D3DCAPS9 DeviceCaps;
-	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)) && (DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
+	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)))
 	{
-		const uint32_t MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1u, static_cast<uint32_t>(DeviceCaps.MaxAnisotropy));
-		if (MaxAnisotropy > 1)
+		if ((DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
 		{
-			MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
-			MagFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
-			for (DWORD Stage = 0; Stage < 8; Stage++)
+			const uint32_t MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1u, static_cast<uint32_t>(DeviceCaps.MaxAnisotropy));
+			if (MaxAnisotropy > 1)
 			{
-				m_pDev->SetSamplerState(Stage, D3D9::D3DSAMP_MAXANISOTROPY, MaxAnisotropy);
+				MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
+				MagFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
+				for (DWORD Stage = 0; Stage < 8; Stage++)
+				{
+					m_pDev->SetSamplerState(Stage, D3D9::D3DSAMP_MAXANISOTROPY, MaxAnisotropy);
+				}
 			}
 		}
+		m_MaxPrimitiveCount = DeviceCaps.MaxPrimitiveCount;
 	}
 	m_MinFilterAnisotropic = MinFilterAnisotropic;
 	m_MagFilterAnisotropic = MagFilterAnisotropic;
@@ -338,21 +320,14 @@ VOID D2GI::OnBackBufferLock(BOOL bRead)
 {
 	if(bRead)
 	{
-		D3D9::IDirect3DSurface9* pRT;
-		D2GIBackBufferSurface* pBackBuf;
+		auto SceneScope = BeginSceneScope();
 
-		if (!m_bSceneBegun)
-			m_pDev->BeginScene();
+		D2GIBackBufferSurface* pBackBuf = m_pDirectDrawProxy->GetPrimaryFlippableSurface()->GetBackBufferSurface();
 
-		pBackBuf = m_pDirectDrawProxy->GetPrimaryFlippableSurface()->GetBackBufferSurface();
-
-		m_pDev->GetRenderTarget(0, &pRT);
-		m_pDev->StretchRect(pRT, NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
+		Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
+		m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
+		m_pDev->StretchRect(pRT.Get(), NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
 		m_pBlitter->Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
-		pRT->Release();
-
-		if (!m_bSceneBegun)
-			m_pDev->EndScene();
 	}else
 		m_eRenderState = RS_BACKBUFFER_STREAMING;
 }
@@ -408,19 +383,16 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT pRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
 {
-	INT i;
+	D3D9::D3DRECT* pScaledRects = static_cast<D3D9::D3DRECT*>(_malloca(dwCount * sizeof(*pScaledRects)));
 
-	m_pClearRects->clear();
-
-	for (i = 0; i < (INT)dwCount; i++)
+	for (DWORD i = 0; i < dwCount; i++)
 	{
-		D3D9::D3DRECT sRect;
-
-		ScaleD3D9Rect((D3D9::D3DRECT*)pRects + i, &sRect);
-		m_pClearRects->push_back(sRect);
+		ScaleD3D9Rect(&pRects[i], &pScaledRects[i]);
 	}
 
-	m_pDev->Clear(dwCount, m_pClearRects->data(), dwFlags, col, z, dwStencil);
+	m_pDev->Clear(dwCount, pScaledRects, dwFlags, col, z, dwStencil);
+
+	_freea(pScaledRects);
 }
 
 
@@ -432,38 +404,45 @@ VOID D2GI::OnLightEnable(DWORD i, BOOL bEnable)
 
 VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIBackBufferSurface* pDst, RECT* pDstRT)
 {
-	D3D9::IDirect3DSurface9* pRT = NULL;
 	D3D9::D3DSURFACE_DESC sSrcDesc, sDstDesc;
 	FRECT frtSrc, frtDst;
 	FRECT frtScaledDst;
 
 	m_eRenderState = RS_BACKBUFFER_BLITTING;
+	auto SceneScope = BeginSceneScope();
 
-	m_pDev->GetRenderTarget(0, &pRT);
-	if(!m_bSceneBegun)
-		m_pDev->BeginScene();
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
+	m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
 
 
 	pSrc->GetD3D9Texture()->GetLevelDesc(0, &sSrcDesc);
 	pRT->GetDesc(&sDstDesc);
-	if (pSrcRT != NULL)
+	if (pSrcRT != nullptr)
 		frtSrc = FRECT(*pSrcRT);
 	else
 		frtSrc = FRECT(0, 0, (FLOAT)sSrcDesc.Width, (FLOAT)sSrcDesc.Height);
 
-	if (pDstRT != NULL)
+	if (pDstRT != nullptr)
+	{
 		frtDst = FRECT(*pDstRT);
+
+		// If we have any cached floating point X/Y values, add them before scaling.
+		// This is useful for smooth scrolling minimap icons.
+		float integralX, integralY;
+		const float fracX = std::modf(m_LastBltX, &integralX);
+		const float fracY = std::modf(m_LastBltY, &integralY);
+
+		frtDst.fLeft += fracX;
+		frtDst.fRight += fracX;
+		frtDst.fTop += fracY;
+		frtDst.fBottom += fracY;
+	}
 	else
 		frtDst = FRECT(0, 0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
 	ScaleFRect(&frtDst, &frtScaledDst);
-	m_pBlitter->Blit(pRT, &frtScaledDst,
+	m_pBlitter->Blit(pRT.Get(), &frtScaledDst,
 		pSrc->GetD3D9Texture(), &frtSrc, pSrc->HasColorKeyConversion());
-
-	if (!m_bSceneBegun)
-		m_pDev->EndScene();
-
-	pRT->Release();
 }
 
 
@@ -477,16 +456,15 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 VOID D2GI::OnSceneBegin()
 {
 	m_eRenderState = RS_3D_RENDERING;
-	BeginScene();
+	TryBeginScene();
 }
 
 
-VOID D2GI::BeginScene()
+VOID D2GI::TryBeginScene()
 {
-	if (!m_bSceneBegun)
+	if (m_SceneBeginCount++ == 0)
 	{
 		m_pDev->BeginScene();
-		m_bSceneBegun = TRUE;
 	}
 }
 
@@ -494,16 +472,15 @@ VOID D2GI::BeginScene()
 VOID D2GI::OnSceneEnd()
 {
 	m_eRenderState = RS_3D_RENDERING;
-	EndScene();
+	TryEndScene();
 }
 
 
-VOID D2GI::EndScene()
+VOID D2GI::TryEndScene()
 {
-	if (m_bSceneBegun)
+	if (--m_SceneBeginCount == 0)
 	{
 		m_pDev->EndScene();
-		m_bSceneBegun = FALSE;
 	}
 }
 
@@ -830,25 +807,28 @@ VOID D2GI::OnPrimitiveStridedDraw(
 
 VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
 {
+	void* vertexMemory = nullptr;
 	if (dwFVF & D3DFVF_XYZRHW)
 	{
 		UINT uStride = CalcFVFStride(dwFVF);
 		UINT uSize = uStride * dwVertCount;
-		INT i;
 
-		m_p2DBuffer->clear();
-		m_p2DBuffer->insert(m_p2DBuffer->begin(), (BYTE*)pVerts, (BYTE*)pVerts + uSize);
-		for (i = 0; i < (INT)dwVertCount; i++)
+		vertexMemory = _malloca(uSize);
+		memcpy(vertexMemory, pVerts, uSize);
+
+		FLOAT* pV = static_cast<FLOAT*>(vertexMemory);
+		for (DWORD i = 0; i < dwVertCount; i++)
 		{
-			FLOAT* pV = (FLOAT*)(m_p2DBuffer->data() + i * uStride);
-			
 			pV[0] *= m_fWidthScale;
 			pV[1] *= m_fHeightScale;
+
+			pV = reinterpret_cast<FLOAT*>(reinterpret_cast<char*>(pV) + uStride);
 		}
-		pVerts = m_p2DBuffer->data();
+		pVerts = vertexMemory;
 	}
 
 	DrawPrimitive(pt, dwFVF, FALSE, pVerts, dwVertCount, NULL, 0, dwFlags);
+	_freea(vertexMemory);
 }
 
 
@@ -938,12 +918,8 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 		}
 		else
 		{
-			// TODO: think about this scene begin/end fix
-			if (!m_bSceneBegun)
-				m_pDev->BeginScene();
+			auto SceneScope = BeginSceneScope();
 			m_pDev->DrawPrimitiveUP((D3D9::D3DPRIMITIVETYPE)pt, uPrimCount, pVertexData, uVertexStride);
-			if (!m_bSceneBegun)
-				m_pDev->EndScene();
 		}
 	}
 
@@ -1053,9 +1029,9 @@ LRESULT D2GI::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
-VOID D2GI::ScaleD3D9Rect(D3D9::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
+VOID D2GI::ScaleD3D9Rect(const D3D7::D3DRECT* pSrc, D3D9::D3DRECT* pOut)
 {
-	if (pSrc == NULL)
+	if (pSrc == nullptr)
 	{
 		pOut->x1 = pOut->y1 = 0;
 		pOut->x2 = m_dwForcedWidth;
