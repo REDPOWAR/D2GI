@@ -8,14 +8,15 @@ class D2GIResourceContainer;
 
 class D2GIResource : public D2GIBase
 {
-protected:
-	D2GIResourceContainer* m_pContainer;
+private:
+	D2GIResourceContainer* m_pContainer = nullptr;
+
 public:
 	D2GIResource(D2GI*);
 	~D2GIResource();
 
-	VOID AttachToContainer(D2GIResourceContainer*);
-	VOID DetachFromContainer();
-	virtual VOID ReleaseResource() = 0;
-	virtual VOID LoadResource() = 0;
+	void AttachToContainer(D2GIResourceContainer*);
+	void DetachFromContainer();
+	virtual void ReleaseResource() = 0;
+	virtual void LoadResource() = 0;
 };

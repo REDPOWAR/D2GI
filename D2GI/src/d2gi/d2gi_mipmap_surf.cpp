@@ -145,7 +145,7 @@ HRESULT D2GIMipMapSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDI
 VOID D2GIMipMapSurface::UpdateWithPalette(D2GIPalette* pPal)
 {
 	D3D9::D3DLOCKED_RECT sLockedRect;
-	UINT16* pPalette16 = pPal->GetEntries16();
+	const UINT16* pPalette16 = pPal->GetEntries16();
 	INT i, j;
 
 	if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))

@@ -1,19 +1,15 @@
 #pragma once
 
-#include "../common/common.h"
 #include "../common/d3d7.h"
 
 
-class DDrawProxy : public D3D7::IDirectDraw7, public Unknown
+class DDrawProxy : public D3D7::IDirectDraw7
 {
 public:
-	DDrawProxy();
-	virtual ~DDrawProxy();
+	static inline const GUID proxy_guid = D3D7::IID_IDirectDraw7;
+	using proxy_type = D3D7::IDirectDraw7;
 
-	STDMETHOD(QueryInterface) (REFIID riid, LPVOID FAR* ppvObj) { return Unknown::QueryInterface(riid, ppvObj); };
-	STDMETHOD_(ULONG, AddRef) () { return Unknown::AddRef(); };
-	STDMETHOD_(ULONG, Release) () { return Unknown::Release(); };
-
+public:
 	STDMETHOD(Compact)();
 	STDMETHOD(CreateClipper)(DWORD, D3D7::LPDIRECTDRAWCLIPPER FAR*, IUnknown FAR*) ;
 	STDMETHOD(CreatePalette)( DWORD, LPPALETTEENTRY, D3D7::LPDIRECTDRAWPALETTE FAR*, IUnknown FAR*) ;

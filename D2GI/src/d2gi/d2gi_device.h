@@ -4,8 +4,10 @@
 
 #include "d2gi_common.h"
 
+#include "../common/implements_proxy.hpp"
 
-class D2GIDevice : public DeviceProxy, public D2GIBase
+
+class D2GIDevice : public ImplementsProxy<DeviceProxy>, public D2GIBase
 {
 public:
 	D2GIDevice(D2GI*);

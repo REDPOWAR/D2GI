@@ -1,19 +1,15 @@
 #pragma once
 
-#include "../common/common.h"
 #include "../common/d3d7.h"
 
 
-class DeviceProxy : public D3D7::IDirect3DDevice7, public Unknown
+class DeviceProxy : public D3D7::IDirect3DDevice7
 {
 public:
-	DeviceProxy();
-	virtual ~DeviceProxy();
+	static inline const GUID proxy_guid = D3D7::IID_IDirect3DDevice7;
+	using proxy_type = D3D7::IDirect3DDevice7;
 
-	STDMETHOD(QueryInterface)(REFIID riid, LPVOID* ppvObj) { return Unknown::QueryInterface(riid, ppvObj); };
-	STDMETHOD_(ULONG, AddRef)() { return Unknown::AddRef(); };
-	STDMETHOD_(ULONG, Release)() { return Unknown::Release(); };
-
+public:
 	STDMETHOD(GetCaps)(D3D7::LPD3DDEVICEDESC7);
 	STDMETHOD(EnumTextureFormats)(D3D7::LPD3DENUMPIXELFORMATSCALLBACK, LPVOID);
 	STDMETHOD(BeginScene)();

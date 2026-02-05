@@ -122,7 +122,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\d2gi\d2gi_direct3d.cpp" />
     <ClCompile Include="src\d2gi\d2gi_enums.cpp" />
     <ClCompile Include="src\d2gi\d2gi_hooks.cpp" />
     <ClCompile Include="src\d2gi\d2gi_ib_container.cpp" />
@@ -153,6 +152,7 @@
     <ClInclude Include="src\common\d3d9.h" />
     <ClInclude Include="src\common\dir.h" />
     <ClInclude Include="src\common\frect.h" />
+    <ClInclude Include="src\common\implements_proxy.hpp" />
     <ClInclude Include="src\common\logger.h" />
     <ClInclude Include="src\common\m3x4.h" />
     <ClInclude Include="src\common\utils.h" />
@@ -167,7 +167,6 @@
     <ClInclude Include="src\d2gi\d2gi_container.h" />
     <ClInclude Include="src\d2gi\d2gi_ddraw.h" />
     <ClInclude Include="src\d2gi\d2gi_device.h" />
-    <ClInclude Include="src\d2gi\d2gi_direct3d.h" />
     <ClInclude Include="src\d2gi\d2gi_enums.h" />
     <ClInclude Include="src\d2gi\d2gi_game_classes.h" />
     <ClInclude Include="src\d2gi\d2gi_hooks.h" />

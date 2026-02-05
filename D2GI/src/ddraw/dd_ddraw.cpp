@@ -1,20 +1,8 @@
 
-#include "../common/common.h"
-
 #include "dd_ddraw.h"
 
 
 using namespace D3D7;
-
-
-DDrawProxy::DDrawProxy() 
-{
-}
-
-
-DDrawProxy::~DDrawProxy()
-{
-}
 
 
 HRESULT DDrawProxy::Compact()

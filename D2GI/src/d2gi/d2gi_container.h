@@ -8,15 +8,18 @@
 class D2GIResource;
 
 
-class D2GIResourceContainer : public std::vector<D2GIResource*>, public D2GIBase
+class D2GIResourceContainer
 {
+private:
 	CRITICAL_SECTION m_sCriticalSection;
+	std::vector<D2GIResource*> m_resources;
+
 public:
-	D2GIResourceContainer(D2GI*);
+	D2GIResourceContainer();
 	~D2GIResourceContainer();
 
-	VOID Add(D2GIResource*);
-	VOID Remove(D2GIResource*);
-	VOID ReleaseResources();
-	VOID LoadResources();
+	void Add(D2GIResource*);
+	void Remove(D2GIResource*);
+	void ReleaseResources();
+	void LoadResources();
 };

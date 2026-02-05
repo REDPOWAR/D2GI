@@ -1,22 +1,8 @@
 
-#include "../common/common.h"
-
 #include "d3d_direct3d.h"
 
 
 using namespace D3D7;
-
-
-D3DProxy::D3DProxy() : Unknown()
-{
-
-}
-
-
-D3DProxy::~D3DProxy()
-{
-
-}
 
 
 HRESULT D3DProxy::EnumDevices(LPD3DENUMDEVICESCALLBACK7 lpCallback, LPVOID lpArg)

@@ -11,7 +11,7 @@
 using namespace D3D7;
 
 
-D2GIDevice::D2GIDevice(D2GI* pD2GI) : DeviceProxy(), D2GIBase(pD2GI)
+D2GIDevice::D2GIDevice(D2GI* pD2GI) : D2GIBase(pD2GI)
 {
 
 }
