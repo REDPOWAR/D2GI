@@ -56,6 +56,10 @@ void D2GIMinimapRenderer::EndMinimapDraw()
 	if (m_DrawSetup)
 	{
 		D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
+
+		pDev->SetRenderState(D3D9::D3DRS_ALPHABLENDENABLE, m_PreviousAlphaBlendState);
+		pDev->SetRenderState(D3D9::D3DRS_FOGENABLE, m_PreviousFogState);
+
 		pDev->SetVertexShader(nullptr);
 		pDev->SetPixelShader(nullptr);
 	}
@@ -90,6 +94,9 @@ void D2GIMinimapRenderer::Flush()
 		D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 		if (!m_DrawSetup)
 		{
+			pDev->GetRenderState(D3D9::D3DRS_ALPHABLENDENABLE, &m_PreviousAlphaBlendState);
+			pDev->GetRenderState(D3D9::D3DRS_FOGENABLE, &m_PreviousFogState);
+
 			pDev->SetRenderState(D3D9::D3DRS_ALPHABLENDENABLE, FALSE);
 			pDev->SetRenderState(D3D9::D3DRS_FOGENABLE, FALSE);
 

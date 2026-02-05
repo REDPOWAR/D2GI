@@ -31,6 +31,8 @@ private:
 
 	RECT m_Viewport;
 	DWORD m_NumVertices = 0;
+
+	DWORD m_PreviousAlphaBlendState = 0, m_PreviousFogState = 0;
 	bool m_DrawSetup = false;
 
 	struct LineFVFData
