@@ -73,8 +73,8 @@ class D2GI
 	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
 
 	VOID ResetD3D9Device();
-	VOID ReleaseResources();
-	VOID LoadResources();
+	void ReleaseResources(bool bResettingDevice);
+	void LoadResources(bool bResettingDevice);
 	VOID TryBeginScene();
 	VOID TryEndScene();
 	VOID Present();

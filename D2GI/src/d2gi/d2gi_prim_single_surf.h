@@ -11,13 +11,12 @@ public:
 	D2GIPrimarySingleSurface(D2GI*, DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat);
 	virtual ~D2GIPrimarySingleSurface();
 
-	virtual SURFACETYPE GetType() { return ST_PRIMARY_SINGLE; }
-	virtual VOID ReleaseResource() {};
-	virtual VOID LoadResource() {};
+	virtual SURFACETYPE GetType() const override { return ST_PRIMARY_SINGLE; }
+	virtual void ReleaseResource(bool bResettingDevice) override {};
+	virtual void LoadResource(bool bResettingDevice) override {};
 
 	STDMETHOD(GetSurfaceDesc)(D3D7::LPDDSURFACEDESC2);
 	STDMETHOD(SetPalette)(D3D7::LPDIRECTDRAWPALETTE);
-	STDMETHOD(IsLost)();
 	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX);
 
 	D2GIPalette* GetPalette() { return m_pPalette; }

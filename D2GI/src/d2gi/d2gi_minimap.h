@@ -14,8 +14,8 @@ public:
 	void EndMinimapDraw();
 	void AddMinimapLine(float x1, float y1, float x2, float y2, DWORD color);
 
-	void LoadResources();
-	void ReleaseResources();
+	void LoadResources(bool bResettingDevice);
+	void ReleaseResources(bool bResettingDevice);
 
 private:
 	void Flush();

@@ -14,8 +14,8 @@ class D2GIBlitter : public D2GIBase
 public:
 	using D2GIBase::D2GIBase;
 
-	void ReleaseResource();
-	void LoadResource();
+	void ReleaseResource(bool bResettingDevice);
+	void LoadResource(bool bResettingDevice);
 ;
 	void Blit(D3D9::IDirect3DSurface9*, const FRECT*, D3D9::IDirect3DTexture9*, const FRECT*, bool bEmulateCK);
 };

@@ -140,20 +140,3 @@ HRESULT D2GIMipMapSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDI
 	Logger::Warning(TEXT("Requested unknown attached surface to mipmap"));
 	return DDERR_NOTFOUND;
 }
-
-
-VOID D2GIMipMapSurface::UpdateWithPalette(D2GIPalette* pPal)
-{
-	D3D9::D3DLOCKED_RECT sLockedRect;
-	const UINT16* pPalette16 = pPal->GetEntries16();
-	INT i, j;
-
-	if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))
-		Logger::Error(TEXT("Failed to lock mipmap surface to update with palette"));
-
-	for (i = 0; i < (INT)m_dwHeight; i++)
-		for (j = 0; j < (INT)m_dwWidth; j++)
-			((UINT16*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = pPalette16[((BYTE*)m_pData)[i * m_dwWidth + j]];
-
-	m_pSurface->UnlockRect();
-}

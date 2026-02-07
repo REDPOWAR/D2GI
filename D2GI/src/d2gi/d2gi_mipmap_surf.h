@@ -21,9 +21,9 @@ public:
 	D2GIMipMapSurface(D2GITexture*, UINT, D2GIMipMapSurface*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
 	virtual ~D2GIMipMapSurface();
 
-	virtual SURFACETYPE GetType() { return ST_MIPMAP; }
-	virtual VOID ReleaseResource() {};
-	virtual VOID LoadResource() {};
+	virtual SURFACETYPE GetType() const override { return ST_MIPMAP; }
+	virtual void ReleaseResource(bool bResettingDevice) override {};
+	virtual void LoadResource(bool bResettingDevice) override {};
 
 	VOID SetD3D9Surface(D3D9::IDirect3DSurface9*);
 	D3D9::IDirect3DSurface9* GetD3D9Surface() { return m_pSurface; }
@@ -32,7 +32,6 @@ public:
 	STDMETHOD(Unlock)(LPRECT);
 	STDMETHOD(GetAttachedSurface)(D3D7::LPDDSCAPS2, D3D7::LPDIRECTDRAWSURFACE7 FAR*);
 	VOID UpdateSurface();
-	VOID UpdateWithPalette(D2GIPalette*);
 	VOID* GetData() { return m_pData; }
 	UINT GetDataPitch() { return m_uDataPitch; }
 };

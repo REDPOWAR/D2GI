@@ -18,8 +18,8 @@ public:
 	D2GIStridedPrimitiveRenderer(D2GI*);
 	~D2GIStridedPrimitiveRenderer();
 
-	VOID ReleaseResource();
-	VOID LoadResource();
+	void ReleaseResource(bool bResettingDevice);
+	void LoadResource(bool bResettingDevice);
 
 	VOID DrawIndexedPrimitiveStrided(D3D7::D3DPRIMITIVETYPE, DWORD, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA, DWORD, LPWORD, DWORD, DWORD);
 	VOID DrawPrimitiveStrided(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, D3D7::LPD3DDRAWPRIMITIVESTRIDEDDATA pData, DWORD dwCount, DWORD dwFlags);

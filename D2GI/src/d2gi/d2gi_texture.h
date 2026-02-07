@@ -15,18 +15,15 @@ protected:
 
 	D3D9::IDirect3DTexture9* m_pTexture;
 
-	D3D7::DDCOLORKEY m_sColorKey;
-	BOOL m_bColorKeySet;
 public:
 	D2GITexture(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT, DWORD dwMipMapCount);
 	virtual ~D2GITexture();
 
-	virtual SURFACETYPE GetType() { return ST_TEXTURE; }
-	virtual VOID LoadResource();
-	virtual VOID ReleaseResource();
+	virtual SURFACETYPE GetType() const override { return ST_TEXTURE; }
+	virtual void LoadResource(bool bResettingDevice) override;
+	virtual void ReleaseResource(bool bResettingDevice) override;
 
-	STDMETHOD(SetColorKey)(DWORD, D3D7::LPDDCOLORKEY);
-	STDMETHOD(IsLost)();
+	STDMETHOD(SetColorKey)(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK) override;
 	STDMETHOD(Lock)(LPRECT, D3D7::LPDDSURFACEDESC2, DWORD, HANDLE);
 	STDMETHOD(Unlock)(LPRECT);
 	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX);
@@ -40,8 +37,4 @@ public:
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
 	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
 	DWORD GetMipMapCount() { return m_dwMipMapCount; }
-	DWORD GetOriginalColorKeyValue();
-	BOOL HasColorKeyConversion();
-	VOID UpdateWithPalette(D2GIPalette*);
-	BOOL CopyFrom(D2GITexture*);
 };

@@ -17,6 +17,8 @@ public:
 
 	void AttachToContainer(D2GIResourceContainer*);
 	void DetachFromContainer();
-	virtual void ReleaseResource() = 0;
-	virtual void LoadResource() = 0;
+
+	// true - device re-creation or reset; false - DirectDraw/resource release
+	virtual void ReleaseResource(bool bResettingDevice) = 0;
+	virtual void LoadResource(bool bResettingDevice) = 0;
 };

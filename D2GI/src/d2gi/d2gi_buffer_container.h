@@ -27,13 +27,13 @@ public:
 
 	using D2GIBase::D2GIBase;
 
-	void ReleaseResource()
+	void ReleaseResource(bool bResettingDevice)
 	{
 		m_pBuffer.Reset();
 		m_TotalSpace = m_UsedSpace = 0;
 	}
 
-	void LoadResource()
+	void LoadResource(bool bResettingDevice)
 	{
 		static_cast<ContainerType*>(this)->AllocNewBuffer(0);
 	}

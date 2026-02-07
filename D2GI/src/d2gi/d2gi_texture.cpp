@@ -17,7 +17,6 @@ D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight,
 	m_dwMipMapCount = (dwMipMapCount == 0) ? 1 : dwMipMapCount;
 	m_lpMipMapLevels = NULL;
 	m_pTexture = NULL;
-	m_bColorKeySet = FALSE;
 
 	INT i;
 
@@ -32,7 +31,7 @@ D2GITexture::D2GITexture(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight,
 			dwMipMapWidth, dwMipMapHeight, m_eD2GIPixelFormat);
 	}
 
-	LoadResource();
+	LoadResource(/*bResettingDevice=*/ false);
 }
 
 
@@ -40,7 +39,7 @@ D2GITexture::~D2GITexture()
 {
 	INT i;
 
-	ReleaseResource();
+	ReleaseResource(/*bResettingDevice=*/ false);
 
 	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		RELEASE(m_lpMipMapLevels[i]);
@@ -49,18 +48,11 @@ D2GITexture::~D2GITexture()
 }
 
 
-VOID D2GITexture::LoadResource()
+VOID D2GITexture::LoadResource(bool bResettingDevice)
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
-	D3D9::D3DFORMAT eFormat;
+	D3D9::D3DFORMAT eFormat = GetEffectiveD3DFormat();
 	DWORD i;
-
-	eFormat = g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat];
-
-	if (HasColorKeyConversion())
-		eFormat = D3D9::D3DFMT_A8R8G8B8;
-	if (m_dwBPP == 8)
-		eFormat = D3D9::D3DFMT_R5G6B5;
 
 	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight,
 		m_dwMipMapCount, D3DUSAGE_DYNAMIC,
@@ -78,7 +70,7 @@ VOID D2GITexture::LoadResource()
 }
 
 
-VOID D2GITexture::ReleaseResource()
+VOID D2GITexture::ReleaseResource(bool bResettingDevice)
 {
 	INT i;
 
@@ -91,21 +83,9 @@ VOID D2GITexture::ReleaseResource()
 
 HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 {
+	D2GISurface::SetColorKey(dwFlags, pCK);
+
 	INT i;
-
-	if (!(dwFlags & DDCKEY_SRCBLT))
-	{
-		Logger::Warning(TEXT("Setting unknown color key for texture"));
-		return DDERR_GENERIC;
-	}
-
-	if (pCK != NULL)
-	{
-		m_sColorKey = *pCK;
-		m_bColorKeySet = TRUE;
-	}
-	else
-		m_bColorKeySet = FALSE;
 
 	// Keep the texture name
 #ifdef _DEBUG
@@ -114,8 +94,8 @@ HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 	const HRESULT getNameHresult = m_pTexture->GetPrivateData(WKPDID_D3DDebugObjectName, textureName, &len);
 #endif
 
-	ReleaseResource();
-	LoadResource();
+	ReleaseResource(/*bResettingDevice=*/ false);
+	LoadResource(/*bResettingDevice=*/ false);
 
 #ifdef _DEBUG
 	if (SUCCEEDED(getNameHresult))
@@ -127,12 +107,6 @@ HRESULT D2GITexture::SetColorKey(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK)
 	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		m_lpMipMapLevels[i]->UpdateSurface();
 
-	return DD_OK;
-}
-
-
-HRESULT D2GITexture::IsLost()
-{
 	return DD_OK;
 }
 
@@ -189,47 +163,14 @@ HRESULT D2GITexture::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 }
 
 
-BOOL D2GITexture::HasColorKeyConversion()
-{
-	return m_bColorKeySet && m_eD2GIPixelFormat == D2GIPF_16_565;
-}
-
-
-DWORD D2GITexture::GetOriginalColorKeyValue()
-{
-	return m_sColorKey.dwColorSpaceLowValue;
-}
-
-
-VOID D2GITexture::UpdateWithPalette(D2GIPalette* pPal)
+/*VOID D2GITexture::UpdateWithPalette(D2GIPalette* pPal)
 {
 	INT i;
 
 	for (i = 0; i < (INT)m_dwMipMapCount; i++)
 		m_lpMipMapLevels[i]->UpdateWithPalette(pPal);
-}
+}*/
 
-
-BOOL D2GITexture::CopyFrom(D2GITexture* pSrc)
-{
-	if (m_dwWidth != pSrc->GetWidth() || m_dwHeight != pSrc->GetHeight())
-		return FALSE;
-
-	D3D9::D3DLOCKED_RECT rt;
-	INT                  i;
-
-	m_lpMipMapLevels[0]->GetD3D9Surface()->LockRect(&rt, NULL, D3DLOCK_DISCARD);
-
-	for (i = 0; i < (INT)m_dwHeight; i++)
-		CopyMemory(
-			(BYTE*)rt.pBits + i * rt.Pitch,
-			(BYTE*)pSrc->m_lpMipMapLevels[0]->GetData() + i * pSrc->m_lpMipMapLevels[0]->GetDataPitch(),
-			pSrc->m_lpMipMapLevels[0]->GetDataPitch());
-
-	m_lpMipMapLevels[0]->GetD3D9Surface()->UnlockRect();
-
-	return TRUE;
-}
 
 IFACEMETHODIMP D2GITexture::SetPrivateData(REFGUID refguid, LPVOID pData, DWORD SizeOfData, DWORD Flags)
 {

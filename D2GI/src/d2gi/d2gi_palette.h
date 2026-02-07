@@ -18,8 +18,8 @@ public:
 	D2GIPalette(D2GI*, PALETTEENTRY*);
 	virtual ~D2GIPalette() override;
 
-	virtual VOID ReleaseResource() override {};
-	virtual VOID LoadResource() override {};
+	virtual void ReleaseResource(bool bResettingDevice) override {};
+	virtual void LoadResource(bool bResettingDevice) override {};
 
 	STDMETHOD(SetEntries)(DWORD, DWORD, DWORD, LPPALETTEENTRY) override;
 

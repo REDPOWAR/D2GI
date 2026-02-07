@@ -150,15 +150,15 @@ HRESULT D2GIDirectDraw::GetCaps(D3D7::LPDDCAPS lpHALCaps, D3D7::LPDDCAPS lpHELCa
 }
 
 
-VOID D2GIDirectDraw::ReleaseResources()
+VOID D2GIDirectDraw::ReleaseResources(bool bResettingDevice)
 {
-	m_resourceContainer.ReleaseResources();
+	m_resourceContainer.ReleaseResources(bResettingDevice);
 }
 
 
-VOID D2GIDirectDraw::LoadResources()
+VOID D2GIDirectDraw::LoadResources(bool bResettingDevice)
 {
-	m_resourceContainer.LoadResources();
+	m_resourceContainer.LoadResources(bResettingDevice);
 }
 
 

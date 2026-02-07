@@ -47,19 +47,19 @@ void D2GIResourceContainer::Remove(D2GIResource* pRes)
 }
 
 
-void D2GIResourceContainer::ReleaseResources()
+void D2GIResourceContainer::ReleaseResources(bool bResettingDevice)
 {
 	EnterCriticalSection(&m_sCriticalSection);
 	for (D2GIResource* pRes : m_resources)
-		pRes->ReleaseResource();
+		pRes->ReleaseResource(bResettingDevice);
 	LeaveCriticalSection(&m_sCriticalSection);
 }
 
 
-void D2GIResourceContainer::LoadResources()
+void D2GIResourceContainer::LoadResources(bool bResettingDevice)
 {
 	EnterCriticalSection(&m_sCriticalSection);
 	for (D2GIResource* pRes : m_resources)
-		pRes->LoadResource();
+		pRes->LoadResource(bResettingDevice);
 	LeaveCriticalSection(&m_sCriticalSection);
 }

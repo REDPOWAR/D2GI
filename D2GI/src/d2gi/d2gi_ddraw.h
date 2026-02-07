@@ -37,8 +37,8 @@ public:
 	STDMETHOD(EnumDevices)(D3D7::LPD3DENUMDEVICESCALLBACK7, LPVOID) override;
 	STDMETHOD(EnumZBufferFormats)(REFCLSID, D3D7::LPD3DENUMPIXELFORMATSCALLBACK, LPVOID) override;
 
-	VOID ReleaseResources();
-	VOID LoadResources();
+	void ReleaseResources(bool bResettingDevice);
+	void LoadResources(bool bResettingDevice);
 	D2GIPrimaryFlippableSurface* GetPrimaryFlippableSurface() const { return m_pPrimaryFlippableSurf; }
 	D2GIPrimarySingleSurface* GetPrimarySingleSurface() const { return m_pPrimarySingleSurf; }
 };

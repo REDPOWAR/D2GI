@@ -20,15 +20,15 @@ D2GIPrimaryFlippableSurface::~D2GIPrimaryFlippableSurface()
 }
 
 
-VOID D2GIPrimaryFlippableSurface::ReleaseResource()
+void D2GIPrimaryFlippableSurface::ReleaseResource(bool bResettingDevice)
 {
-	m_pBackBuffer->ReleaseResource();
+	m_pBackBuffer->ReleaseResource(bResettingDevice);
 }
 
 
-VOID D2GIPrimaryFlippableSurface::LoadResource()
+void D2GIPrimaryFlippableSurface::LoadResource(bool bResettingDevice)
 {
-	m_pBackBuffer->LoadResource();
+	m_pBackBuffer->LoadResource(bResettingDevice);
 }
 
 
@@ -48,8 +48,8 @@ HRESULT D2GIPrimaryFlippableSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, 
 
 HRESULT D2GIPrimaryFlippableSurface::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc)
 {
-	ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
-	pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
+	ZeroMemory(pDesc, sizeof(*pDesc));
+	pDesc->dwSize = sizeof(*pDesc);
 	pDesc->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT;
 	pDesc->dwBackBufferCount = 1;
 	pDesc->dwWidth = m_dwWidth;
@@ -58,12 +58,6 @@ HRESULT D2GIPrimaryFlippableSurface::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc
 	pDesc->ddsCaps.dwCaps = DDSCAPS_COMPLEX | DDSCAPS_FLIP | DDSCAPS_FRONTBUFFER | DDSCAPS_PRIMARYSURFACE | DDSCAPS_LOCALVIDMEM | DDSCAPS_VISIBLE | DDSCAPS_VIDEOMEMORY | DDSCAPS_3DDEVICE;
 	pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
 
-	return DD_OK;
-}
-
-
-HRESULT D2GIPrimaryFlippableSurface::IsLost()
-{
 	return DD_OK;
 }
 
