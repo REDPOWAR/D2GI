@@ -192,10 +192,10 @@ void __cdecl D2GIHookInjector::WriteScreenshotFunc(void *a2)
 
 void D2GIHookInjector::InjectScreenshotsPatch() {
 	//						     5.5,		7.3 LT,   1.3,      8.1,      8.2
-	DWORD scr_WriteAddr[]  = { 0x000000, 0x000000, 0x575B92, 0x5764C2, 0x576452 };
-	DWORD scr_mkdirAddr[]  = { 0x000000, 0x000000, 0x575B5E, 0x57648E, 0x57641E };
-	DWORD scr_fopenAddr[]  = { 0x000000, 0x000000, 0x575B8A, 0x5764BA, 0x57644A };
-	DWORD scr_fcloseAddr[] = { 0x000000, 0x000000, 0x575B98, 0x5764C8, 0x576458 };
+	DWORD scr_WriteAddr[]  = { 0x000000, 0x576E5F, 0x575B92, 0x5764C2, 0x576452 };
+	DWORD scr_mkdirAddr[]  = { 0x000000, 0x576E2E, 0x575B5E, 0x57648E, 0x57641E };
+	DWORD scr_fopenAddr[]  = { 0x000000, 0x576E57, 0x575B8A, 0x5764BA, 0x57644A };
+	DWORD scr_fcloseAddr[] = { 0x000000, 0x576E65, 0x575B98, 0x5764C8, 0x576458 };
 
 	CPatch::RedirectCall(scr_WriteAddr[s_eCurrentD2Version], &WriteScreenshotFunc);
 
@@ -221,64 +221,60 @@ float m_fUIAspect;
 //resolution forced by D2GI
 int m_dwResX, m_dwResY;
 
-void D2GIHookInjector::OnPrepareStartGame() {
-	//						     5.5,		7.3 LT,	  1.3,      8.1,      8.2
-	DWORD dw_FuncPointer[] = { 0x000000, 0x000000, 0x5126D0, 0x512EA0, 0x512E00 };
-	DWORD dw_TheGamePtr [] = { 0x000000, 0x000000, 0x695C00, 0x696CA0, 0x696CC0 };
-	DWORD dw_MenuItemID [] = { 0x000000, 0x000000, 0x6CDBD0, 0x6CEC70, 0x6CEC90 };
+static MenuGraphics** pMenuGraphics;
+
+static void (*orgOnPrepareStartGame)(void* a1, void* a2);
+void D2GIHookInjector::OnPrepareStartGame(void* a1, void* a2) {
 
 	//MenuVideo->overwrite selected resolution item ID
-	*(int*)(*(int*)dw_MenuItemID[s_eCurrentD2Version] + 408) = m_dwMenuSettingsValue;
+	MenuGraphicsFacade(*pMenuGraphics).m_videoIni = m_dwMenuSettingsValue;
 
 	//run original function
-	signed int* (*PrepareStartGame)(int*) = (signed int* (*)(int*))dw_FuncPointer[s_eCurrentD2Version];
-	PrepareStartGame((int*)dw_TheGamePtr[s_eCurrentD2Version]);
+	orgOnPrepareStartGame(a1, a2);
 }
 
-void D2GIHookInjector::OnSetupUIOffsets(){
-	//						       5.5,      7.3 LT,	1.3,      8.1,      8.2
-	DWORD dw_SetupOffsets [] = { 0x000000, 0x000000, 0x510750, 0x510F20, 0x510E80 };
-	//Just two int32 values
-	DWORD dw_MenuBackInfoX[] = { 0x000000, 0x000000, 0x6CDC7C, 0x6CED1C, 0x6CED3C };
-	DWORD dw_MainSideBarX [] = { 0x000000, 0x000000, 0x6CDC74, 0x6CED14, 0x6CED34 };
-	//Pointers to menu object instances
-	DWORD dw_MainFuelGasX [] = { 0x000000, 0x000000, 0x6CDC0C, 0x6CECAC, 0x6CECCC };
-	DWORD dw_MainNetworkX [] = { 0x000000, 0x000000, 0x6CDC14, 0x6CECB4, 0x6CECD4 };
+static int* MenuBackInfoX;
+static int* MainSideBarX;
 
-	//Some offsets for 7.3:
-	//Multiplayer menu offset X - *(int*)0x6CC9A0 + 0x38) + 0x28
-	//NOT 0x38 + 0x2C, as it was in 8.x/1.3 versions.
+CMenu** pMenuInGameGas; // Only in 8.x
+CMenu** pMenuInGameNetwork;
+
+static void (*orgOnSetupUIOffsets)(void* a1);
+void D2GIHookInjector::OnSetupUIOffsets(void* a1){
 
 	//call original function before changing offsets
-	((void(*)(int))dw_SetupOffsets[s_eCurrentD2Version])(0);
+	orgOnSetupUIOffsets(a1);
 
 	//fix sidebar positions
-	*(int*)dw_MenuBackInfoX[s_eCurrentD2Version] = m_dwResX - 385;
-	*(int*)dw_MainSideBarX[s_eCurrentD2Version] = m_dwResX - 225;
+	*MenuBackInfoX = m_dwResX - 385;
+	*MainSideBarX = m_dwResX - 225;
 
-	*(int*)(*(int*)(*(int*)dw_MainFuelGasX[s_eCurrentD2Version] + 0x38) + 0x2C) = (m_dwResX - 1024) / 2;
-	*(int*)(*(int*)(*(int*)dw_MainNetworkX[s_eCurrentD2Version] + 0x38) + 0x2C) = (m_dwResX - 1024) / 2;
+	// Only in 8.x
+	if (pMenuInGameGas != nullptr)
+	{
+		SpriteFacade(CMenuFacade(*pMenuInGameGas).m_sprite).m_rect->left = (m_dwResX - 1024) / 2;
+	}
+	SpriteFacade(CMenuFacade(*pMenuInGameNetwork).m_sprite).m_rect->left = (m_dwResX - 1024) / 2;
 
 }
 
-void D2GIHookInjector::OnInitClusters() {
-	//						       5.5,      7.3 LT,	1.3,      8.1,      8.2
-	DWORD dw_InitClusters[] = { 0x000000, 0x000000, 0x52A470, 0x52AD30, 0x52ACB0 };
-	DWORD dw_FOV         [] = { 0x000000, 0x000000, 0x695C0C, 0x696CAC, 0x696CCC };
+static CBlockObserver** pCabObserver;
 
-	//This offsets (0x58, 0x54) are tested only at 1.3, 8.1 and 8.2
+static void (*orgOnInitClusters)();
+void D2GIHookInjector::OnInitClusters() {
+
+	CBlockObserverFacade CabObserverF(*pCabObserver);
 
 	//blockObserver->FOV
-	*(float*)(*(DWORD*)dw_FOV[s_eCurrentD2Version] + 0x58) = m_fUIAspect * 1.2f;
-	*(float*)(*(DWORD*)dw_FOV[s_eCurrentD2Version] + 0x54) = 1.2f;
+	CabObserverF.m_fovX = m_fUIAspect * 1.2f;
+	CabObserverF.m_fovY = 1.2f;
 
 	//call original function
-	void(*InitClusters)() = (void(*)())dw_InitClusters[s_eCurrentD2Version];
-	InitClusters();
+	orgOnInitClusters();
 }
 
 //Interface main injection code
-void D2GIHookInjector::InjectInterfacePatch() {
+void D2GIHookInjector::InjectInterfacePatch() try {
 	// How it works:
 	// 1. The screen resolution set by D2GI is checked; if its width is higher than 1600, the width
 	// becomes equal to 1600, the height is proportionally reduced.
@@ -304,6 +300,13 @@ void D2GIHookInjector::InjectInterfacePatch() {
 	// * OnInitClusters     - a new interior FOV is being installed here, because the standard D2GI fix
 	// not actual due to interface hooks.
 
+	// First match patterns before we try to do any patching
+	using namespace hook::txn;
+
+	auto sidebar_positions = pattern("C7 05 ? ? ? ? ? ? ? ? 8B C8 C7 05 ? ? ? ? ? ? ? ? 8B D0 E9").get_one();
+	MainSideBarX = *sidebar_positions.get<int*>(2);
+	MenuBackInfoX = *sidebar_positions.get<int*>(0xC + 2);
+
 	m_dwResX = D2GIConfig::GetVideoWidth();
 	m_dwResY = D2GIConfig::GetVideoHeight();
 
@@ -328,21 +331,21 @@ void D2GIHookInjector::InjectInterfacePatch() {
 
 	m_dwMenuSettingsValue = 306;  //set 1024x768 in game settings
 
-	//						   5.5,		7.3 LT,     1.3,      8.1,      8.2
-	DWORD cmp1204addr[] = { 0x000000, 0x000000, 0x5691ED, 0x569ADD, 0x569A6D };
-	DWORD cmp800addr [] = { 0x000000, 0x000000, 0x569223, 0x569B13, 0x569AA3 };
-	DWORD pagerXaddr [] = { 0x000000, 0x000000, 0x56924B, 0x569B3B, 0x569ACB };
-	DWORD pagerYaddr [] = { 0x000000, 0x000000, 0x5691E8, 0x569AD8, 0x569A68 };
-	DWORD panelXaddr [] = { 0x000000, 0x000000, 0x569259, 0x569B49, 0x569AD9 };
-	DWORD textXaddr  [] = { 0x000000, 0x000000, 0x569254, 0x569B44, 0x569AD4 };
+	//						   5.5,		7.3 LT,		  1.3,      8.1,      8.2
+	DWORD cmp1204addr[] = { 0x000000, 0x56ACAC + 1, 0x5691ED, 0x569ADD, 0x569A6D };
+	DWORD cmp800addr [] = { 0x000000, 0x56ACE2 + 1, 0x569223, 0x569B13, 0x569AA3 };
+	DWORD pagerXaddr [] = { 0x000000, 0x56AD07 + 4, 0x56924B, 0x569B3B, 0x569ACB };
+	DWORD pagerYaddr [] = { 0x000000, 0x56ACA7 + 1, 0x5691E8, 0x569AD8, 0x569A68 };
+	DWORD panelXaddr [] = { 0x000000, 0x56AD18 + 1, 0x569259, 0x569B49, 0x569AD9 };
+	DWORD textXaddr  [] = { 0x000000, 0x56AD13 + 1, 0x569254, 0x569B44, 0x569AD4 };
 
-	DWORD m_dwResXAddr[] = { 0x000000, 0x000000, 0x5127F1, 0x512FC1, 0x512F21 };
-	DWORD m_dwResYAddr[] = { 0x000000, 0x000000, 0x5127EC, 0x512FBC, 0x512F1C };
+	DWORD m_dwResXAddr[] = { 0x000000, 0x514DA0 + 1, 0x5127F1, 0x512FC1, 0x512F21 };
+	DWORD m_dwResYAddr[] = { 0x000000, 0x514D9B + 1, 0x5127EC, 0x512FBC, 0x512F1C };
 
 	//function call pointers
-	DWORD call_prepareGameAddr [] = { 0x000000, 0x000000, 0x510516, 0x510CE6, 0x510C46 };
-	DWORD call_setOffsetsAddr  [] = { 0x000000, 0x000000, 0x510732, 0x510F02, 0x510E62 };
-	DWORD call_initClustersAddr[] = { 0x000000, 0x000000, 0x4E0505, 0x4E05A5, 0x4E0625 };
+	DWORD call_prepareGameAddr [] = { 0x000000, 0x512AA6, 0x510516, 0x510CE6, 0x510C46 };
+	DWORD call_setOffsetsAddr  [] = { 0x000000, 0x512CE5, 0x510732, 0x510F02, 0x510E62 };
+	DWORD call_initClustersAddr[] = { 0x000000, 0x4E1FC5, 0x4E0505, 0x4E05A5, 0x4E0625 };
 
 	//2) Set resolution from aspect
 	if (aspect_rev > 0.7) {
@@ -377,17 +380,20 @@ void D2GIHookInjector::InjectInterfacePatch() {
 
 	Logger::Log(TEXT("Current GUI res is %dx%d"), m_dwResX, m_dwResY);
 
+	using namespace Memory::VP;
+
 	//3) replace default 1024x768 resolution to new
 	CPatch::SetShort(m_dwResXAddr[s_eCurrentD2Version], m_dwResX);
 	CPatch::SetShort(m_dwResYAddr[s_eCurrentD2Version], m_dwResY);
 
 	//4) hook functions
-	CPatch::RedirectCall(call_prepareGameAddr[s_eCurrentD2Version],  &OnPrepareStartGame);
-	CPatch::RedirectCall(call_setOffsetsAddr[s_eCurrentD2Version],   &OnSetupUIOffsets);
-	CPatch::RedirectCall(call_initClustersAddr[s_eCurrentD2Version], &OnInitClusters);
+	InterceptCall(call_prepareGameAddr[s_eCurrentD2Version], orgOnPrepareStartGame, OnPrepareStartGame);
+	InterceptCall(call_setOffsetsAddr[s_eCurrentD2Version], orgOnSetupUIOffsets, OnSetupUIOffsets);
+	InterceptCall(call_initClustersAddr[s_eCurrentD2Version], orgOnInitClusters, &OnInitClusters);
 
 	Logger::Log(TEXT("Successfully injected interface hooks"));
 }
+TXN_CATCH();
 
 double m_dRainSpeed = 50.0;
 void __fastcall D2GIHookInjector::OnProcessRainDrop(int* _this, int* EDX) {
@@ -776,6 +782,57 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	}
 	TXN_CATCH();
 
+
+	bool bHasMenuGraphics = false;
+	try
+	{
+		pMenuGraphics = *get_pattern<MenuGraphics**>("A1 ? ? ? ? 0F BF 88 ? ? ? ? 0F BF 90 ? ? ? ? 89 4C 24", 1);
+
+		FACADE_SET_MEMBER_OFFSET(MenuGraphicsFacade, m_videoIni, *get_pattern<uint32_t>("89 87 ? ? ? ? 75", 2));
+
+		bHasMenuGraphics = true;
+	}
+	TXN_CATCH();
+
+
+	bool bHasMenuAndSprite = false;
+	try
+	{
+		auto sprite_and_rect = pattern("89 46 ? 5F 89 48").get_one();
+		pMenuInGameNetwork = *get_pattern<CMenu**>("8B 0D ? ? ? ? 8B 11 FF 52 ? 8B 8C 24", 2);
+
+		// This menu only exists in 8.x
+		try
+		{
+			pMenuInGameGas = *get_pattern<CMenu**>("8B 0D ? ? ? ? 8B 11 FF 52 ? A1 ? ? ? ? C7 40", 2);
+		}
+		catch(const hook::txn_exception&)
+		{
+			pMenuInGameGas = nullptr;
+		}
+
+		FACADE_SET_MEMBER_OFFSET(CMenuFacade, m_sprite, *sprite_and_rect.get<uint8_t>(2));
+		FACADE_SET_MEMBER_OFFSET(SpriteFacade, m_rect, *sprite_and_rect.get<uint8_t>(4 + 2));
+
+		bHasMenuAndSprite = true;
+	}
+	TXN_CATCH();
+
+
+	bool bHasBlockObserver = false;
+	try
+	{
+		auto fov_xy = pattern("89 48 ? 89 48 ? 89 78 ? 89 78 ? C6 40").get_one();
+
+		pCabObserver = *get_pattern<CBlockObserver**>("8B 15 ? ? ? ? 8D 4C 24 ? 51 6A", 2);
+
+		FACADE_SET_MEMBER_OFFSET(CBlockObserverFacade, m_fovX, *fov_xy.get<uint8_t>(2));
+		FACADE_SET_MEMBER_OFFSET(CBlockObserverFacade, m_fovY, *fov_xy.get<uint8_t>(3 + 2));
+
+		bHasBlockObserver = true;
+	}
+	TXN_CATCH();
+
 	try
 	{
 		auto device_address_ptr = get_pattern<D3D7::IDirect3DDevice7**>("8B 0D ? ? ? ? 8D 54 24 ? 51 6A ? 52 68 ? ? ? ? 68 ? ? ? ? C7 44 24", 2);
@@ -1013,14 +1070,14 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 	Logger::Log(TEXT("Injected common hooks."));
 
-	if (s_eCurrentD2Version != D2V_5_5 && s_eCurrentD2Version != D2V_7_3_LT && s_eCurrentD2Version != D2V_UNKNOWN) {
+	if (s_eCurrentD2Version != D2V_5_5 && s_eCurrentD2Version != D2V_UNKNOWN) {
 		//hooks ONLY for v1.3, v8.1 and v8.2
 
 		//Screenshot save patch
 		D2GIHookInjector::InjectScreenshotsPatch();
 		D2GIHookInjector::InjectRainPatch();
 		//Interface aspect fix
-		if (options.m_bEnableUIHooks)
+		if (options.m_bEnableUIHooks && bHasMenuGraphics && bHasMenuAndSprite && bHasBlockObserver)
 			D2GIHookInjector::InjectInterfacePatch();
 
 	} else {
