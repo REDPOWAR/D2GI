@@ -395,34 +395,31 @@ void D2GIHookInjector::InjectInterfacePatch() try {
 }
 TXN_CATCH();
 
-double m_dRainSpeed = 50.0;
-void __fastcall D2GIHookInjector::OnProcessRainDrop(int* _this, int* EDX) {
-	//						   5.5,      1.3,      8.1,      8.2
-	DWORD rainProcAddr[] = { 0x000000, 0x5A5640, 0x5A5F50, 0x5A5ED0 };
 
-	int* TheGame = (int*)((char*)_this + 0x20);
-	double dt = *(double*)((char*)*TheGame + 0xB90); //delta time
+// ======= Fix horizontal raindrops at over 50 FPS =======
+namespace RaindropsFix
+{
+	int ftol_PreserveFrac(double val)
+	{
+		static double lastFraction = 0.0;
 
-	//default game value is dt * 50.0 = 1.5 at 30 FPS
-	m_dRainSpeed = 1.5 / dt;
+		double integral;
+		lastFraction = std::modf(val + lastFraction, &integral);
 
-	//limit value (original in-game value is 50.0)
-	if (m_dRainSpeed < 50.0)
-		m_dRainSpeed = 50.0;
+		return static_cast<int>(integral);
+	}
 
-	//call original function
-	((int(__thiscall*)(int*))rainProcAddr[s_eCurrentD2Version])(_this);
-}
-
-void D2GIHookInjector::InjectRainPatch() {
-	//						       5.5,      1.3,      8.1,      8.2
-	DWORD rainProcCallAddr[] = { 0x000000, 0x650524, 0x651534, 0x651534 };
-	DWORD rainSpeedAddr[]    = { 0x000000, 0x5A5654, 0x5A5F64, 0x5A5EE4 };
-
-	//replace function call pointer
-	CPatch::SetPointer(rainProcCallAddr[s_eCurrentD2Version], &OnProcessRainDrop);
-	//replace rain drop moving down speed value
-	CPatch::SetPointer(rainSpeedAddr[s_eCurrentD2Version], &m_dRainSpeed);
+	__declspec(naked) void ftol_PreserveFracHook()
+	{
+		_asm
+		{
+			sub		esp, 8
+			fstp	qword ptr [esp]
+			call	ftol_PreserveFrac
+			add		esp, 8
+			retn
+		}
+	}
 }
 
 
@@ -1068,6 +1065,18 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	TXN_CATCH();
 
 
+	// Fix horizontal raindrops at over 50 FPS
+	try
+	{
+		using namespace RaindropsFix;
+
+		auto ftol_raindrop = get_pattern("E8 ? ? ? ? 8B F8 E8 ? ? ? ? 25");
+
+		InjectHook(ftol_raindrop, ftol_PreserveFracHook);
+	}
+	TXN_CATCH();
+
+
 	Logger::Log(TEXT("Injected common hooks."));
 
 	if (s_eCurrentD2Version != D2V_5_5 && s_eCurrentD2Version != D2V_UNKNOWN) {
@@ -1075,7 +1084,6 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 		//Screenshot save patch
 		D2GIHookInjector::InjectScreenshotsPatch();
-		D2GIHookInjector::InjectRainPatch();
 		//Interface aspect fix
 		if (options.m_bEnableUIHooks && bHasMenuGraphics && bHasMenuAndSprite && bHasBlockObserver)
 			D2GIHookInjector::InjectInterfacePatch();
