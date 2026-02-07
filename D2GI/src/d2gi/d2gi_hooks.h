@@ -33,6 +33,9 @@ class D2GIHookInjector
 	static void D2GIHookInjector::OnSetupUIOffsets();
 	static void D2GIHookInjector::OnInitClusters();
 	static void D2GIHookInjector::InjectInterfacePatch();
+
+	static void __fastcall D2GIHookInjector::OnProcessRainDrop(int* _this, int* EDX);
+	static void D2GIHookInjector::InjectRainPatch();
 public:
 	static D2GI* ObtainD2GI();
 	static void InjectHooks(const HookOptions& options);

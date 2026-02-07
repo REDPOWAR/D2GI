@@ -8,6 +8,7 @@
 
 * Fixes incorrect graphics output (["Rainbow" bug](https://www.pcgamingwiki.com/wiki/Rainbow_color_problems_in_older_games), bug with an object's transparency etc.)
 * Fixes problems with rendering the background of translucent objects
+* Fixes ["horizontal rain"](https://github.com/REDPOWAR/D2GI/issues/1) bug
 * Fixes a bug with overwriting screenshots and allows you to select the format and path for saving them
 * You can specify any resolution with any aspect ratio (4:3, 16:9 etc.)
 * 3 modes: windowed, borderless, fullscreen

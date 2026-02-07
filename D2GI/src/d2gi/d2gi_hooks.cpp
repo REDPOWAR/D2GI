@@ -1,4 +1,4 @@
-﻿
+
 #include "../common/common.h"
 #include "../common/logger.h"
 
@@ -291,7 +291,7 @@ void D2GIHookInjector::InjectInterfacePatch() {
 	//
 	//
 	// 3. Next, the resolution values ​​of 1024x768 are overwritten to the new one. All this code
-	// is made as a redesign of the 1024x768 resolution interface layout.
+	// is made as a redesign of the 1024x768/1600x1200 resolution interface layout.
 	//
 	//
 	// 4. Installation of hooks:
@@ -323,9 +323,9 @@ void D2GIHookInjector::InjectInterfacePatch() {
 	//0x110 (274) 640x480
 	//0x120 (290) 800x600
 	//0x130 (306) 1024x768
-	//0x140 (322) 1600x900
+	//0x140 (322) 1600x1200
 
-	m_dwMenuSettingsValue = 306;
+	m_dwMenuSettingsValue = 306;  //set 1024x768 in game settings
 
 	//						   5.5,      1.3,      8.1,      8.2
 	DWORD cmp1204addr[] = { 0x000000, 0x5691ED, 0x569ADD, 0x569A6D };
@@ -348,7 +348,7 @@ void D2GIHookInjector::InjectInterfacePatch() {
 		if (m_dwResX > 1024) {
 			m_dwResX = 1600;
 			m_dwResY = 1200;
-			m_dwMenuSettingsValue = 322;
+			m_dwMenuSettingsValue = 322; //set 1600x1200 in game settings
 		}
 		else {
 			m_dwResX = 1024;
@@ -386,6 +386,36 @@ void D2GIHookInjector::InjectInterfacePatch() {
 	CPatch::RedirectCall(call_initClustersAddr[s_eCurrentD2Version], &OnInitClusters);
 
 	Logger::Log(TEXT("Successfully injected interface hooks"));
+}
+
+double m_dRainSpeed = 50.0;
+void __fastcall D2GIHookInjector::OnProcessRainDrop(int* _this, int* EDX) {
+	//						   5.5,      1.3,      8.1,      8.2
+	DWORD rainProcAddr[] = { 0x000000, 0x5A5640, 0x5A5F50, 0x5A5ED0 };
+
+	int* TheGame = (int*)((char*)_this + 0x20);
+	double dt = *(double*)((char*)*TheGame + 0xB90); //delta time
+
+	//default game value is dt * 50.0 = 1.5 at 30 FPS
+	m_dRainSpeed = 1.5 / dt;
+
+	//limit value (original in-game value is 50.0)
+	if (m_dRainSpeed < 50.0)
+		m_dRainSpeed = 50.0;
+
+	//call original function
+	((int(__thiscall*)(int*))rainProcAddr[s_eCurrentD2Version])(_this);
+}
+
+void D2GIHookInjector::InjectRainPatch() {
+	//						       5.5,      1.3,      8.1,      8.2
+	DWORD rainProcCallAddr[] = { 0x000000, 0x650524, 0x651534, 0x651534 };
+	DWORD rainSpeedAddr[]    = { 0x000000, 0x5A5654, 0x5A5F64, 0x5A5EE4 };
+
+	//replace function call pointer
+	CPatch::SetPointer(rainProcCallAddr[s_eCurrentD2Version], &OnProcessRainDrop);
+	//replace rain drop moving down speed value
+	CPatch::SetPointer(rainSpeedAddr[s_eCurrentD2Version], &m_dRainSpeed);
 }
 
 
@@ -919,7 +949,7 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 		//Screenshot save patch
 		D2GIHookInjector::InjectScreenshotsPatch();
-
+		D2GIHookInjector::InjectRainPatch();
 		//Interface aspect fix
 		if (options.m_bEnableUIHooks)
 			D2GIHookInjector::InjectInterfacePatch();
