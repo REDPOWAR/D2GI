@@ -23,7 +23,6 @@ void D2GIBackBufferSurface::ReleaseResource(bool bResettingDevice)
 {
 	D2GISurface::ReleaseResource(bResettingDevice);
 
-	m_pStreamingTexture.Reset();
 	m_pStreamingSurface.Reset();
 	m_pReadingSurface.Reset();
 	if (!bResettingDevice)
@@ -37,22 +36,18 @@ void D2GIBackBufferSurface::LoadResource(bool bResettingDevice)
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 
-	if (FAILED(pDev->CreateTexture(m_dwWidth, m_dwHeight, 1, D3DUSAGE_DYNAMIC,
-		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat],
-		D3D9::D3DPOOL_DEFAULT, &m_pStreamingTexture, NULL)))
-		Logger::Error(TEXT("Failed to create backbuffer streaming texture"));
-
-	if (FAILED(m_pStreamingTexture->GetSurfaceLevel(0, &m_pStreamingSurface)))
+	if (FAILED(pDev->CreateOffscreenPlainSurface(m_dwWidth, m_dwHeight,
+		g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_DEFAULT, &m_pStreamingSurface, nullptr)))
 		Logger::Error(TEXT("Failed to get backbuffer streaming surface"));
 
 	if (FAILED(pDev->CreateRenderTarget(m_dwWidth, m_dwHeight, g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat],
-		D3D9::D3DMULTISAMPLE_NONE, 0, FALSE, &m_pReadingSurface, NULL)))
+		D3D9::D3DMULTISAMPLE_NONE, 0, FALSE, &m_pReadingSurface, nullptr)))
 		Logger::Error(TEXT("Failed to create backbuffer reading render target"));
 
 	if (!m_pOffSurface)
 	{
 		if (FAILED(pDev->CreateOffscreenPlainSurface(m_dwWidth, m_dwHeight,
-			g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_SYSTEMMEM, &m_pOffSurface, NULL)))
+			g_asD2GIPF_To_D3D9PF[m_eD2GIPixelFormat], D3D9::D3DPOOL_SYSTEMMEM, &m_pOffSurface, nullptr)))
 			Logger::Error(TEXT("Failed to create backbuffer reading offscreen surface"));
 	}
 }

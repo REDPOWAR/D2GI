@@ -7,7 +7,6 @@
 
 class D2GIBackBufferSurface : public D2GISurface
 {
-	Microsoft::WRL::ComPtr<D3D9::IDirect3DTexture9> m_pStreamingTexture;
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pStreamingSurface;
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pReadingSurface;
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pOffSurface;
