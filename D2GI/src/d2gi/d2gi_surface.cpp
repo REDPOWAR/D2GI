@@ -9,14 +9,10 @@
 using namespace D3D7;
 
 
-D2GISurface::D2GISurface(D2GI* pD2GI, DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
-	: D2GIResource(pD2GI)
+D2GISurface::D2GISurface(D2GI* pD2GI, uint32_t dwWidth, uint32_t dwHeight, D2GIPIXELFORMAT eFormat) 
+	: D2GIResource(pD2GI), m_dwWidth(dwWidth), m_dwHeight(dwHeight), m_eD2GIPixelFormat(eFormat)
+	, m_sDD7PixelFormat(g_asD2GIPF_To_DD7PF[eFormat]), m_dwBPP(g_asD2GIPF_To_DD7PF[eFormat].dwRGBBitCount)
 {
-	m_dwWidth = dwWidth;
-	m_dwHeight = dwHeight;
-	m_eD2GIPixelFormat = eFormat;
-	m_sDD7PixelFormat = g_asD2GIPF_To_DD7PF[eFormat];
-	m_dwBPP = m_sDD7PixelFormat.dwRGBBitCount;
 }
 
 

@@ -27,8 +27,8 @@ enum SURFACETYPE
 class D2GISurface : public ImplementsProxy<SurfaceProxy>, public D2GIResource
 {
 protected:
-	DWORD m_dwWidth, m_dwHeight, m_dwBPP;
-	D3D7::DDPIXELFORMAT m_sDD7PixelFormat;
+	uint32_t m_dwWidth, m_dwHeight, m_dwBPP;
+	const D3D7::DDPIXELFORMAT& m_sDD7PixelFormat;
 	D2GIPIXELFORMAT m_eD2GIPixelFormat;
 
 	std::unique_ptr<std::byte[]> m_intermediateBuffer; // For 8bpp palettized and color keyed surfaces
@@ -36,7 +36,7 @@ protected:
 	bool m_bSurfaceDirty = false;
 
 public:
-	D2GISurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
+	D2GISurface(D2GI*, uint32_t dwW, uint32_t dwH, D2GIPIXELFORMAT);
 	virtual ~D2GISurface() override;
 	virtual void ReleaseResource(bool bResettingDevice) override;
 
@@ -48,7 +48,6 @@ public:
 	DWORD GetWidth() const { return m_dwWidth; }
 	DWORD GetHeight() const { return m_dwHeight; }
 	DWORD GetBPP() const { return m_dwBPP; }
-	const D3D7::DDPIXELFORMAT* GetDD7PixelFormat() const { return &m_sDD7PixelFormat; }
 	D2GIPIXELFORMAT GetD2GIPixelFormat() const { return m_eD2GIPixelFormat; }
 
 	bool HasColorKeyConversion() const { return m_sColorKey.has_value() && m_eD2GIPixelFormat == D2GIPF_16_565; }
