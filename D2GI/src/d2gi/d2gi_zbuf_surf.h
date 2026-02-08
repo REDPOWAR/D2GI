@@ -10,6 +10,5 @@ public:
 	virtual ~D2GIZBufferSurface();
 
 	virtual SURFACETYPE GetType() const override { return ST_ZBUFFER; }
-	virtual void ReleaseResource(bool bResettingDevice) override {};
 	virtual void LoadResource(bool bResettingDevice) override {}
 };

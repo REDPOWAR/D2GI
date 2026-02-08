@@ -3,17 +3,21 @@
 #include "d2gi_surface.h"
 #include "d2gi_mipmap_surf.h"
 
+#include <wrl/client.h>
+#include <memory>
 
 class D2GIPalette;
+class D2GISystemMemorySurface;
 
 
 class D2GITexture : public D2GISurface
 {
 protected:
-	DWORD m_dwMipMapCount;
-	D2GIMipMapSurface** m_lpMipMapLevels;
+	uint32_t m_dwMipMapCount = 1;
+	std::unique_ptr<Microsoft::WRL::ComPtr<D2GIMipMapSurface>[]> m_lpMipMapLevels;
 
-	D3D9::IDirect3DTexture9* m_pTexture;
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DTexture9> m_pTexture;
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pLastBlitSource;
 
 public:
 	D2GITexture(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT, DWORD dwMipMapCount);
@@ -34,7 +38,14 @@ public:
 	IFACEMETHOD(GetPrivateData)(REFGUID, LPVOID, LPDWORD) override;
 	IFACEMETHOD(FreePrivateData)(REFGUID) override;
 
+	void SetBlitSource(const D2GISystemMemorySurface* pBlitSource);
+
 	D3D9::IDirect3DSurface9* GetD3D9Surface();
-	D3D9::IDirect3DTexture9* GetD3D9Texture() { return m_pTexture; }
-	DWORD GetMipMapCount() { return m_dwMipMapCount; }
+	D3D9::IDirect3DTexture9* GetD3D9Texture();
+	uint32_t GetMipMapCount() const { return m_dwMipMapCount; }
+
+private:
+	void EnsureD3DResourceCreated();
+	void FlushResourceToGPU();
+	bool IsDynamicTexture() const { return HasColorKeyConversion() || m_pLastBlitSource != nullptr; }
 };

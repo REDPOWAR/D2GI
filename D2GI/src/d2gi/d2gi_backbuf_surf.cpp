@@ -19,8 +19,10 @@ D2GIBackBufferSurface::~D2GIBackBufferSurface()
 }
 
 
-VOID D2GIBackBufferSurface::ReleaseResource(bool bResettingDevice)
+void D2GIBackBufferSurface::ReleaseResource(bool bResettingDevice)
 {
+	D2GISurface::ReleaseResource(bResettingDevice);
+
 	m_pStreamingTexture.Reset();
 	m_pStreamingSurface.Reset();
 	m_pReadingSurface.Reset();
@@ -31,7 +33,7 @@ VOID D2GIBackBufferSurface::ReleaseResource(bool bResettingDevice)
 }
 
 
-VOID D2GIBackBufferSurface::LoadResource(bool bResettingDevice)
+void D2GIBackBufferSurface::LoadResource(bool bResettingDevice)
 {
 	D3D9::IDirect3DDevice9* pDev = GetD3D9Device();
 

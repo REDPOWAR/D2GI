@@ -139,10 +139,14 @@ VOID D2GI::ResetD3D9Device()
 {
 	D3D9::D3DPRESENT_PARAMETERS sParams;
 
-	if (m_pDev != NULL)
+	if (m_pDev != nullptr)
 	{
-		while (m_pDev->TestCooperativeLevel() == D3DERR_DEVICELOST)
+		HRESULT hr;
+		while ((hr = m_pDev->TestCooperativeLevel()) == D3DERR_DEVICELOST)
 			Sleep(50);
+
+		if (FAILED(hr) && hr != D3DERR_DEVICENOTRESET)
+			Logger::Error(TEXT("Failed to ready the D3D9 device for resetting"));
 	}
 
 	ReleaseResources(/*bResettingDevice=*/ true);
@@ -184,13 +188,13 @@ VOID D2GI::ResetD3D9Device()
 		if (sParams.Windowed)
 		{
 			Logger::Warning(
-				TEXT("Can't set fullscreen mode %ix%i, display mode not found"),
+				TEXT("Can't set fullscreen mode %ux%u, display mode not found"),
 				m_dwForcedWidth, m_dwForcedHeight);
 		}
 	}
 
 
-	if (m_pDev == NULL)
+	if (m_pDev == nullptr)
 	{
 		if (FAILED(m_pD3D9->CreateDevice(D3DADAPTER_DEFAULT, D3D9::D3DDEVTYPE_HAL, m_hWnd,
 			D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
@@ -199,17 +203,12 @@ VOID D2GI::ResetD3D9Device()
 	}
 	else
 	{
-		HRESULT hResetResult;
-
-		while ((hResetResult = m_pDev->Reset(&sParams)) == D3DERR_DEVICELOST)
-			Sleep(50);
-
-		if (FAILED(hResetResult))
+		if (FAILED(m_pDev->Reset(&sParams)))
 			Logger::Error(TEXT("Failed to reset D3D9 device"));
 	}
 
 	Logger::Log(
-		TEXT("Working on %ix%i mode (fullscreen: %s)"),
+		TEXT("Working on %ux%u mode (fullscreen: %s)"),
 		sParams.BackBufferWidth, sParams.BackBufferHeight,
 		sParams.Windowed ? TEXT("off") : TEXT("on"));
 
@@ -450,7 +449,8 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 {
 	// MULTITHREADED_ACCESS
 	const POINT destPoint = pDstRT != nullptr ? POINT{ pDstRT->left, pDstRT->top } : POINT{ 0, 0 };
-	m_pDev->UpdateSurface(pSrc->GetSystemMemSurface(), pSrcRT, pDst->GetD3D9Surface(), &destPoint);
+	if (FAILED(m_pDev->UpdateSurface(pSrc->GetSystemMemSurface(), pSrcRT, pDst->GetD3D9Surface(), &destPoint)))
+		Logger::Error(TEXT("Failed to blit the surface"));
 }
 
 

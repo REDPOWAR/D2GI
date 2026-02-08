@@ -2,20 +2,16 @@
 
 #include "d2gi_surface.h"
 
-#include <memory>
-
 #include <wrl/client.h>
 
 class D2GISystemMemorySurface : public D2GISurface
 {
 private:
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_systemMemSurface;
-	std::unique_ptr<uint8_t[]> m_paletteSurface; // For 8bpp palettized textures
 
 	// Instantiated on demand if the system memory surface is used for blitting.
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DTexture9> m_backingGPUTexture;
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_backingGPUSurface;
-	bool m_bTextureDirty = false;
 
 public:
 	D2GISystemMemorySurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT eFormat);
@@ -39,7 +35,6 @@ public:
 	D3D9::IDirect3DTexture9* RequestGPUTexture();
 
 private:
-	void EnsureSystemMemResourceCreated();
+	void EnsureD3DResourceCreated();
 	void FlushResourceToGPU();
-	void UpdateColorKey();
 };

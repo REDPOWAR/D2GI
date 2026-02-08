@@ -8,6 +8,9 @@
 
 #include "../common/implements_proxy.hpp"
 
+#include <memory>
+#include <optional>
+
 
 enum SURFACETYPE
 {
@@ -28,14 +31,14 @@ protected:
 	D3D7::DDPIXELFORMAT m_sDD7PixelFormat;
 	D2GIPIXELFORMAT m_eD2GIPixelFormat;
 
-	D3D9::D3DLOCKED_RECT m_LastColorKeyLock {}; // Used for color key updates
-
-	D3D7::DDCOLORKEY m_sColorKey {};
-	bool m_bColorKeySet = false;
+	std::unique_ptr<std::byte[]> m_intermediateBuffer; // For 8bpp palettized and color keyed surfaces
+	std::optional<uint32_t> m_sColorKey;
+	bool m_bSurfaceDirty = false;
 
 public:
 	D2GISurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
 	virtual ~D2GISurface() override;
+	virtual void ReleaseResource(bool bResettingDevice) override;
 
 	IFACEMETHOD(IsLost)() override final;
 	IFACEMETHOD(SetColorKey)(DWORD dwFlags, D3D7::LPDDCOLORKEY pCK) override;
@@ -48,7 +51,12 @@ public:
 	const D3D7::DDPIXELFORMAT* GetDD7PixelFormat() const { return &m_sDD7PixelFormat; }
 	D2GIPIXELFORMAT GetD2GIPixelFormat() const { return m_eD2GIPixelFormat; }
 
-	bool HasColorKeyConversion() const { return m_bColorKeySet && m_eD2GIPixelFormat == D2GIPF_16_565; }
-	DWORD GetOriginalColorKeyValue() const { return m_sColorKey.dwColorSpaceLowValue; }
+	bool HasColorKeyConversion() const { return m_sColorKey.has_value() && m_eD2GIPixelFormat == D2GIPF_16_565; }
+	uint32_t GetOriginalColorKeyValue() const { return m_sColorKey.value(); }
+
+protected:
+	bool NeedsIntermediateBuffer() const { return m_dwBPP == 8 || HasColorKeyConversion(); }
 	D3D9::D3DFORMAT GetEffectiveD3DFormat() const;
+	void EnsureD3DResourceCreated();
+	void ExpandColorKeyToSurface(D3D9::IDirect3DSurface9* pSurface, bool bCanDiscard) const;
 };

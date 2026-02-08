@@ -22,6 +22,7 @@ D2GIPrimaryFlippableSurface::~D2GIPrimaryFlippableSurface()
 
 void D2GIPrimaryFlippableSurface::ReleaseResource(bool bResettingDevice)
 {
+	D2GISurface::ReleaseResource(bResettingDevice);
 	m_pBackBuffer->ReleaseResource(bResettingDevice);
 }
 

@@ -12,7 +12,6 @@ public:
 	virtual ~D2GIPrimarySingleSurface();
 
 	virtual SURFACETYPE GetType() const override { return ST_PRIMARY_SINGLE; }
-	virtual void ReleaseResource(bool bResettingDevice) override {};
 	virtual void LoadResource(bool bResettingDevice) override {};
 
 	STDMETHOD(GetSurfaceDesc)(D3D7::LPDDSURFACEDESC2);
