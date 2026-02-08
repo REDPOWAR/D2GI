@@ -67,6 +67,8 @@ public:
 	FACADE_MEMBER(uint32_t, m_videoIni); // 0x190 in 7.3, 0x198 in 8.2
 };
 
+// Currently unused, but let's leave it as documentation
+/*
 class CMenu;
 class Sprite;
 
@@ -91,6 +93,7 @@ public:
 public:
 	FACADE_MEMBER(Sprite*, m_sprite); // 0x38 in 7.3 and 8.2
 };
+*/
 
 class CBlockObserver;
 

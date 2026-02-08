@@ -31,7 +31,6 @@ class D2GIHookInjector
 	static void D2GIHookInjector::InjectScreenshotsPatch();
 
 	static void D2GIHookInjector::OnPrepareStartGame(void* a1, void* a2);
-	static void D2GIHookInjector::OnSetupUIOffsets(void* a1);
 	static void D2GIHookInjector::OnInitClusters();
 	static void D2GIHookInjector::InjectInterfacePatch();
 

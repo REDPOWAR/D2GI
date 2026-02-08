@@ -236,26 +236,14 @@ void D2GIHookInjector::OnPrepareStartGame(void* a1, void* a2) {
 static int* MenuBackInfoX;
 static int* MainSideBarX;
 
-CMenu** pMenuInGameGas; // Only in 8.x
-CMenu** pMenuInGameNetwork;
-
-static void (*orgOnSetupUIOffsets)(void* a1);
-void D2GIHookInjector::OnSetupUIOffsets(void* a1){
-
-	//call original function before changing offsets
-	orgOnSetupUIOffsets(a1);
-
+static void (*orgInitInGameMenus)();
+static void InitInGameMenus_FixupOffsets()
+{
 	//fix sidebar positions
 	*MenuBackInfoX = m_dwResX - 385;
 	*MainSideBarX = m_dwResX - 225;
 
-	// Only in 8.x
-	if (pMenuInGameGas != nullptr)
-	{
-		SpriteFacade(CMenuFacade(*pMenuInGameGas).m_sprite).m_rect->left = (m_dwResX - 1024) / 2;
-	}
-	SpriteFacade(CMenuFacade(*pMenuInGameNetwork).m_sprite).m_rect->left = (m_dwResX - 1024) / 2;
-
+	orgInitInGameMenus();
 }
 
 static CBlockObserver** pCabObserver;
@@ -295,13 +283,15 @@ void D2GIHookInjector::InjectInterfacePatch() try {
 	// * OnPrepareStartGame - here there is a forced selection of the "1024x768" button in the graphics
 	// settings menu of the main game menu;
 	// 
-	// * OnSetupUIOffsets   - here new offsets of the interface on the right side of the screen are set;
+	// * InitInGameMenus   - here new offsets of the interface on the right side of the screen are set;
 	// 
 	// * OnInitClusters     - a new interior FOV is being installed here, because the standard D2GI fix
 	// not actual due to interface hooks.
 
 	// First match patterns before we try to do any patching
 	using namespace hook::txn;
+
+	auto init_in_game_menus = get_pattern("E8 ? ? ? ? 8B 0D ? ? ? ? 8B 01 FF 90 ? ? ? ? 8B 0D ? ? ? ? 8B 81");
 
 	auto sidebar_positions = pattern("C7 05 ? ? ? ? ? ? ? ? 8B C8 C7 05 ? ? ? ? ? ? ? ? 8B D0 E9").get_one();
 	MainSideBarX = *sidebar_positions.get<int*>(2);
@@ -344,7 +334,6 @@ void D2GIHookInjector::InjectInterfacePatch() try {
 
 	//function call pointers
 	DWORD call_prepareGameAddr [] = { 0x000000, 0x512AA6, 0x510516, 0x510CE6, 0x510C46 };
-	DWORD call_setOffsetsAddr  [] = { 0x000000, 0x512CE5, 0x510732, 0x510F02, 0x510E62 };
 	DWORD call_initClustersAddr[] = { 0x000000, 0x4E1FC5, 0x4E0505, 0x4E05A5, 0x4E0625 };
 
 	//2) Set resolution from aspect
@@ -388,7 +377,7 @@ void D2GIHookInjector::InjectInterfacePatch() try {
 
 	//4) hook functions
 	InterceptCall(call_prepareGameAddr[s_eCurrentD2Version], orgOnPrepareStartGame, OnPrepareStartGame);
-	InterceptCall(call_setOffsetsAddr[s_eCurrentD2Version], orgOnSetupUIOffsets, OnSetupUIOffsets);
+	InterceptCall(init_in_game_menus, orgInitInGameMenus, InitInGameMenus_FixupOffsets);
 	InterceptCall(call_initClustersAddr[s_eCurrentD2Version], orgOnInitClusters, &OnInitClusters);
 
 	Logger::Log(TEXT("Successfully injected interface hooks"));
@@ -792,30 +781,6 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	TXN_CATCH();
 
 
-	bool bHasMenuAndSprite = false;
-	try
-	{
-		auto sprite_and_rect = pattern("89 46 ? 5F 89 48").get_one();
-		pMenuInGameNetwork = *get_pattern<CMenu**>("8B 0D ? ? ? ? 8B 11 FF 52 ? 8B 8C 24", 2);
-
-		// This menu only exists in 8.x
-		try
-		{
-			pMenuInGameGas = *get_pattern<CMenu**>("8B 0D ? ? ? ? 8B 11 FF 52 ? A1 ? ? ? ? C7 40", 2);
-		}
-		catch(const hook::txn_exception&)
-		{
-			pMenuInGameGas = nullptr;
-		}
-
-		FACADE_SET_MEMBER_OFFSET(CMenuFacade, m_sprite, *sprite_and_rect.get<uint8_t>(2));
-		FACADE_SET_MEMBER_OFFSET(SpriteFacade, m_rect, *sprite_and_rect.get<uint8_t>(4 + 2));
-
-		bHasMenuAndSprite = true;
-	}
-	TXN_CATCH();
-
-
 	bool bHasBlockObserver = false;
 	try
 	{
@@ -1085,7 +1050,7 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		//Screenshot save patch
 		D2GIHookInjector::InjectScreenshotsPatch();
 		//Interface aspect fix
-		if (options.m_bEnableUIHooks && bHasMenuGraphics && bHasMenuAndSprite && bHasBlockObserver)
+		if (options.m_bEnableUIHooks && bHasMenuGraphics && bHasBlockObserver)
 			D2GIHookInjector::InjectInterfacePatch();
 
 	} else {
