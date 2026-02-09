@@ -12,6 +12,7 @@ class D2GIHookInjector
 	enum D2VERSION
 	{
 		D2V_5_5 = 0,
+		D2V_7_3_LT,
 		D2V_1_3,
 		D2V_8_1,
 		D2V_8_2,
@@ -29,13 +30,10 @@ class D2GIHookInjector
 	static void __cdecl D2GIHookInjector::WriteScreenshotFunc(void* a2);
 	static void D2GIHookInjector::InjectScreenshotsPatch();
 
-	static void D2GIHookInjector::OnPrepareStartGame();
-	static void D2GIHookInjector::OnSetupUIOffsets();
+	static void D2GIHookInjector::OnPrepareStartGame(void* a1, void* a2);
 	static void D2GIHookInjector::OnInitClusters();
 	static void D2GIHookInjector::InjectInterfacePatch();
 
-	static void __fastcall D2GIHookInjector::OnProcessRainDrop(int* _this, int* EDX);
-	static void D2GIHookInjector::InjectRainPatch();
 public:
 	static D2GI* ObtainD2GI();
 	static void InjectHooks(const HookOptions& options);

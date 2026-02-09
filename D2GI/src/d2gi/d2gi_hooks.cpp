@@ -64,6 +64,7 @@ D2GIHookInjector::D2VERSION D2GIHookInjector::DetectD2Version()
 	const DWORD c_adwTimestamps[] =
 	{
 		0x39DC4F94, //v 5.5 - 05.10.2000 [EN]
+		0x3BCBEF5A, //v 7.3 - 16.10.2001 [LT]
 		0x3C970FF7, //v 1.3 - 19.03.2002 [EN/GOG]
       //0x3E3E392B, //v 8.0 - 03.02.2003 [RU]
 		0x400502EA, //v 8.1 - 14.01.2004 [RU/GOG]
@@ -190,11 +191,11 @@ void __cdecl D2GIHookInjector::WriteScreenshotFunc(void *a2)
 }
 
 void D2GIHookInjector::InjectScreenshotsPatch() {
-	//						     5.5,      1.3,      8.1,      8.2
-	DWORD scr_WriteAddr[]  = { 0x000000, 0x575B92, 0x5764C2, 0x576452 };
-	DWORD scr_mkdirAddr[]  = { 0x000000, 0x575B5E, 0x57648E, 0x57641E };
-	DWORD scr_fopenAddr[]  = { 0x000000, 0x575B8A, 0x5764BA, 0x57644A };
-	DWORD scr_fcloseAddr[] = { 0x000000, 0x575B98, 0x5764C8, 0x576458 };
+	//						     5.5,		7.3 LT,   1.3,      8.1,      8.2
+	DWORD scr_WriteAddr[]  = { 0x000000, 0x576E5F, 0x575B92, 0x5764C2, 0x576452 };
+	DWORD scr_mkdirAddr[]  = { 0x000000, 0x576E2E, 0x575B5E, 0x57648E, 0x57641E };
+	DWORD scr_fopenAddr[]  = { 0x000000, 0x576E57, 0x575B8A, 0x5764BA, 0x57644A };
+	DWORD scr_fcloseAddr[] = { 0x000000, 0x576E65, 0x575B98, 0x5764C8, 0x576458 };
 
 	CPatch::RedirectCall(scr_WriteAddr[s_eCurrentD2Version], &WriteScreenshotFunc);
 
@@ -220,64 +221,48 @@ float m_fUIAspect;
 //resolution forced by D2GI
 int m_dwResX, m_dwResY;
 
-void D2GIHookInjector::OnPrepareStartGame() {
-	//						     5.5,      1.3,      8.1,      8.2
-	DWORD dw_FuncPointer[] = { 0x000000, 0x5126D0, 0x512EA0, 0x512E00 };
-	DWORD dw_TheGamePtr [] = { 0x000000, 0x695C00, 0x696CA0, 0x696CC0 };
-	DWORD dw_MenuItemID [] = { 0x000000, 0x6CDBD0, 0x6CEC70, 0x6CEC90 };
+static MenuGraphics** pMenuGraphics;
+
+static void (*orgOnPrepareStartGame)(void* a1, void* a2);
+void D2GIHookInjector::OnPrepareStartGame(void* a1, void* a2) {
 
 	//MenuVideo->overwrite selected resolution item ID
-	*(int*)(*(int*)dw_MenuItemID[s_eCurrentD2Version] + 408) = m_dwMenuSettingsValue;
+	MenuGraphicsFacade(*pMenuGraphics).m_videoIni = m_dwMenuSettingsValue;
 
 	//run original function
-	signed int* (*PrepareStartGame)(int*) = (signed int* (*)(int*))dw_FuncPointer[s_eCurrentD2Version];
-	PrepareStartGame((int*)dw_TheGamePtr[s_eCurrentD2Version]);
+	orgOnPrepareStartGame(a1, a2);
 }
 
-void D2GIHookInjector::OnSetupUIOffsets(){
-	//						       5.5,      1.3,      8.1,      8.2
-	DWORD dw_SetupOffsets [] = { 0x000000, 0x510750, 0x510F20, 0x510E80 };
-	//Just two int32 values
-	DWORD dw_MenuBackInfoX[] = { 0x000000, 0x6CDC7C, 0x6CED1C, 0x6CED3C };
-	DWORD dw_MainSideBarX [] = { 0x000000, 0x6CDC74, 0x6CED14, 0x6CED34 };
-	//Pointers to menu object instances
-	DWORD dw_MainFuelGasX [] = { 0x000000, 0x6CDC0C, 0x6CECAC, 0x6CECCC };
-	DWORD dw_MainNetworkX [] = { 0x000000, 0x6CDC14, 0x6CECB4, 0x6CECD4 };
+static int* MenuBackInfoX;
+static int* MainSideBarX;
 
-	//Some offsets for 7.3:
-	//Multiplayer menu offset X - *(int*)0x6CC9A0 + 0x38) + 0x28
-	//NOT 0x38 + 0x2C, as it was in 8.x/1.3 versions.
-
-	//call original function before changing offsets
-	((void(*)(int))dw_SetupOffsets[s_eCurrentD2Version])(0);
-
+static void (*orgInitInGameMenus)();
+static void InitInGameMenus_FixupOffsets()
+{
 	//fix sidebar positions
-	*(int*)dw_MenuBackInfoX[s_eCurrentD2Version] = m_dwResX - 385;
-	*(int*)dw_MainSideBarX[s_eCurrentD2Version] = m_dwResX - 225;
+	*MenuBackInfoX = m_dwResX - 385;
+	*MainSideBarX = m_dwResX - 225;
 
-	*(int*)(*(int*)(*(int*)dw_MainFuelGasX[s_eCurrentD2Version] + 0x38) + 0x2C) = (m_dwResX - 1024) / 2;
-	*(int*)(*(int*)(*(int*)dw_MainNetworkX[s_eCurrentD2Version] + 0x38) + 0x2C) = (m_dwResX - 1024) / 2;
-
+	orgInitInGameMenus();
 }
 
-void D2GIHookInjector::OnInitClusters() {
-	//						       5.5,      1.3,      8.1,      8.2
-	DWORD dw_InitClusters[] = { 0x000000, 0x52A470, 0x52AD30, 0x52ACB0 };
-	DWORD dw_FOV         [] = { 0x000000, 0x695C0C, 0x696CAC, 0x696CCC };
+static CBlockObserver** pCabObserver;
 
-	//This offsets (0x58, 0x54) are tested only at 1.3, 8.1 and 8.2
+static void (*orgOnInitClusters)();
+void D2GIHookInjector::OnInitClusters() {
+
+	CBlockObserverFacade CabObserverF(*pCabObserver);
 
 	//blockObserver->FOV
-	*(float*)(*(DWORD*)dw_FOV[s_eCurrentD2Version] + 0x58) = m_fUIAspect * 1.2f;
-	*(float*)(*(DWORD*)dw_FOV[s_eCurrentD2Version] + 0x54) = 1.2f;
+	CabObserverF.m_fovX = m_fUIAspect * 1.2f;
+	CabObserverF.m_fovY = 1.2f;
 
 	//call original function
-	void(*InitClusters)() = (void(*)())dw_InitClusters[s_eCurrentD2Version];
-	InitClusters();
+	orgOnInitClusters();
 }
 
 //Interface main injection code
-void D2GIHookInjector::InjectInterfacePatch() {
+void D2GIHookInjector::InjectInterfacePatch() try {
 	// How it works:
 	// 1. The screen resolution set by D2GI is checked; if its width is higher than 1600, the width
 	// becomes equal to 1600, the height is proportionally reduced.
@@ -298,10 +283,19 @@ void D2GIHookInjector::InjectInterfacePatch() {
 	// * OnPrepareStartGame - here there is a forced selection of the "1024x768" button in the graphics
 	// settings menu of the main game menu;
 	// 
-	// * OnSetupUIOffsets   - here new offsets of the interface on the right side of the screen are set;
+	// * InitInGameMenus   - here new offsets of the interface on the right side of the screen are set;
 	// 
 	// * OnInitClusters     - a new interior FOV is being installed here, because the standard D2GI fix
 	// not actual due to interface hooks.
+
+	// First match patterns before we try to do any patching
+	using namespace hook::txn;
+
+	auto init_in_game_menus = get_pattern("E8 ? ? ? ? 8B 0D ? ? ? ? 8B 01 FF 90 ? ? ? ? 8B 0D ? ? ? ? 8B 81");
+
+	auto sidebar_positions = pattern("C7 05 ? ? ? ? ? ? ? ? 8B C8 C7 05 ? ? ? ? ? ? ? ? 8B D0 E9").get_one();
+	MainSideBarX = *sidebar_positions.get<int*>(2);
+	MenuBackInfoX = *sidebar_positions.get<int*>(0xC + 2);
 
 	m_dwResX = D2GIConfig::GetVideoWidth();
 	m_dwResY = D2GIConfig::GetVideoHeight();
@@ -327,21 +321,20 @@ void D2GIHookInjector::InjectInterfacePatch() {
 
 	m_dwMenuSettingsValue = 306;  //set 1024x768 in game settings
 
-	//						   5.5,      1.3,      8.1,      8.2
-	DWORD cmp1204addr[] = { 0x000000, 0x5691ED, 0x569ADD, 0x569A6D };
-	DWORD cmp800addr [] = { 0x000000, 0x569223, 0x569B13, 0x569AA3 };
-	DWORD pagerXaddr [] = { 0x000000, 0x56924B, 0x569B3B, 0x569ACB };
-	DWORD pagerYaddr [] = { 0x000000, 0x5691E8, 0x569AD8, 0x569A68 };
-	DWORD panelXaddr [] = { 0x000000, 0x569259, 0x569B49, 0x569AD9 };
-	DWORD textXaddr  [] = { 0x000000, 0x569254, 0x569B44, 0x569AD4 };
+	//						   5.5,		7.3 LT,		  1.3,      8.1,      8.2
+	DWORD cmp1204addr[] = { 0x000000, 0x56ACAC + 1, 0x5691ED, 0x569ADD, 0x569A6D };
+	DWORD cmp800addr [] = { 0x000000, 0x56ACE2 + 1, 0x569223, 0x569B13, 0x569AA3 };
+	DWORD pagerXaddr [] = { 0x000000, 0x56AD07 + 4, 0x56924B, 0x569B3B, 0x569ACB };
+	DWORD pagerYaddr [] = { 0x000000, 0x56ACA7 + 1, 0x5691E8, 0x569AD8, 0x569A68 };
+	DWORD panelXaddr [] = { 0x000000, 0x56AD18 + 1, 0x569259, 0x569B49, 0x569AD9 };
+	DWORD textXaddr  [] = { 0x000000, 0x56AD13 + 1, 0x569254, 0x569B44, 0x569AD4 };
 
-	DWORD m_dwResXAddr[] = { 0x000000, 0x5127F1, 0x512FC1, 0x512F21 };
-	DWORD m_dwResYAddr[] = { 0x000000, 0x5127EC, 0x512FBC, 0x512F1C };
+	DWORD m_dwResXAddr[] = { 0x000000, 0x514DA0 + 1, 0x5127F1, 0x512FC1, 0x512F21 };
+	DWORD m_dwResYAddr[] = { 0x000000, 0x514D9B + 1, 0x5127EC, 0x512FBC, 0x512F1C };
 
 	//function call pointers
-	DWORD call_prepareGameAddr [] = { 0x000000, 0x510516, 0x510CE6, 0x510C46 };
-	DWORD call_setOffsetsAddr  [] = { 0x000000, 0x510732, 0x510F02, 0x510E62 };
-	DWORD call_initClustersAddr[] = { 0x000000, 0x4E0505, 0x4E05A5, 0x4E0625 };
+	DWORD call_prepareGameAddr [] = { 0x000000, 0x512AA6, 0x510516, 0x510CE6, 0x510C46 };
+	DWORD call_initClustersAddr[] = { 0x000000, 0x4E1FC5, 0x4E0505, 0x4E05A5, 0x4E0625 };
 
 	//2) Set resolution from aspect
 	if (aspect_rev > 0.7) {
@@ -376,46 +369,46 @@ void D2GIHookInjector::InjectInterfacePatch() {
 
 	Logger::Log(TEXT("Current GUI res is %dx%d"), m_dwResX, m_dwResY);
 
+	using namespace Memory::VP;
+
 	//3) replace default 1024x768 resolution to new
 	CPatch::SetShort(m_dwResXAddr[s_eCurrentD2Version], m_dwResX);
 	CPatch::SetShort(m_dwResYAddr[s_eCurrentD2Version], m_dwResY);
 
 	//4) hook functions
-	CPatch::RedirectCall(call_prepareGameAddr[s_eCurrentD2Version],  &OnPrepareStartGame);
-	CPatch::RedirectCall(call_setOffsetsAddr[s_eCurrentD2Version],   &OnSetupUIOffsets);
-	CPatch::RedirectCall(call_initClustersAddr[s_eCurrentD2Version], &OnInitClusters);
+	InterceptCall(call_prepareGameAddr[s_eCurrentD2Version], orgOnPrepareStartGame, OnPrepareStartGame);
+	InterceptCall(init_in_game_menus, orgInitInGameMenus, InitInGameMenus_FixupOffsets);
+	InterceptCall(call_initClustersAddr[s_eCurrentD2Version], orgOnInitClusters, &OnInitClusters);
 
 	Logger::Log(TEXT("Successfully injected interface hooks"));
 }
+TXN_CATCH();
 
-double m_dRainSpeed = 50.0;
-void __fastcall D2GIHookInjector::OnProcessRainDrop(int* _this, int* EDX) {
-	//						   5.5,      1.3,      8.1,      8.2
-	DWORD rainProcAddr[] = { 0x000000, 0x5A5640, 0x5A5F50, 0x5A5ED0 };
 
-	int* TheGame = (int*)((char*)_this + 0x20);
-	double dt = *(double*)((char*)*TheGame + 0xB90); //delta time
+// ======= Fix horizontal raindrops at over 50 FPS =======
+namespace RaindropsFix
+{
+	int ftol_PreserveFrac(double val)
+	{
+		static double lastFraction = 0.0;
 
-	//default game value is dt * 50.0 = 1.5 at 30 FPS
-	m_dRainSpeed = 1.5 / dt;
+		double integral;
+		lastFraction = std::modf(val + lastFraction, &integral);
 
-	//limit value (original in-game value is 50.0)
-	if (m_dRainSpeed < 50.0)
-		m_dRainSpeed = 50.0;
+		return static_cast<int>(integral);
+	}
 
-	//call original function
-	((int(__thiscall*)(int*))rainProcAddr[s_eCurrentD2Version])(_this);
-}
-
-void D2GIHookInjector::InjectRainPatch() {
-	//						       5.5,      1.3,      8.1,      8.2
-	DWORD rainProcCallAddr[] = { 0x000000, 0x650524, 0x651534, 0x651534 };
-	DWORD rainSpeedAddr[]    = { 0x000000, 0x5A5654, 0x5A5F64, 0x5A5EE4 };
-
-	//replace function call pointer
-	CPatch::SetPointer(rainProcCallAddr[s_eCurrentD2Version], &OnProcessRainDrop);
-	//replace rain drop moving down speed value
-	CPatch::SetPointer(rainSpeedAddr[s_eCurrentD2Version], &m_dRainSpeed);
+	__declspec(naked) void ftol_PreserveFracHook()
+	{
+		_asm
+		{
+			sub		esp, 8
+			fstp	qword ptr [esp]
+			call	ftol_PreserveFrac
+			add		esp, 8
+			retn
+		}
+	}
 }
 
 
@@ -744,6 +737,7 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	const TCHAR* c_lpszVersionNames[] =
 	{
 		TEXT("5.5"),
+		TEXT("7.3 (LT)"),
 		TEXT("KotR 1.3"),
 		TEXT("8.1"),
 		TEXT("8.2"),
@@ -771,6 +765,33 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		FACADE_SET_MEMBER_OFFSET(ResTextureFacade, m_d3dSurface, *get_pattern<uint8_t>("89 45 ? E8 ? ? ? ? 8B 45 ? 89 45", 2));
 
 		bHasTextureFacade = true;
+	}
+	TXN_CATCH();
+
+
+	bool bHasMenuGraphics = false;
+	try
+	{
+		pMenuGraphics = *get_pattern<MenuGraphics**>("A1 ? ? ? ? 0F BF 88 ? ? ? ? 0F BF 90 ? ? ? ? 89 4C 24", 1);
+
+		FACADE_SET_MEMBER_OFFSET(MenuGraphicsFacade, m_videoIni, *get_pattern<uint32_t>("89 87 ? ? ? ? 75", 2));
+
+		bHasMenuGraphics = true;
+	}
+	TXN_CATCH();
+
+
+	bool bHasBlockObserver = false;
+	try
+	{
+		auto fov_xy = pattern("89 48 ? 89 48 ? 89 78 ? 89 78 ? C6 40").get_one();
+
+		pCabObserver = *get_pattern<CBlockObserver**>("8B 15 ? ? ? ? 8D 4C 24 ? 51 6A", 2);
+
+		FACADE_SET_MEMBER_OFFSET(CBlockObserverFacade, m_fovX, *fov_xy.get<uint8_t>(2));
+		FACADE_SET_MEMBER_OFFSET(CBlockObserverFacade, m_fovY, *fov_xy.get<uint8_t>(3 + 2));
+
+		bHasBlockObserver = true;
 	}
 	TXN_CATCH();
 
@@ -826,7 +847,18 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		using namespace BatchedMinimap;
 
 		auto begin_scene = get_pattern("E8 ? ? ? ? 85 FF 0F 84 ? ? ? ? B8");
-		auto end_scene = get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 54 24 ? A1 ? ? ? ? 83 C4 ? 3B D0 0F 84");
+		auto end_scene = [] {
+			try
+			{
+				// 8.2/KotR 1.3
+				 return get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 54 24 ? A1 ? ? ? ? 83 C4 ? 3B D0 0F 84");
+			}
+			catch (const hook::txn_exception&)
+			{
+				// 7.3 LT
+				return get_pattern("E8 ? ? ? ? 8D 4C 24 ? 51 E8 ? ? ? ? 8B 00 8B 0D ? ? ? ? 83 C4 ? 3B C1 89 44 24 ? 0F 84");
+			}
+		}();
 
 		auto draw_border_line1 = pattern("E8 ? ? ? ? 83 C4 ? 6A ? 68 ? ? ? ? 6A ? 6A ? E8").count(2);
 		std::array<void*, 4> draw_line_int = {
@@ -868,48 +900,104 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 			coords_map_bounds_check.get<void>(0x13),
 		};
 
-		auto get_window_rect = get_pattern("8B 44 24 ? 33 D2 66 8B 51 ? 33 F6", -8);
+		auto get_window_rect = [] {
+			try
+			{
+				// 8.2/KotR 1.3
+				return get_pattern("8B 44 24 ? 33 D2 66 8B 51 ? 33 F6", -8);
+			}
+			catch (const hook::txn_exception&)
+			{
+				// 7.3 LT
+				return get_pattern("8B 44 24 ? 53 57 33 FF", -8);
+			}
+		}();
 
 		// Smooth minimap icon scrolling
 		// Separate try...catch, as it is completely optional and other minimap changes will work without it.
 		try
 		{
-			auto town_icons = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F8 DC 44 24 ? E8").count(2);
-			auto obstacles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(2);
+			// Most of those patterns differ between 8.x and earlier executables, so branch the code instead of just the individual pattern matches.
+			auto other_vehicles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? DC 25 ? ? ? ? E8").get_one();
 			auto circuit = pattern("E8 ? ? ? ? DD 44 24 ? DC 0D ? ? ? ? 8B F0 DC 44 24 ? E8").get_one();
-			auto repair_shops = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(3);
 			auto player_marker = pattern("E8 ? ? ? ? DD 44 24 ? DC ? ? ? ? ? 50 E8").count(2);
+			try
+			{
+				// 8.2/KotR 1.3
+				auto town_icons = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F8 DC 44 24 ? E8").count(2);
+				auto obstacles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(2);
+				auto repair_shops = pattern("E8 ? ? ? ? D9 44 24 ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(3);
 
-			std::array<void*, 11> store_icon_posx = {
-				get_pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? DC 25"), // Other vehicles
-				town_icons.get(0).get<void>(0), // Town/gas station icons
-				town_icons.get(1).get<void>(0), // Selected hired driver
-				obstacles.get(0).get<void>(0), // Obstacles/road works
-				obstacles.get(1).get<void>(0), // Town names
-				circuit.get<void>(0), // Circuit icon and text
-				repair_shops.get(0).get<void>(0), // Repair shops and parkings
-				repair_shops.get(1).get<void>(0), // Other players and hired drivers
-				repair_shops.get(2).get<void>(0), // Cargo destination masks
-				player_marker.get(0).get<void>(0x10), // Player icon
-				player_marker.get(1).get<void>(0x10), // Player name
-			};
+				std::array<void*, 11> store_icon_posx = {
+					other_vehicles.get<void>(0), // Other vehicles
+					town_icons.get(0).get<void>(0), // Town/gas station icons
+					town_icons.get(1).get<void>(0), // Selected hired driver
+					obstacles.get(0).get<void>(0), // Obstacles/road works
+					obstacles.get(1).get<void>(0), // Town names
+					circuit.get<void>(0), // Circuit icon and text
+					repair_shops.get(0).get<void>(0), // Repair shops and parkings
+					repair_shops.get(1).get<void>(0), // Other players and hired drivers
+					repair_shops.get(2).get<void>(0), // Cargo destination masks
+					player_marker.get(0).get<void>(0x10), // Player icon
+					player_marker.get(1).get<void>(0x10), // Player name
+				};
 
-			std::array<void*, 11> store_icon_posy = {
-				get_pattern("E8 ? ? ? ? 8B F8 8B 45 ? 3B C3"), // Other vehicles
-				town_icons.get(0).get<void>(0x13), // Town/gas station icons
-				town_icons.get(1).get<void>(0x13), // Selected hired driver
-				obstacles.get(0).get<void>(0xF), // Obstacles/road works
-				obstacles.get(1).get<void>(0xF), // Town names
-				circuit.get<void>(0x15), // Circuit icon and text
-				repair_shops.get(0).get<void>(0x13), // Repair shops and parkings
-				repair_shops.get(1).get<void>(0x13), // Other players and hired drivers
-				repair_shops.get(2).get<void>(0x13), // Cargo destination masks
-				player_marker.get(0).get<void>(0), // Player icon
-				player_marker.get(1).get<void>(0), // Player name
-			};
+				std::array<void*, 11> store_icon_posy = {
+					other_vehicles.get<void>(0x15), // Other vehicles
+					town_icons.get(0).get<void>(0x13), // Town/gas station icons
+					town_icons.get(1).get<void>(0x13), // Selected hired driver
+					obstacles.get(0).get<void>(0xF), // Obstacles/road works
+					obstacles.get(1).get<void>(0xF), // Town names
+					circuit.get<void>(0x15), // Circuit icon and text
+					repair_shops.get(0).get<void>(0x13), // Repair shops and parkings
+					repair_shops.get(1).get<void>(0x13), // Other players and hired drivers
+					repair_shops.get(2).get<void>(0x13), // Cargo destination masks
+					player_marker.get(0).get<void>(0), // Player icon
+					player_marker.get(1).get<void>(0), // Player name
+				};
 
-			HookEach_StoreFloatX(store_icon_posx, InterceptCall);
-			HookEach_StoreFloatY(store_icon_posy, InterceptCall);
+				HookEach_StoreFloatX(store_icon_posx, InterceptCall);
+				HookEach_StoreFloatY(store_icon_posy, InterceptCall);
+			}
+			catch (const hook::txn_exception&)
+			{
+				// 7.3 LT
+				auto town_icons = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 89 74 24 ? DC 44 24 ? E8").get_one();
+				auto repair_shops = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F8 DC 44 24 ? E8").count(3);
+				auto obstacles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? E8").count(3);
+
+				// 7.3 LT
+				std::array<void*, 11> store_icon_posx = {
+					other_vehicles.get<void>(0), // Other vehicles
+					town_icons.get<void>(0), // Town/gas station icons
+					repair_shops.get(2).get<void>(0), // Selected hired driver
+					obstacles.get(0).get<void>(0), // Obstacles/road works
+					repair_shops.get(1).get<void>(0), // Town names
+					circuit.get<void>(0), // Circuit icon and text
+					repair_shops.get(0).get<void>(0), // Repair shops and parkings
+					obstacles.get(1).get<void>(0), // Other players and hired drivers
+					obstacles.get(2).get<void>(0), // Cargo destination masks
+					player_marker.get(0).get<void>(0x10), // Player icon
+					player_marker.get(1).get<void>(0x10), // Player name
+				};
+
+				std::array<void*, 11> store_icon_posy = {
+					other_vehicles.get<void>(0x15), // Other vehicles
+					town_icons.get<void>(0x13), // Town/gas station icons
+					repair_shops.get(2).get<void>(0xF), // Selected hired driver
+					obstacles.get(0).get<void>(0xF), // Obstacles/road works
+					repair_shops.get(1).get<void>(0xF), // Town names
+					circuit.get<void>(0x15), // Circuit icon and text
+					repair_shops.get(0).get<void>(0xF), // Repair shops and parkings
+					obstacles.get(1).get<void>(0xF), // Other players and hired drivers
+					obstacles.get(2).get<void>(0xF), // Cargo destination masks
+					player_marker.get(0).get<void>(0), // Player icon
+					player_marker.get(1).get<void>(0), // Player name
+				};
+
+				HookEach_StoreFloatX(store_icon_posx, InterceptCall);
+				HookEach_StoreFloatY(store_icon_posy, InterceptCall);
+			}
 		}
 		TXN_CATCH();
 
@@ -942,6 +1030,18 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	TXN_CATCH();
 
 
+	// Fix horizontal raindrops at over 50 FPS
+	try
+	{
+		using namespace RaindropsFix;
+
+		auto ftol_raindrop = get_pattern("E8 ? ? ? ? 8B F8 E8 ? ? ? ? 25");
+
+		InjectHook(ftol_raindrop, ftol_PreserveFracHook);
+	}
+	TXN_CATCH();
+
+
 	Logger::Log(TEXT("Injected common hooks."));
 
 	if (s_eCurrentD2Version != D2V_5_5 && s_eCurrentD2Version != D2V_UNKNOWN) {
@@ -949,9 +1049,8 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 		//Screenshot save patch
 		D2GIHookInjector::InjectScreenshotsPatch();
-		D2GIHookInjector::InjectRainPatch();
 		//Interface aspect fix
-		if (options.m_bEnableUIHooks)
+		if (options.m_bEnableUIHooks && bHasMenuGraphics && bHasBlockObserver)
 			D2GIHookInjector::InjectInterfacePatch();
 
 	} else {

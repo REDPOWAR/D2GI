@@ -53,3 +53,59 @@ public:
 public:
 	FACADE_MEMBER(const char*, m_name); // 0x3C in 8.2
 };
+
+class MenuGraphics;
+
+class MenuGraphicsFacade
+{
+public:
+	MenuGraphicsFacade(MenuGraphics* obj)
+		: FACADE_INIT_MEMBER(obj, m_videoIni)
+	{}
+
+public:
+	FACADE_MEMBER(uint32_t, m_videoIni); // 0x190 in 7.3, 0x198 in 8.2
+};
+
+// Currently unused, but let's leave it as documentation
+/*
+class CMenu;
+class Sprite;
+
+class SpriteFacade
+{
+public:
+	SpriteFacade(Sprite* obj)
+		: FACADE_INIT_MEMBER(obj, m_rect)
+	{}
+
+public:
+	FACADE_MEMBER(RECT, m_rect); // 0x28 in 7.3, 0x2C in 8.x/KotR 1.3
+};
+
+class CMenuFacade
+{
+public:
+	CMenuFacade(CMenu* obj)
+		: FACADE_INIT_MEMBER(obj, m_sprite)
+	{}
+
+public:
+	FACADE_MEMBER(Sprite*, m_sprite); // 0x38 in 7.3 and 8.2
+};
+*/
+
+class CBlockObserver;
+
+class CBlockObserverFacade
+{
+public:
+	CBlockObserverFacade(CBlockObserver* obj)
+		: FACADE_INIT_MEMBER(obj, m_fovX)
+		, FACADE_INIT_MEMBER(obj, m_fovY)
+	{}
+
+public:
+	FACADE_MEMBER(float, m_fovX); // 0x58
+	FACADE_MEMBER(float, m_fovY); // 0x54
+};
