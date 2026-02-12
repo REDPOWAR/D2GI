@@ -78,6 +78,22 @@ Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() cons
 	return result;
 }
 
+void D2GI::OnDrawBridgeLightingPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
+{
+	// No need to reset the texture and states, other blocks set-up their materials (and those states) again.
+	// Not all those states were wrong previously, but let's not rely on the state of the previous effect that was drawn.
+	OnTextureSet(0, nullptr);
+	m_pDev->SetRenderState(D3D9::D3DRS_DIFFUSEMATERIALSOURCE, D3D9::D3DMCS_COLOR1);
+	m_pDev->SetRenderState(D3D9::D3DRS_EMISSIVEMATERIALSOURCE, D3D9::D3DMCS_COLOR1);
+
+	m_pDev->SetRenderState(D3D9::D3DRS_FOGENABLE, TRUE);
+	m_pDev->SetRenderState(D3D9::D3DRS_ZENABLE, D3D9::D3DZB_TRUE);
+	m_pDev->SetRenderState(D3D9::D3DRS_ZWRITEENABLE, TRUE);
+	m_pDev->SetRenderState(D3D9::D3DRS_ZFUNC, D3D9::D3DCMP_LESSEQUAL);
+
+	DrawPrimitive(pt, dwFVF, FALSE, pVerts, dwVertCount, nullptr, 0, dwFlags);
+}
+
 VOID D2GI::OnDirectDrawReleased()
 {
 	delete this;
