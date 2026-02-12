@@ -808,21 +808,39 @@ VOID D2GI::OnPrimitiveStridedDraw(
 VOID D2GI::OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
 {
 	void* vertexMemory = nullptr;
-	if (dwFVF & D3DFVF_XYZRHW)
+
+	const bool bNeedsRHWFixup = (dwFVF & D3DFVF_XYZRHW) != 0;
+	const bool bNeedsPointSizeFixup = pt == D3D7::D3DPT_POINTLIST && (dwFVF & D3DFVF_RESERVED1) != 0;
+	if (bNeedsRHWFixup || bNeedsPointSizeFixup)
 	{
-		UINT uStride = CalcFVFStride(dwFVF);
-		UINT uSize = uStride * dwVertCount;
+		const size_t uStride = CalcFVFStride(dwFVF);
+		const size_t uSize = uStride * dwVertCount;
 
 		vertexMemory = _malloca(uSize);
 		memcpy(vertexMemory, pVerts, uSize);
 
-		FLOAT* pV = static_cast<FLOAT*>(vertexMemory);
-		for (DWORD i = 0; i < dwVertCount; i++)
+		if (bNeedsRHWFixup)
 		{
-			pV[0] *= m_fWidthScale;
-			pV[1] *= m_fHeightScale;
+			float* pV = static_cast<float*>(vertexMemory);
+			for (size_t i = 0; i < dwVertCount; i++)
+			{
+				pV[0] *= m_fWidthScale;
+				pV[1] *= m_fHeightScale;
 
-			pV = reinterpret_cast<FLOAT*>(reinterpret_cast<char*>(pV) + uStride);
+				pV = reinterpret_cast<float*>(reinterpret_cast<char*>(pV) + uStride);
+			}
+		}
+		if (bNeedsPointSizeFixup)
+		{
+			const float scaledPointSize = m_dwForcedHeight / 480.0f; // Keep constant size relative to the lowest base resolution
+
+			float* pPointSize = reinterpret_cast<float*>(static_cast<char*>(vertexMemory) + CalcOffsetToPSize(dwFVF));
+			for (size_t i = 0; i < dwVertCount; i++)
+			{
+				*pPointSize = scaledPointSize;
+
+				pPointSize = reinterpret_cast<float*>(reinterpret_cast<char*>(pPointSize) + uStride);
+			}
 		}
 		pVerts = vertexMemory;
 	}
