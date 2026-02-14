@@ -28,7 +28,7 @@
 float D2GI::m_LastBltX, D2GI::m_LastBltY;
 
 D2GI::D2GI()
-	: m_pD3D9(D3D9::Direct3DCreate9(D3D_SDK_VERSION)), m_MinimapRenderer(this)
+	: m_pD3D9(D3D9::Direct3DCreate9(D3D_SDK_VERSION)), m_Blitter(this), m_StridedRenderer(this), m_MinimapRenderer(this)
 {
 	if (m_pD3D9 == nullptr)
 		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
@@ -44,8 +44,6 @@ D2GI::D2GI()
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
-	m_pBlitter = new D2GIBlitter(this);
-	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
 }
 
 
@@ -54,8 +52,6 @@ D2GI::~D2GI()
 	ReleaseResources(/*bResettingDevice=*/ false);
 
 	DetachWndProc();
-	DEL(m_pStridedRenderer);
-	DEL(m_pBlitter);
 
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
@@ -114,8 +110,8 @@ VOID D2GI::ReleaseResources(bool bResettingDevice)
 	m_MinimapRenderer.ReleaseResources(bResettingDevice);
 
 	m_pDirectDrawProxy->ReleaseResources(bResettingDevice);
-	m_pBlitter->ReleaseResource(bResettingDevice);
-	m_pStridedRenderer->ReleaseResource(bResettingDevice);
+	m_Blitter.ReleaseResource(bResettingDevice);
+	m_StridedRenderer.ReleaseResource(bResettingDevice);
 
 	RELEASE(m_pDepthStencilSurf);
 	RELEASE(m_pMSAASurf);
@@ -128,8 +124,8 @@ VOID D2GI::ReleaseResources(bool bResettingDevice)
 VOID D2GI::LoadResources(bool bResettingDevice)
 {
 	m_pDirectDrawProxy->LoadResources(bResettingDevice);
-	m_pBlitter->LoadResource(bResettingDevice);
-	m_pStridedRenderer->LoadResource(bResettingDevice);
+	m_Blitter.LoadResource(bResettingDevice);
+	m_StridedRenderer.LoadResource(bResettingDevice);
 
 	m_MinimapRenderer.LoadResources(bResettingDevice);
 }
@@ -326,7 +322,7 @@ VOID D2GI::OnBackBufferLock(BOOL bRead)
 		Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
 		m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
 		m_pDev->StretchRect(pRT.Get(), NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
-		m_pBlitter->Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
+		m_Blitter.Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
 	}else
 		m_eRenderState = RS_BACKBUFFER_STREAMING;
 }
@@ -440,7 +436,7 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 		frtDst = FRECT(0, 0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
 	ScaleFRect(&frtDst, &frtScaledDst);
-	m_pBlitter->Blit(pRT.Get(), &frtScaledDst,
+	m_Blitter.Blit(pRT.Get(), &frtScaledDst,
 		pSrcTexture, &frtSrc, pSrc->HasColorKeyConversion());
 }
 
@@ -900,13 +896,13 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 	{
 		if (pIndexData != NULL)
 		{
-			m_pStridedRenderer->DrawIndexedPrimitiveStrided(pt, dwFVF,
+			m_StridedRenderer.DrawIndexedPrimitiveStrided(pt, dwFVF,
 				(D3D7::D3DDRAWPRIMITIVESTRIDEDDATA*)pVertexData, dwVertexCount,
 				pIndexData, dwIndexCount, dwFlags);
 		}
 		else
 		{
-			m_pStridedRenderer->DrawPrimitiveStrided(pt, dwFVF,
+			m_StridedRenderer.DrawPrimitiveStrided(pt, dwFVF,
 				(D3D7::D3DDRAWPRIMITIVESTRIDEDDATA*)pVertexData, dwVertexCount, dwFlags);
 		}
 	}

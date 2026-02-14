@@ -9,7 +9,9 @@
 #include "d2gi_common.h"
 #include "d2gi_ddraw.h"
 
+#include "d2gi_blitter.h"
 #include "d2gi_minimap.h"
+#include "d2gi_strided_renderer.h"
 
 #include <wrl/client.h>
 
@@ -27,9 +29,7 @@ enum RENDERSTATE
 class D2GISystemMemorySurface;
 class D2GIPrimarySingleSurface;
 class D2GIBackBufferSurface;
-class D2GIBlitter;
 class D2GITexture;
-class D2GIStridedPrimitiveRenderer;
 
 struct MAT3X4;
 struct FRECT;
@@ -61,8 +61,8 @@ class D2GI
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
 
-	D2GIBlitter* m_pBlitter;
-	D2GIStridedPrimitiveRenderer* m_pStridedRenderer;
+	D2GIBlitter m_Blitter;
+	D2GIStridedPrimitiveRenderer m_StridedRenderer;
 
 	std::optional<std::pair<D3D9::D3DTEXTUREADDRESS, D3D9::D3DTEXTUREADDRESS>> m_UVOverride;
 

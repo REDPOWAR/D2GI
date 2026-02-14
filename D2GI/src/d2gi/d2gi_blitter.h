@@ -4,6 +4,7 @@
 
 #include <wrl/client.h>
 
+struct FRECT;
 
 class D2GIBlitter : public D2GIBase
 {
