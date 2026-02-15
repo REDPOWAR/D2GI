@@ -10,34 +10,41 @@
 
 using namespace D3D9;
 
-void D2GIMinimapRenderer::LoadResources()
+void D2GIMinimapRenderer::LoadResources(bool bResettingDevice)
 {
-	const D3DVERTEXELEMENT9 asVertexElements[] =
-	{
-		{0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
-		{0, 8, D3DDECLTYPE_D3DCOLOR, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_COLOR, 0},
-		D3DDECL_END()
-	};
 	IDirect3DDevice9* pDev = GetD3D9Device();
 
-	if (FAILED(pDev->CreateVertexDeclaration(asVertexElements, &m_VDecl)))
-		Logger::Error(TEXT("Failed to create minimap vertex declaration"));
+	if (!m_VDecl)
+	{
+		const D3DVERTEXELEMENT9 asVertexElements[] =
+		{
+			{0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
+			{0, 8, D3DDECLTYPE_D3DCOLOR, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_COLOR, 0},
+			D3DDECL_END()
+		};
 
-	if (FAILED(pDev->CreateVertexShader(reinterpret_cast<const DWORD*>(g_MinimapVS), &m_VS)))
-		Logger::Error(TEXT("Failed to create minimap vertex shader"));
+		if (FAILED(pDev->CreateVertexDeclaration(asVertexElements, &m_VDecl)))
+			Logger::Error(TEXT("Failed to create minimap vertex declaration"));
 
-	if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_MinimapPS), &m_PS)))
-		Logger::Error(TEXT("Failed to create minimap pixel shader"));
+		if (FAILED(pDev->CreateVertexShader(reinterpret_cast<const DWORD*>(g_MinimapVS), &m_VS)))
+			Logger::Error(TEXT("Failed to create minimap vertex shader"));
+
+		if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_MinimapPS), &m_PS)))
+			Logger::Error(TEXT("Failed to create minimap pixel shader"));
+	}
 
 	if (FAILED(pDev->CreateVertexBuffer(MAX_NUM_VERTICES * sizeof(*m_LockedVertexData), D3DUSAGE_DYNAMIC|D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &m_VB, nullptr)))
 		Logger::Error(TEXT("Failed to create minimap vertex buffer"));
 }
 
-void D2GIMinimapRenderer::ReleaseResources()
+void D2GIMinimapRenderer::ReleaseResources(bool bResettingDevice)
 {
-	m_VDecl.Reset();
-	m_VS.Reset();
-	m_PS.Reset();
+	if (!bResettingDevice)
+	{
+		m_VDecl.Reset();
+		m_VS.Reset();
+		m_PS.Reset();
+	}
 	m_VB.Reset();
 }
 

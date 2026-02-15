@@ -28,7 +28,7 @@
 float D2GI::m_LastBltX, D2GI::m_LastBltY;
 
 D2GI::D2GI()
-	: m_pD3D9(D3D9::Direct3DCreate9(D3D_SDK_VERSION)), m_MinimapRenderer(this)
+	: m_pD3D9(D3D9::Direct3DCreate9(D3D_SDK_VERSION)), m_Blitter(this), m_StridedRenderer(this), m_MinimapRenderer(this)
 {
 	if (m_pD3D9 == nullptr)
 		Logger::Error(TEXT("Failed to obtain IDirect3D9 interface"));
@@ -44,18 +44,14 @@ D2GI::D2GI()
 	ZeroMemory(m_lpCurrentTextures, sizeof(m_lpCurrentTextures));
 
 	m_pDirectDrawProxy = new D2GIDirectDraw(this);
-	m_pBlitter = new D2GIBlitter(this);
-	m_pStridedRenderer = new D2GIStridedPrimitiveRenderer(this);
 }
 
 
 D2GI::~D2GI()
 {
-	ReleaseResources();
+	ReleaseResources(/*bResettingDevice=*/ false);
 
 	DetachWndProc();
-	DEL(m_pStridedRenderer);
-	DEL(m_pBlitter);
 
 	RELEASE(m_pDev);
 	RELEASE(m_pD3D9);
@@ -109,13 +105,13 @@ VOID D2GI::OnDisplayModeSet(DWORD dwWidth, DWORD dwHeight, DWORD dwBPP, DWORD dw
 }
 
 
-VOID D2GI::ReleaseResources()
+VOID D2GI::ReleaseResources(bool bResettingDevice)
 {
-	m_MinimapRenderer.ReleaseResources();
+	m_MinimapRenderer.ReleaseResources(bResettingDevice);
 
-	m_pDirectDrawProxy->ReleaseResources();
-	m_pBlitter->ReleaseResource();
-	m_pStridedRenderer->ReleaseResource();
+	m_pDirectDrawProxy->ReleaseResources(bResettingDevice);
+	m_Blitter.ReleaseResource(bResettingDevice);
+	m_StridedRenderer.ReleaseResource(bResettingDevice);
 
 	RELEASE(m_pDepthStencilSurf);
 	RELEASE(m_pMSAASurf);
@@ -125,13 +121,13 @@ VOID D2GI::ReleaseResources()
 }
 
 
-VOID D2GI::LoadResources()
+VOID D2GI::LoadResources(bool bResettingDevice)
 {
-	m_pDirectDrawProxy->LoadResources();
-	m_pBlitter->LoadResource();
-	m_pStridedRenderer->LoadResource();
+	m_pDirectDrawProxy->LoadResources(bResettingDevice);
+	m_Blitter.LoadResource(bResettingDevice);
+	m_StridedRenderer.LoadResource(bResettingDevice);
 
-	m_MinimapRenderer.LoadResources();
+	m_MinimapRenderer.LoadResources(bResettingDevice);
 }
 
 
@@ -139,13 +135,17 @@ VOID D2GI::ResetD3D9Device()
 {
 	D3D9::D3DPRESENT_PARAMETERS sParams;
 
-	if (m_pDev != NULL)
+	if (m_pDev != nullptr)
 	{
-		while (m_pDev->TestCooperativeLevel() == D3DERR_DEVICELOST)
+		HRESULT hr;
+		while ((hr = m_pDev->TestCooperativeLevel()) == D3DERR_DEVICELOST)
 			Sleep(50);
+
+		if (FAILED(hr) && hr != D3DERR_DEVICENOTRESET)
+			Logger::Error(TEXT("Failed to ready the D3D9 device for resetting"));
 	}
 
-	ReleaseResources();
+	ReleaseResources(/*bResettingDevice=*/ true);
 
 	ZeroMemory(&sParams, sizeof(sParams));
 	sParams.AutoDepthStencilFormat     = D3D9::D3DFMT_UNKNOWN;
@@ -184,13 +184,13 @@ VOID D2GI::ResetD3D9Device()
 		if (sParams.Windowed)
 		{
 			Logger::Warning(
-				TEXT("Can't set fullscreen mode %ix%i, display mode not found"),
+				TEXT("Can't set fullscreen mode %ux%u, display mode not found"),
 				m_dwForcedWidth, m_dwForcedHeight);
 		}
 	}
 
 
-	if (m_pDev == NULL)
+	if (m_pDev == nullptr)
 	{
 		if (FAILED(m_pD3D9->CreateDevice(D3DADAPTER_DEFAULT, D3D9::D3DDEVTYPE_HAL, m_hWnd,
 			D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
@@ -199,17 +199,12 @@ VOID D2GI::ResetD3D9Device()
 	}
 	else
 	{
-		HRESULT hResetResult;
-
-		while ((hResetResult = m_pDev->Reset(&sParams)) == D3DERR_DEVICELOST)
-			Sleep(50);
-
-		if (FAILED(hResetResult))
+		if (FAILED(m_pDev->Reset(&sParams)))
 			Logger::Error(TEXT("Failed to reset D3D9 device"));
 	}
 
 	Logger::Log(
-		TEXT("Working on %ix%i mode (fullscreen: %s)"),
+		TEXT("Working on %ux%u mode (fullscreen: %s)"),
 		sParams.BackBufferWidth, sParams.BackBufferHeight,
 		sParams.Windowed ? TEXT("off") : TEXT("on"));
 
@@ -283,7 +278,7 @@ VOID D2GI::ResetD3D9Device()
 	m_MinFilterAnisotropic = MinFilterAnisotropic;
 	m_MagFilterAnisotropic = MagFilterAnisotropic;
 
-	LoadResources();
+	LoadResources(/*bResettingDevice=*/ true);
 }
 
 
@@ -327,7 +322,7 @@ VOID D2GI::OnBackBufferLock(BOOL bRead)
 		Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
 		m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
 		m_pDev->StretchRect(pRT.Get(), NULL, m_pBackBufferCopySurf, NULL, D3D9::D3DTEXF_LINEAR);
-		m_pBlitter->Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
+		m_Blitter.Blit(pBackBuf->GetD3D9ReadingSurface(), NULL, m_pBackBufferCopy, NULL, FALSE);
 	}else
 		m_eRenderState = RS_BACKBUFFER_STREAMING;
 }
@@ -373,7 +368,7 @@ VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT
 
 		pSrc->UpdateWithPalette(pDst->GetPalette());
 		m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, &pRT);
-		m_pDev->StretchRect(pSrc->GetD3D9Surface(), pSrcRT, pRT, &sScaledRect, D3D9::D3DTEXF_LINEAR);
+		m_pDev->StretchRect(pSrc->RequestGPUSurface(), pSrcRT, pRT, &sScaledRect, D3D9::D3DTEXF_LINEAR);
 		pRT->Release();
 
 		Present();
@@ -413,9 +408,9 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
 	m_pDev->GetRenderTarget(0, pRT.GetAddressOf());
+	D3D9::IDirect3DTexture9* pSrcTexture = pSrc->RequestGPUTexture();
 
-
-	pSrc->GetD3D9Texture()->GetLevelDesc(0, &sSrcDesc);
+	pSrcTexture->GetLevelDesc(0, &sSrcDesc);
 	pRT->GetDesc(&sDstDesc);
 	if (pSrcRT != nullptr)
 		frtSrc = FRECT(*pSrcRT);
@@ -441,15 +436,17 @@ VOID D2GI::OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface* pSrc, RECT* p
 		frtDst = FRECT(0, 0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
 	ScaleFRect(&frtDst, &frtScaledDst);
-	m_pBlitter->Blit(pRT.Get(), &frtScaledDst,
-		pSrc->GetD3D9Texture(), &frtSrc, pSrc->HasColorKeyConversion());
+	m_Blitter.Blit(pRT.Get(), &frtScaledDst,
+		pSrcTexture, &frtSrc, pSrc->HasColorKeyConversion());
 }
 
 
 VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GITexture* pDst, RECT* pDstRT)
 {
 	// MULTITHREADED_ACCESS
-	pDst->CopyFrom((D2GITexture*)pSrc);
+	const POINT destPoint = pDstRT != nullptr ? POINT{ pDstRT->left, pDstRT->top } : POINT{ 0, 0 };
+	if (FAILED(m_pDev->UpdateSurface(pSrc->GetSystemMemSurface(), pSrcRT, pDst->GetD3D9Surface(), &destPoint)))
+		Logger::Error(TEXT("Failed to blit the surface"));
 }
 
 
@@ -724,10 +721,16 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 
 }
 
+#include <cassert>
 
 VOID D2GI::OnTextureSet(DWORD i, D2GITexture* pTex)
 {
 	m_lpCurrentTextures[i] = pTex;
+
+	if (pTex != nullptr)
+	{
+		assert(pTex->GetType() != ST_SYSMEM);
+	}
 
 	m_pDev->SetTexture(i, pTex == NULL ? NULL : pTex->GetD3D9Texture());
 }
@@ -893,13 +896,13 @@ VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, 
 	{
 		if (pIndexData != NULL)
 		{
-			m_pStridedRenderer->DrawIndexedPrimitiveStrided(pt, dwFVF,
+			m_StridedRenderer.DrawIndexedPrimitiveStrided(pt, dwFVF,
 				(D3D7::D3DDRAWPRIMITIVESTRIDEDDATA*)pVertexData, dwVertexCount,
 				pIndexData, dwIndexCount, dwFlags);
 		}
 		else
 		{
-			m_pStridedRenderer->DrawPrimitiveStrided(pt, dwFVF,
+			m_StridedRenderer.DrawPrimitiveStrided(pt, dwFVF,
 				(D3D7::D3DDRAWPRIMITIVESTRIDEDDATA*)pVertexData, dwVertexCount, dwFlags);
 		}
 	}

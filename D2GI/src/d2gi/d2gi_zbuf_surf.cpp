@@ -15,9 +15,3 @@ D2GIZBufferSurface::~D2GIZBufferSurface()
 {
 
 }
-
-
-HRESULT D2GIZBufferSurface::IsLost()
-{
-	return DD_OK;
-}

@@ -18,17 +18,17 @@ D2GIStridedPrimitiveRenderer::~D2GIStridedPrimitiveRenderer()
 }
 
 
-VOID D2GIStridedPrimitiveRenderer::ReleaseResource()
+VOID D2GIStridedPrimitiveRenderer::ReleaseResource(bool bResettingDevice)
 {
-	m_VBContainer.ReleaseResource();
-	m_IBContainer.ReleaseResource();
+	m_VBContainer.ReleaseResource(bResettingDevice);
+	m_IBContainer.ReleaseResource(bResettingDevice);
 }
 
 
-VOID D2GIStridedPrimitiveRenderer::LoadResource()
+VOID D2GIStridedPrimitiveRenderer::LoadResource(bool bResettingDevice)
 {
-	m_VBContainer.LoadResource();
-	m_IBContainer.LoadResource();
+	m_VBContainer.LoadResource(bResettingDevice);
+	m_IBContainer.LoadResource(bResettingDevice);
 }
 
 

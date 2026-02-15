@@ -20,6 +20,6 @@ public:
 
 	void Add(D2GIResource*);
 	void Remove(D2GIResource*);
-	void ReleaseResources();
-	void LoadResources();
+	void ReleaseResources(bool bResettingDevice);
+	void LoadResources(bool bResettingDevice);
 };

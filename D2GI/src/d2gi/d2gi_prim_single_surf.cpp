@@ -50,13 +50,6 @@ HRESULT D2GIPrimarySingleSurface::SetPalette(D3D7::LPDIRECTDRAWPALETTE pPal)
 }
 
 
-
-HRESULT D2GIPrimarySingleSurface::IsLost()
-{
-	return DD_OK;
-}
-
-
 HRESULT D2GIPrimarySingleSurface::Blt(LPRECT pDestRT, D3D7::LPDIRECTDRAWSURFACE7 pSrc, LPRECT pSrcRT, DWORD dwFlags, D3D7::LPDDBLTFX lpFX)
 {
 	D2GISurface* pSurf = (D2GISurface*)pSrc;

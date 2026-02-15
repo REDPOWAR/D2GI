@@ -12,27 +12,40 @@
 
 using namespace D3D9;
 
-void D2GIBlitter::ReleaseResource()
+void D2GIBlitter::ReleaseResource(bool bResettingDevice)
 {
+	if (!bResettingDevice)
+	{
+		m_pVDecl.Reset();
+		m_pVS.Reset();
+		m_pPS.Reset();
+	}
 	m_pVB.Reset();
-	m_pVDecl.Reset();
-	m_pVS.Reset();
-	m_pPS.Reset();
 }
 
 
-void D2GIBlitter::LoadResource()
+void D2GIBlitter::LoadResource(bool bResettingDevice)
 {
-	const D3DVERTEXELEMENT9 asVertexElements[] =
-	{
-		{0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
-		{0, 8, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0},
-		D3DDECL_END()
-	};
 	IDirect3DDevice9* pDev = GetD3D9Device();
 
-	if (FAILED(pDev->CreateVertexDeclaration(asVertexElements, &m_pVDecl)))
-		Logger::Error(TEXT("Failed to create blitter vertex declaration"));
+	if (!m_pVDecl)
+	{
+		const D3DVERTEXELEMENT9 asVertexElements[] =
+		{
+			{0, 0, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
+			{0, 8, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0},
+			D3DDECL_END()
+		};
+
+		if (FAILED(pDev->CreateVertexDeclaration(asVertexElements, &m_pVDecl)))
+			Logger::Error(TEXT("Failed to create blitter vertex declaration"));
+
+		if (FAILED(pDev->CreateVertexShader(reinterpret_cast<const DWORD*>(g_BlitterVS), &m_pVS)))
+			Logger::Error(TEXT("Failed to create blitter vertex shader"));
+
+		if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_BlitterPS), &m_pPS)))
+			Logger::Error(TEXT("Failed to create blitter pixel shader"));
+	}
 
 	const FLOAT afVerts[] =
 	{
@@ -42,23 +55,16 @@ void D2GIBlitter::LoadResource()
 
 		0.5f, -0.5f,  1.0f, 1.0f,
 	};
-	void* pData;
 
 	if (FAILED(pDev->CreateVertexBuffer(sizeof(afVerts), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &m_pVB, NULL)))
 		Logger::Error(TEXT("Failed to create blitter vertex buffer"));
 
+	void* pData;
 	if (FAILED(m_pVB->Lock(0, 0, &pData, 0)))
 		Logger::Error(TEXT("Failed to lock blitter vertex buffer"));
 
 	CopyMemory(pData, afVerts, sizeof(afVerts));
 	m_pVB->Unlock();
-
-
-	if (FAILED(pDev->CreateVertexShader(reinterpret_cast<const DWORD*>(g_BlitterVS), &m_pVS)))
-		Logger::Error(TEXT("Failed to create blitter vertex shader"));
-
-	if (FAILED(pDev->CreatePixelShader(reinterpret_cast<const DWORD*>(g_BlitterPS), &m_pPS)))
-		Logger::Error(TEXT("Failed to create blitter pixel shader"));
 }
 
 void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,

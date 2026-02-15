@@ -9,46 +9,36 @@
 
 D2GIMipMapSurface::D2GIMipMapSurface(D2GITexture* pParent, UINT uLevelID, D2GIMipMapSurface* pNextSurf,
 	DWORD dwWidth, DWORD dwHeight, D2GIPIXELFORMAT eFormat) 
-	: D2GISurface(pParent->GetD2GI(), dwWidth, dwHeight, eFormat)
+	: D2GISurface(pParent->GetD2GI(), dwWidth, dwHeight, eFormat), m_pParent(pParent), m_pNextLevel(pNextSurf)
+	, m_uLevelID(uLevelID)
 {
-	m_pSurface = NULL;
-	m_pNextLevel = pNextSurf;
-
-	m_pParent = pParent;
-	m_pNextLevel = pNextSurf;
-	m_uLevelID = uLevelID;
-
-	m_pSurface = NULL;
-	m_uDataPitch = (m_dwBPP / 8) * m_dwWidth;
-	m_uDataSize = m_uDataPitch * m_dwHeight;
-	m_pData = new BYTE[m_uDataSize];
 }
 
 
 D2GIMipMapSurface::~D2GIMipMapSurface()
 {
-	DEL(m_pData);
-	RELEASE(m_pSurface);
 }
 
-
-VOID D2GIMipMapSurface::SetD3D9Surface(D3D9::IDirect3DSurface9* pSurf)
+void D2GIMipMapSurface::ReleaseResource(bool bResettingDevice)
 {
-	if (pSurf == m_pSurface)
-		return;
+	D2GISurface::ReleaseResource(bResettingDevice);
 
-	RELEASE(m_pSurface);
-	m_pSurface = pSurf;
-	UpdateSurface();
+	m_pSurface.Reset();
+}
+
+void D2GIMipMapSurface::SetD3D9Surface(Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pSurf)
+{
+	m_pSurface = std::move(pSurf);
+	m_bSurfaceDirty = true;
 }
 
 
-HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWORD, HANDLE)
+HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWORD dwFlags, HANDLE)
 {
 	if (pRect == NULL)
 	{
-		ZeroMemory(pDesc, sizeof(D3D7::DDSURFACEDESC2));
-		pDesc->dwSize = sizeof(D3D7::DDSURFACEDESC2);
+		ZeroMemory(pDesc, sizeof(*pDesc));
+		pDesc->dwSize = sizeof(*pDesc);
 		pDesc->dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_MIPMAPCOUNT;
 
 		pDesc->dwMipMapCount = m_pParent->GetMipMapCount() - m_uLevelID;
@@ -63,8 +53,34 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 		pDesc->dwWidth = m_dwWidth;
 		pDesc->dwHeight = m_dwHeight;
 		pDesc->ddpfPixelFormat = m_sDD7PixelFormat;
-		pDesc->lpSurface = m_pData;
-		pDesc->lPitch = m_uDataPitch;
+
+		const bool bReadOnly = (dwFlags & DDLOCK_READONLY) != 0;
+		const bool bWriteOnly = (dwFlags & DDLOCK_WRITEONLY) != 0;
+		if (!bReadOnly || bWriteOnly)
+		{
+			m_bSurfaceDirty = true;
+		}
+
+		EnsureD3DResourceCreated();
+		if (m_intermediateBuffer)
+		{
+			pDesc->lpSurface = m_intermediateBuffer.get();
+			pDesc->lPitch = m_dwWidth * (m_dwBPP / 8);
+			return DD_OK;
+		}
+
+		DWORD lockFlags = D3DLOCK_NOSYSLOCK;
+		if (bReadOnly)
+		{
+			lockFlags |= D3DLOCK_READONLY;
+		}
+
+		D3D9::D3DLOCKED_RECT sRect;
+		if (FAILED(m_pSurface->LockRect(&sRect, nullptr, lockFlags)))
+			Logger::Error(TEXT("Failed to lock mip map surface"));
+
+		pDesc->lpSurface = sRect.pBits;
+		pDesc->lPitch = sRect.Pitch;
 
 		return DD_OK;
 	}
@@ -75,65 +91,20 @@ HRESULT D2GIMipMapSurface::Lock(LPRECT pRect, D3D7::LPDDSURFACEDESC2 pDesc, DWOR
 
 HRESULT D2GIMipMapSurface::Unlock(LPRECT)
 {
-	UpdateSurface();
+	if (!m_intermediateBuffer)
+	{
+		m_pSurface->UnlockRect();
+	}
 	return DD_OK;
-}
-
-
-VOID D2GIMipMapSurface::UpdateSurface()
-{
-	D3D9::D3DLOCKED_RECT sRect;
-
-	if (m_pSurface == NULL)
-		return;
-
-	if (m_dwBPP != 16)
-		return;
-
-	if (FAILED(m_pSurface->LockRect(&sRect, NULL, 0)))
-		Logger::Error(TEXT("Failed to lock mip map surface"));
-
-	if (m_pParent->HasColorKeyConversion())
-	{
-		INT i, j;
-
-		for (i = 0; i < (INT)m_dwHeight; i++)
-		{
-			for (j = 0; j < (INT)m_dwWidth; j++)
-			{
-				UINT16 uSrcColor = *((UINT16*)m_pData + i * m_dwWidth + j);
-				UINT32 uDstColor;
-				BYTE r, g, b, a;
-
-				r = ((uSrcColor >> 11) & 0x1F) * 255 / 31;
-				g = ((uSrcColor >> 5) & 0x3F) * 255 / 63;
-				b = (uSrcColor & 0x1F) * 255 / 31;
-				a = (uSrcColor == (UINT16)m_pParent->GetOriginalColorKeyValue()) ? 0 : 255;
-
-				uDstColor = (a << 24) | (r << 16) | (g << 8) | b;
-
-				((UINT32*)((BYTE*)sRect.pBits + i * sRect.Pitch))[j] = uDstColor;
-			}
-		}
-	}
-	else 
-	{
-		INT i;
-
-		for (i = 0; i < (INT)m_dwHeight; i++)
-			CopyMemory((BYTE*)sRect.pBits + i * sRect.Pitch, (BYTE*)m_pData + i * m_uDataPitch, m_uDataPitch);
-	}
-
-	m_pSurface->UnlockRect();
 }
 
 
 HRESULT D2GIMipMapSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDIRECTDRAWSURFACE7 FAR* lpSurf)
 {
-	if ((pCaps->dwCaps & DDSCAPS_MIPMAP) && m_pNextLevel != NULL)
+	if ((pCaps->dwCaps & DDSCAPS_MIPMAP) && m_pNextLevel != nullptr)
 	{
 		m_pNextLevel->AddRef();
-		*lpSurf = (D3D7::IDirectDrawSurface7*)m_pNextLevel;
+		*lpSurf = m_pNextLevel;
 		return DD_OK;
 	}
 
@@ -141,19 +112,15 @@ HRESULT D2GIMipMapSurface::GetAttachedSurface(D3D7::LPDDSCAPS2 pCaps, D3D7::LPDI
 	return DDERR_NOTFOUND;
 }
 
-
-VOID D2GIMipMapSurface::UpdateWithPalette(D2GIPalette* pPal)
+void D2GIMipMapSurface::FlushResourceToGPU()
 {
-	D3D9::D3DLOCKED_RECT sLockedRect;
-	const UINT16* pPalette16 = pPal->GetEntries16();
-	INT i, j;
+	if (m_bSurfaceDirty)
+	{
+		if (HasColorKeyConversion())
+		{
+			ExpandColorKeyToSurface(m_pSurface.Get(), /*bCanDiscard=*/ m_uLevelID == 0);
+		}
 
-	if (FAILED(m_pSurface->LockRect(&sLockedRect, NULL, D3DLOCK_DISCARD)))
-		Logger::Error(TEXT("Failed to lock mipmap surface to update with palette"));
-
-	for (i = 0; i < (INT)m_dwHeight; i++)
-		for (j = 0; j < (INT)m_dwWidth; j++)
-			((UINT16*)((BYTE*)sLockedRect.pBits + i * sLockedRect.Pitch))[j] = pPalette16[((BYTE*)m_pData)[i * m_dwWidth + j]];
-
-	m_pSurface->UnlockRect();
+		m_bSurfaceDirty = false;
+	}
 }
