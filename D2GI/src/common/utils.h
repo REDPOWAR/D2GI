@@ -4,7 +4,8 @@
 #include "d3d9.h"
 
 
-UINT CalcFVFStride(DWORD);
+size_t CalcFVFStride(DWORD dwFVF);
+size_t CalcOffsetToPSize(DWORD dwFVF);
 UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE, DWORD dwVertexOrIndexCount);
-UINT CalcFVFTextureCount(DWORD);
+size_t CalcFVFTextureCount(DWORD);
 VOID CalcMipMapLevelSize(DWORD, DWORD, UINT, DWORD*, DWORD*);

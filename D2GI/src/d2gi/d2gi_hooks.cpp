@@ -731,6 +731,36 @@ namespace BatchedMinimap
 	HOOK_EACH_INIT(StoreFloatY, orgftol_StoreY, ftol_StoreY);
 }
 
+// ======= Fixed North Harbor bridge lighting =======
+namespace BridgeLightingFix
+{
+	static void* (*orgOperatorNew)(size_t size);
+	static void* operatorNew_InitializePSize(size_t size)
+	{
+		void* result = orgOperatorNew(size);
+
+		if (result != nullptr)
+		{
+			const float scaledPointSize = D2GIHookInjector::ObtainD2GI()->GetForcedHeight() / 480.0f; // Keep constant size relative to the lowest base resolution
+
+			D3D7::D3DLVERTEX* verts = static_cast<D3D7::D3DLVERTEX*>(result);
+			const size_t numVerts = size / sizeof(*verts);
+			for (size_t i = 0; i < numVerts; i++)
+			{
+				*reinterpret_cast<float*>(&verts[i].dwReserved) = scaledPointSize;
+			}
+		}
+
+		return result;
+	}
+
+	// Function definition perfectly matching DrawPrimitive
+	static COM_DECLSPEC_NOTHROW HRESULT STDMETHODCALLTYPE DrawBridgeLightingHook(D2GIDevice* device, D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
+	{
+		device->GetD2GI()->OnDrawBridgeLightingPrimitive(pt, dwFVF, pVerts, dwVertCount, dwFlags);
+		return DD_OK;
+	}
+}
 
 void D2GIHookInjector::InjectHooks(const HookOptions& options)
 {
@@ -1026,6 +1056,25 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		}
 
 		HookEach_MapBoundsCheck(coords_map_bounds_check_calls, InterceptCall);
+	}
+	TXN_CATCH();
+
+
+	// Fixed North Harbor bridge lighting
+	// It worked in 5.5, and broke presumably with an upgrade to D3D7
+	try
+	{
+		using namespace BridgeLightingFix;
+
+		auto init_primitive_data = get_pattern("E8 ? ? ? ? 83 C4 ? 3B C7 74 ? 4B");
+		auto render_lights = pattern("8B 11 50 68 ? ? ? ? 6A ? 51 FF 52 ? 5F B8").get_one();
+
+		InterceptCall(init_primitive_data, orgOperatorNew, operatorNew_InitializePSize);
+
+		// 'move' data 2 bytes back, so we have space for a direct call
+		// push eax \ push D3DFVF_LVERTEX \ push D3DPT_POINTLIST \ push g_pDirect3DDevice
+		Patch(render_lights.get<void>(0), { 0x50, 0x68, 0xE2, 0x01, 0x00, 0x00, 0x6A, 0x01, 0x51 });
+		InjectHook(render_lights.get<void>(9), DrawBridgeLightingHook, HookType::Call);
 	}
 	TXN_CATCH();
 

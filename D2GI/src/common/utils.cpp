@@ -7,22 +7,24 @@
 using namespace D3D7;
 
 
-UINT CalcFVFStride(DWORD dwFVF)
+size_t CalcFVFStride(DWORD dwFVF)
 {
-	UINT uVertexStride = 0;
+	size_t uVertexStride = 0;
 
 	if (dwFVF & ~(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 | 
 		D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_SPECULAR | D3DFVF_RESERVED1 | D3DFVF_XYZRHW))
 		return 0;
 
-	if (dwFVF & D3DFVF_XYZ)
-		uVertexStride += sizeof(FLOAT) * 3;
-
 	if (dwFVF & D3DFVF_XYZRHW)
 		uVertexStride += sizeof(FLOAT) * 4;
+	else
+	{
+		if (dwFVF & D3DFVF_XYZ)
+			uVertexStride += sizeof(FLOAT) * 3;
 
-	if (dwFVF & D3DFVF_NORMAL)
-		uVertexStride += sizeof(FLOAT) * 3;
+		if (dwFVF & D3DFVF_NORMAL)
+			uVertexStride += sizeof(FLOAT) * 3;
+	}
 
 	if (dwFVF & D3DFVF_RESERVED1)
 		uVertexStride += sizeof(DWORD);
@@ -38,6 +40,23 @@ UINT CalcFVFStride(DWORD dwFVF)
 	return uVertexStride;
 }
 
+size_t CalcOffsetToPSize(DWORD dwFVF)
+{
+	size_t vertexOffset = 0;
+
+	if (dwFVF & D3DFVF_XYZRHW)
+		vertexOffset += sizeof(FLOAT) * 4;
+	else
+	{
+		if (dwFVF & D3DFVF_XYZ)
+			vertexOffset += sizeof(FLOAT) * 3;
+
+		if (dwFVF & D3DFVF_NORMAL)
+			vertexOffset += sizeof(FLOAT) * 3;
+	}
+
+	return vertexOffset;
+}
 
 UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwVertexOrIndexCount)
 {
@@ -60,7 +79,7 @@ UINT CalcPrimitiveCount(D3D7::D3DPRIMITIVETYPE pt, DWORD dwVertexOrIndexCount)
 }
 
 
-UINT CalcFVFTextureCount(DWORD dwFVF)
+size_t CalcFVFTextureCount(DWORD dwFVF)
 {
 	return (dwFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
 }

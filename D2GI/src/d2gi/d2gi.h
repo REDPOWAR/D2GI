@@ -136,6 +136,8 @@ public:
 	void OnEndMinimapDraw() { m_MinimapRenderer.EndMinimapDraw(); }
 	void OnAddMinimapLine(float x1, float y1, float x2, float y2, DWORD color) { m_MinimapRenderer.AddMinimapLine(x1, y1, x2, y2, color); }
 
+	void OnDrawBridgeLightingPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags);
+
 	VOID OnDirectDrawReleased();
 	VOID OnCooperativeLevelSet(HWND, DWORD);
 	VOID OnDisplayModeSet(DWORD, DWORD, DWORD, DWORD dwFlags);
