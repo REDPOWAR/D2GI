@@ -57,7 +57,7 @@ class D2GI
 	FLOAT m_fAspectRatioScale, m_fWidthScale, m_fHeightScale;
 
 	RENDERSTATE m_eRenderState;
-	DWORD m_SceneBeginCount = 0;
+	int32_t m_SceneBeginCount = 0;
 	BOOL m_bColorKeyEnabled;
 	D2GITexture* m_lpCurrentTextures[8];
 

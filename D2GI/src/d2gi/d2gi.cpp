@@ -491,7 +491,7 @@ VOID D2GI::OnSceneEnd()
 
 VOID D2GI::TryEndScene()
 {
-	if (--m_SceneBeginCount == 0)
+	if (m_SceneBeginCount > 0 && --m_SceneBeginCount == 0)
 	{
 		m_pDev->EndScene();
 	}
@@ -800,10 +800,23 @@ VOID D2GI::OnClipStatusSet(D3D7::LPD3DCLIPSTATUS pStatus)
 
 VOID D2GI::Present()
 {
+	// In D3D7 it was allowed to call Present inside a BeginScene/EndScene pair, but in D3D9 it's not.
+	bool bRestartScene = false;
+	if (m_SceneBeginCount > 0)
+	{
+		m_pDev->EndScene();
+		bRestartScene = true;
+	}
+
 	const HRESULT hr = m_pDev->Present(NULL, NULL, NULL, NULL);
 
 	if (hr == D3DERR_DEVICELOST)
 		ResetD3D9Device();
+
+	if (bRestartScene)
+	{
+		m_pDev->BeginScene();
+	}
 }
 
 
