@@ -6,6 +6,7 @@
 
 ### Features
 
+* Allows you to play the game on modern PC
 * Fixes incorrect graphics output (["Rainbow" bug](https://www.pcgamingwiki.com/wiki/Rainbow_color_problems_in_older_games), bug with an object's transparency etc.)
 * Fixes problems with rendering the background of translucent objects
 * Fixes ["horizontal rain"](https://github.com/REDPOWAR/D2GI/issues/1) bug
@@ -16,15 +17,22 @@
 * 32-bit color rendering
 * An option to enable Anisotropic Filtering
 * Support for Multisample Anti-Aliasing (MSAA)
-* Compatibility with vanilla 8.1 or King of the Road 1.3 game versions (digital releases) and probably with some old versions
+* Compatibility with multiple game versions (see **Requirements** section below)
 * Compatibility with [SEMod 1.2](https://vk.com/rnr_mods?w=page-157113673_53889819)
+* Fixes performance issue in 8.2 game version (reverts one of 8.2 patch changes that ruins it)
+* Smooth minimap scrolling
 * Works stable, without freezes or crashes
 * High FPS on low-end hardware (even on integrated GPU like Intel HD Graphics 4000)
 
 ### Requirements
 
-* Game version 8.2, 8.1 or KotR 1.3 (only these are tested, maybe it works on another versions too)
-* Windows XP or higher
+* GPU with shaders 2.0 or higher
+* Any game version of:
+  * King of the Road 1.3 (international release)
+  * 8.1 - 8.2 (Russian releases)
+  * Kelyje 2 (Lithuanian release)
+  * some other versions (other game versions may be compatible too, but some D2GI features probably won't work and there may be some stability issues)
+* Windows XP or higher (note that there is problem on Windows 11 - game movies don't play, and it's not resolved by D2GI yet, but you can try to fix it manually as described in [corresponding issue](https://github.com/REDPOWAR/D2GI/issues/18))
 
 ### Download
 
@@ -54,3 +62,8 @@ The `d2gi.ini` file has the following settings.
 `SCREENSHOTS` section:
 * `SavePath` - Path to the folder where screenshots will be saved
 * `ImageFormat` - Screenshots image format. Possible values: `bmp`, `png`, `jpg`
+
+### Special thanks to contributors
+
+* [CookiePLMonster](https://github.com/CookiePLMonster)
+* [aleko2144](https://github.com/aleko2144)
