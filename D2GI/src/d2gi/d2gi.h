@@ -132,8 +132,8 @@ public:
 	void DisableUVOverride() { m_UVOverride.reset(); }
 
 	void OnMapDrawSetViewport(const RECT& viewport) { m_MinimapRenderer.SetViewport(viewport); }
-	void OnBeginMinimapDraw() { m_MinimapRenderer.BeginMinimapDraw(); }
-	void OnEndMinimapDraw() { m_MinimapRenderer.EndMinimapDraw(); }
+	void OnBeginMinimapDraw();
+	void OnEndMinimapDraw();
 	void OnAddMinimapLine(float x1, float y1, float x2, float y2, DWORD color) { m_MinimapRenderer.AddMinimapLine(x1, y1, x2, y2, color); }
 
 	void OnDrawBridgeLightingPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags);
@@ -149,8 +149,8 @@ public:
 	VOID OnLightEnable(DWORD, BOOL);
 	VOID OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface*, RECT*, D2GIBackBufferSurface*, RECT*);
 	VOID OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface*, RECT*, D2GITexture*, RECT*);
-	VOID OnSceneBegin();
-	VOID OnSceneEnd();
+	void OnSceneBegin();
+	void OnSceneEnd();
 	VOID OnRenderStateSet(D3D7::D3DRENDERSTATETYPE, DWORD);
 	VOID OnTextureStageSet(DWORD, D3D7::D3DTEXTURESTAGESTATETYPE, DWORD);
 	VOID OnTextureSet(DWORD, D2GITexture*);

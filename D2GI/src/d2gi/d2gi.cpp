@@ -74,6 +74,18 @@ Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() cons
 	return result;
 }
 
+void D2GI::OnBeginMinimapDraw()
+{
+	m_eRenderState = RS_3D_RENDERING;
+	m_MinimapRenderer.BeginMinimapDraw();
+}
+
+void D2GI::OnEndMinimapDraw()
+{
+	m_eRenderState = RS_3D_RENDERING;
+	m_MinimapRenderer.EndMinimapDraw();
+}
+
 void D2GI::OnDrawBridgeLightingPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, LPVOID pVerts, DWORD dwVertCount, DWORD dwFlags)
 {
 	// No need to reset the texture and states, other blocks set-up their materials (and those states) again.
@@ -466,9 +478,12 @@ VOID D2GI::OnSysMemSurfaceBltOnTexture(D2GISystemMemorySurface* pSrc, RECT* pSrc
 }
 
 
-VOID D2GI::OnSceneBegin()
+void D2GI::OnSceneBegin()
 {
-	m_eRenderState = RS_3D_RENDERING;
+	// Some old game versions can call BeginScene/EndScene pairs with nothing between
+	// or just with back buffer write inside. So we should track RS_3D_RENDERING state
+	// on DrawPrimitive calls (instead of scene begin/end calls), otherwise we can
+	// lose RS_BACKBUFFER_STREAMING state and get FMVs broken.
 	TryBeginScene();
 }
 
@@ -482,9 +497,8 @@ VOID D2GI::TryBeginScene()
 }
 
 
-VOID D2GI::OnSceneEnd()
+void D2GI::OnSceneEnd()
 {
-	m_eRenderState = RS_3D_RENDERING;
 	TryEndScene();
 }
 
@@ -922,6 +936,8 @@ VOID D2GI::OnColorFillOnBackBuffer(DWORD dwColor, RECT* pRect)
 VOID D2GI::DrawPrimitive(D3D7::D3DPRIMITIVETYPE pt, DWORD dwFVF, BOOL bStrided, VOID* pVertexData,
 	DWORD dwVertexCount, WORD* pIndexData, DWORD dwIndexCount, DWORD dwFlags)
 {
+	m_eRenderState = RS_3D_RENDERING;
+
 	DWORD        dwAlphaTestEnable, dwAlphaTestFunc, dwAlphaTestRef;
 	D2GITexture* pTexture = m_lpCurrentTextures[0];
 
