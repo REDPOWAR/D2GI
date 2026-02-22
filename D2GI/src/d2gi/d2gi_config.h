@@ -21,7 +21,7 @@ enum class IMG_FORMAT
 struct HookOptions
 {
 	bool m_bEnableHooks = true;
-	bool m_bEnableUIHooks = true;
+	bool m_bEnableUIHooks = false;
 	bool m_bEnableAffinityHooks = true;
 };
 

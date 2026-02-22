@@ -57,7 +57,7 @@ The `d2gi.ini` file has the following settings.
 
 `HOOKS` section:
 * `EnableHooks` - Enable game functions hooking (projection matrix correction with any aspect ratio)
-* `EnableUIFix` - Enable GUI functions hooking (improves the appearance of game menus when using wide screen resolutions)
+* `EnableUIFix` - Enable GUI functions hooking (improves the appearance of game menus when using wide screen resolutions). **Currently unstable, may lead to game crash on some GPUs, so use it carefully**.
 
 `SCREENSHOTS` section:
 * `SavePath` - Path to the folder where screenshots will be saved
