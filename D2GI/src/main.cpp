@@ -59,14 +59,15 @@ EXPORT HRESULT WINAPI D3D7::DirectDrawEnumerateW(D3D7::LPDDENUMCALLBACKW lpCallb
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD dwReason, LPVOID)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-	{
-		Logger::Log(TEXT("D2GI %s module loaded"), D2GI_VERSION);
+	if (dwReason == DLL_PROCESS_ATTACH) {
+		Logger::Log(T("D2GI %s module loaded"), D2GI_VERSION_STRING);
+		Logger::Log(T("Visit D2GI repository page for help: %s"), D2GI_REPOSITORY_URL);
+
 		const HookOptions hookOptions = D2GIConfig::ReadFromFile();
 		D2GIHookInjector::InjectHooks(hookOptions);
+	} else if (dwReason == DLL_PROCESS_DETACH) {
+		Logger::Log(T("D2GI module unloaded\n"));
 	}
-	else if (dwReason == DLL_PROCESS_DETACH)
-		Logger::Log(TEXT("D2GI module unloaded\n"));
 
 	return TRUE;
 }

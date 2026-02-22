@@ -5,10 +5,15 @@
     <D2VERSION>GOG 8.1 SEMod 1.2</D2VERSION>
     <D2DIR>E:\Program Files (x86)\Hard Truck 2\Hard Truck 2 $(D2VERSION)\</D2DIR>
     <D2EXE>$(D2DIR)King.exe</D2EXE>
+
+    <D2GI_VERSION>0.4</D2GI_VERSION>
+    <D2GI_VERSION_STRING>$(D2GI_VERSION)</D2GI_VERSION_STRING>
+    <D2GI_VERSION_STRING Condition="'$(Configuration)'=='Debug'">$(D2GI_VERSION_STRING) DEBUG</D2GI_VERSION_STRING>
+    <D2GI_REPOSITORY_URL>https://github.com/REDPOWAR/D2GI</D2GI_REPOSITORY_URL>
   </PropertyGroup >
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>D2GI_VERSION=TEXT("0.3");%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D2GI_VERSION=$(D2GI_VERSION);D2GI_VERSION_STRING=TEXT("$(D2GI_VERSION_STRING)");D2GI_REPOSITORY_URL=TEXT("$(D2GI_REPOSITORY_URL)");%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

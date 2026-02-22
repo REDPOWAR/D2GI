@@ -73,6 +73,7 @@
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="defs.props" />
+    <None Include="d2gi.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\d2gi\d2gi_ddraw.cpp">

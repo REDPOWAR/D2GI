@@ -5,9 +5,19 @@
 #include <tchar.h>
 #include <stdio.h>
 
+#define T TEXT
+
 
 #ifndef D2GI_VERSION
-#define D2GI_VERSION TEXT("UNDEFINED")
+#define D2GI_VERSION T("UNDEFINED")
+#endif
+
+#ifndef D2GI_VERSION_STRING
+#define D2GI_VERSION_STRING D2GI_VERSION
+#endif
+
+#ifndef D2GI_REPOSITORY_URL
+#define D2GI_REPOSITORY_URL T("UNDEFINED")
 #endif
 
 

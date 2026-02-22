@@ -780,40 +780,44 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	static_assert(std::size(c_lpszVersionNames) == NUM_D2VERSIONS + 1);
 	Logger::Log(TEXT("Detected D2 version: %s"), c_lpszVersionNames[s_eCurrentD2Version]);
 
-	if (!options.m_bEnableHooks)
-	{
+	if (!options.m_bEnableHooks) {
 		Logger::Log(TEXT("Hook injection is not enabled."));
 		return;
 	}
+
+	Logger::Log(TEXT("Initializing facades and applying hooks..."));
 
 	using namespace Memory::VP;
 	using namespace hook::txn;
 
 	bool bHasTextureFacade = false;
-	try
-	{
+	try {
 		FACADE_SET_MEMBER_OFFSET(ResTextureFacade, m_d3dSurface, *get_pattern<uint8_t>("89 45 ? E8 ? ? ? ? 8B 45 ? 89 45", 2));
 
 		bHasTextureFacade = true;
+
+		Logger::Log(TEXT("Texture facade initialized"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to read texture facade offsets"));
 	}
-	TXN_CATCH();
 
 
 	bool bHasMenuGraphics = false;
-	try
-	{
+	try {
 		pMenuGraphics = *get_pattern<MenuGraphics**>("A1 ? ? ? ? 0F BF 88 ? ? ? ? 0F BF 90 ? ? ? ? 89 4C 24", 1);
 
 		FACADE_SET_MEMBER_OFFSET(MenuGraphicsFacade, m_videoIni, *get_pattern<uint32_t>("89 87 ? ? ? ? 75", 2));
 
 		bHasMenuGraphics = true;
+
+		Logger::Log(TEXT("Menu graphics facade initialized"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to read menu graphics facade offsets"));
 	}
-	TXN_CATCH();
 
 
 	bool bHasBlockObserver = false;
-	try
-	{
+	try {
 		auto fov_xy = pattern("89 48 ? 89 48 ? 89 78 ? 89 78 ? C6 40").get_one();
 
 		pCabObserver = *get_pattern<CBlockObserver**>("8B 15 ? ? ? ? 8D 4C 24 ? 51 6A", 2);
@@ -822,26 +826,27 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		FACADE_SET_MEMBER_OFFSET(CBlockObserverFacade, m_fovY, *fov_xy.get<uint8_t>(3 + 2));
 
 		bHasBlockObserver = true;
-	}
-	TXN_CATCH();
 
-	try
-	{
+		Logger::Log(TEXT("Block observer facade initialized"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to read block observer facade offsets"));
+	}
+
+	try {
 		auto device_address_ptr = get_pattern<D3D7::IDirect3DDevice7**>("8B 0D ? ? ? ? 8D 54 24 ? 51 6A ? 52 68 ? ? ? ? 68 ? ? ? ? C7 44 24", 2);
 		auto setup_transforms = get_pattern("50 51 8B CE E8 ? ? ? ? 5F 5E 5D", 4);
 
 		m_deviceAddress = *device_address_ptr;
 		InterceptCall(setup_transforms, m_origSetupTransform, &SetupTransforms);
-	}
-	catch (const hook::txn_exception&)
-	{
-		Logger::Log(TEXT("Failed to inject hooks, signature scan(s) failed."));
+
+		Logger::Log(TEXT("Aspect ratio fix injected"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to inject aspect ratio fix"));
 	}
 
 
 	// Texture UV addressing mode overrides
-	if (bHasTextureFacade) try
-	{
+	if (bHasTextureFacade) try {
 		using namespace TextureUVFixes;
 
 		std::array<void*, 2> setup_materials_with_blending = {
@@ -853,27 +858,32 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		FACADE_SET_MEMBER_OFFSET(D3DRenderDataFacade, m_currentGameModule, *get_pattern<uint32_t>("8B 81 ? ? ? ? 85 C0 74 ? 8B 80 ? ? ? ? 85 C0 74 ? 51", 2));
 		FACADE_SET_MEMBER_OFFSET(GameModuleFacade, m_name, *get_pattern<uint8_t>("8B 46 ? 85 C0 74 ? 50 E8 ? ? ? ? 83 C4 ? 8B 46 ? 85 C0 74 ? 8B 48", 2));
 
-		if (LoadOverridesData())
-		{
+		if (LoadOverridesData()) {
 			HookEach_OverrideUV(setup_materials_with_blending, InterceptCall);
+			Logger::Log(TEXT("Texture addressing overrides injected"));
+		} else {
+			Logger::Log(TEXT("Configuration for texture addressing overrides isn't set, skipping overrides injection"));
 		}
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to inject texture addressing overrides"));
 	}
-	TXN_CATCH();
 
 
 	// Undo patch 8.2's single core affinity changes
-	if (options.m_bEnableAffinityHooks) try
-	{
+	if (options.m_bEnableAffinityHooks) try {
 		auto set_process_affinity_mark = get_pattern("50 FF 15 ? ? ? ? B8 01 00 00 00 C3", 3);
 
 		Patch(set_process_affinity_mark, &AffinityChanges::pSetProcessAffinityMask_NOP);
+
+		Logger::Log(TEXT("Process affinity fix injected"));
+	} catch (const hook::txn_exception&) {
+		if (s_eCurrentD2Version == D2V_8_2) // log only if somehow failed in 8.2, in other versions should fail always
+			Logger::Log(TEXT("Failed to inject process affinity fix"));
 	}
-	TXN_CATCH();
 
 
 	// Batched minimap draws
-	try
-	{
+	try {
 		using namespace BatchedMinimap;
 
 		auto begin_scene = get_pattern("E8 ? ? ? ? 85 FF 0F 84 ? ? ? ? B8");
@@ -945,8 +955,7 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 		// Smooth minimap icon scrolling
 		// Separate try...catch, as it is completely optional and other minimap changes will work without it.
-		try
-		{
+		try {
 			// Most of those patterns differ between 8.x and earlier executables, so branch the code instead of just the individual pattern matches.
 			auto other_vehicles = pattern("E8 ? ? ? ? DC 4C 24 ? 8B F0 DC 44 24 ? DC 25 ? ? ? ? E8").get_one();
 			auto circuit = pattern("E8 ? ? ? ? DD 44 24 ? DC 0D ? ? ? ? 8B F0 DC 44 24 ? E8").get_one();
@@ -1028,8 +1037,11 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 				HookEach_StoreFloatX(store_icon_posx, InterceptCall);
 				HookEach_StoreFloatY(store_icon_posy, InterceptCall);
 			}
+
+			Logger::Log(TEXT("Smooth minimap icons scrolling injected"));
+		} catch (const hook::txn_exception&) {
+			Logger::Log(TEXT("Failed to inject smooth minimap icons scrolling"));
 		}
-		TXN_CATCH();
 
 		GraphicsData_GetWindowRect = reinterpret_cast<decltype(GraphicsData_GetWindowRect)>(get_window_rect);
 
@@ -1056,14 +1068,16 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		}
 
 		HookEach_MapBoundsCheck(coords_map_bounds_check_calls, InterceptCall);
+
+		Logger::Log(TEXT("Batched minimap drawing injected"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to inject batched minimap drawing"));
 	}
-	TXN_CATCH();
 
 
 	// Fixed North Harbor bridge lighting
 	// It worked in 5.5, and broke presumably with an upgrade to D3D7
-	try
-	{
+	try {
 		using namespace BridgeLightingFix;
 
 		auto init_primitive_data = get_pattern("E8 ? ? ? ? 83 C4 ? 3B C7 74 ? 4B");
@@ -1075,8 +1089,11 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		// push eax \ push D3DFVF_LVERTEX \ push D3DPT_POINTLIST \ push g_pDirect3DDevice
 		Patch(render_lights.get<void>(0), { 0x50, 0x68, 0xE2, 0x01, 0x00, 0x00, 0x6A, 0x01, 0x51 });
 		InjectHook(render_lights.get<void>(9), DrawBridgeLightingHook, HookType::Call);
+
+		Logger::Log(TEXT("Bridge lighting fix injected"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to inject bridge lighting fix"));
 	}
-	TXN_CATCH();
 
 
 	// Fix horizontal raindrops at over 50 FPS
@@ -1087,11 +1104,14 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 		auto ftol_raindrop = get_pattern("E8 ? ? ? ? 8B F8 E8 ? ? ? ? 25");
 
 		InjectHook(ftol_raindrop, ftol_PreserveFracHook);
+
+		Logger::Log(TEXT("Horizontal raindrops fix injected"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to inject horizontal raindrops fix"));
 	}
-	TXN_CATCH();
 
 
-	Logger::Log(TEXT("Injected common hooks."));
+	Logger::Log(TEXT("Initialization of common hooks/facades finished"));
 
 	if (s_eCurrentD2Version != D2V_5_5 && s_eCurrentD2Version != D2V_UNKNOWN) {
 		//hooks ONLY for v1.3, v8.1 and v8.2
@@ -1108,8 +1128,7 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 
 	// Texture names injection
 #ifdef _DEBUG
-	if (bHasTextureFacade) try
-	{
+	if (bHasTextureFacade) try {
 		using namespace TextureNames;
 
 		std::array<void*, 3> texture_init = {
@@ -1118,7 +1137,10 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 			get_pattern("E8 ? ? ? ? 8B 45 ? 46 3B F0 7C ? 68"),
 		};
 		HookEach_SetName(texture_init, InterceptCall);
+
+		Logger::Log(TEXT("Texture names injection applied"));
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("Failed to apply texture names injection"));
 	}
-	TXN_CATCH();
 #endif
 }
