@@ -403,10 +403,10 @@ signed int __fastcall D2GIHookInjector::OnInitDrawForGame(int* CWinApp, int EDX,
 	std::vector<D3D9::D3DDISPLAYMODE> modes = pD2GI->GetDisplayModes();
 
 	//Check resolutions from largest to smallest
-	for (int i = modes.size() - 1; i >= 0; i--)
+	for (auto mode = modes.rbegin(); mode != modes.rend(); mode++)
 	{
-		int modeX = modes[i].Width;
-		int modeY = modes[i].Height;
+		int modeX = mode->Width;
+		int modeY = mode->Height;
 
 		//Check if the resolution[i] is greater than the size of the game window
 		if (modeX > m_dwWinResX || modeY > m_dwWinResY)
