@@ -510,14 +510,12 @@ void D2GIHookInjector::OnInitClusters() {
 //Interface main injection code
 void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	// How it works:
-	// 1. The screen resolution set by D2GI is checked; if its width is higher than 1600, the width
-	// becomes equal to 1600, the height is proportionally reduced. If the resolution is less than
-	// 1280x720, then the then the hook injection will be aborted.
+	// 1. The screen resolution set by D2GI is checked; if the resolution is less than 1280x720 or 4:3,
+	// then the then the hook injection will be aborted.
 	// 
 	// 
-	// 2. Next comes the check: if the screen resolution is 4:3, then the then the hook injection will
-	// be aborted too. If the format resolution is 16:9 or higher, then the interface resolution will
-	// be in the range from 1280x720 to 1600x1200.
+	// 2. Next comes the search for pointers to the required objects, as well as an attempt to adjust
+	// the side offset of the minimap and, if the option is enabled, injection of mirrors hook.
 	//
 	//
 	// 3. Installation of hooks:
@@ -534,6 +532,7 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	//
 	//
 	// All this hook is made as a redesign of the 1024x768 resolution interface layout.
+	// The interface resolution may be in the range from 1280x720 to 1600x1200.
 
 
 	//1) Check resolution
@@ -557,6 +556,7 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 		return;
 	}
 
+	//2) Get offsets
 	// First match patterns before we try to do any patching
 	using namespace hook::txn;
 
@@ -566,15 +566,6 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	MainSideBarX = *sidebar_positions.get<int*>(2);
 	MenuBackInfoX = *sidebar_positions.get<int*>(0xC + 2);
 
-
-	//1) Clamp resolution to 1600; max in-game GUI textures size is 1600x1200, in other cases
-	//textures in esc16.res should be redrawn for higher resolutions.
-	if (m_dwUIResX > 1600) {
-		m_dwUIResX = 1600;
-		m_dwUIResY = (int)((float)m_dwUIResX / real_aspect);
-	}
-
-	//Get offsets using patterns
 	//Top UI panel
 	int addr_panelDrawStart = get_pattern_uintptr("C7 44 24 ? ? ? ? ? 89 4C 24 ? ? ? ? ? ? ? ? ? ? ? 7E 19 C7 44 24 ? ? ? ? ? C7 44 24");
 
