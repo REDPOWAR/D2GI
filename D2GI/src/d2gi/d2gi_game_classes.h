@@ -121,5 +121,7 @@ public:
 		addr_panelX,         //panel texture X offset
 		addr_textX,          //panel labels X offset
 		addr_resX,           //default resolution 1024x768 offsets
-		addr_resY;
+		addr_resY,
+		addr_mapOffsetX;     //side minimap offset X
+	double m_dMapSideOffset;
 };

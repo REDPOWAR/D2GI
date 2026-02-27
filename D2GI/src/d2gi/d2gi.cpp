@@ -1168,7 +1168,6 @@ std::vector<D3D9::D3DDISPLAYMODE> D2GI::GetDisplayModes() {
 		if (SUCCEEDED(pD3D9->EnumAdapterModes(D3DADAPTER_DEFAULT, D3D9::D3DFMT_X8R8G8B8, i, &sDMode)))
 		{
 			displayModes.push_back(sDMode);
-			//Logger::Log(TEXT("DisplayMode %d x %d "), sDMode.Width, sDMode.Height);
 		}
 	}
 

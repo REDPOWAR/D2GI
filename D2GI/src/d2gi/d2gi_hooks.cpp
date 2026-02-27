@@ -34,9 +34,8 @@ using namespace D3D9;
 void (__thiscall *D2GIHookInjector::m_origSetupTransform)(void* pThis, MAT3X4* pmView, MAT3X4* pmProj);
 D3D7::IDirect3DDevice7** D2GIHookInjector::m_deviceAddress;
 
-int  m_dwGameVersion;
-int* m_pViewerPtr;
-
+int  m_dwGameVersion = 0;
+int* m_pViewerPtr = nullptr;
 
 D2GI* D2GIHookInjector::ObtainD2GI()
 {
@@ -59,37 +58,70 @@ void __fastcall D2GIHookInjector::SetupTransforms(void* pThis, void*, MAT3X4* pm
 }
 
 
-int D2GIHookInjector::GetGameVersion() try {
-	using namespace hook::txn;
+int D2GIHookInjector::DetectD2Version() {
+	const DWORD c_adwTimestamps[] =
+	{
+		0x39DC4F94, //v 5.5 - 05.10.2000 [EN]
+		0x3B1B5FA9, //v 5.8 - 04.06.2001 [PT]
 
-	// v x.x (v 8.0, v 5.8, etc.)
-	char* gameVersionStr = (char*)get_pattern_uintptr("76 20 ? 2E ?");
+		0x3AD1B323, //v 6.6 - 09.04.2001 [RU]
+		0x3AD2DBD1, //v 6.6 - 10.04.2001 [RU]
+		0x3AF7EEA4, //v 6.7 - 08.05.2001 [RU]
+		0x3B1A1D62, //v 6.9 - 03.06.2001 [RU]
 
-	float temp_flt;
-	int scan = sscanf(gameVersionStr, "%*s %f", &temp_flt);
+		0x3B2E0973, //v 7.0 - 18.06.2001 [RU]
+		0x3B3C169E, //v 7.1 - 29.06.2001 [RU]
+		0x3B498D4A, //v 7.2 - 09.07.2001 [RU]
+		0x3B9DC338, //v 7.3 - 11.09.2001 [RU]
+		0x3BCBEF5A, //v 7.3 - 16.10.2001 [LT]
+		0x40546A64, //v 7.4 - 14.03.2004 [RU]
 
-	if (scan != 1)
-		return 0;
+		0x3E3E392B, //v 8.0 - 03.02.2003 [RU]
+		0x400502EA, //v 8.1 - 14.01.2004 [RU/GOG]
+		0x4760F7AC, //v 8.2 - 13.12.2007 [RU]
+	  //0x52FDD61E, //v 8.? - 14.02.2014 [RU] (with 1C-DRM protection, possibly 8.2?)
 
-	//string "8.1" -> float 8.1 -> int 81
-	int versionIdx = temp_flt * 10;
+		//EU KotR versions
+	  //0x3B22214C, //v 1.0 - 09.06.2001 [DE] (with protection)
+		0x3C970FF7, //v 1.3 - 19.03.2002 [EN/GOG]
+		0x3D511A4B, //v 1.3 - 07.08.2002 [FR]
+	};
+	const int c_gameVersions[] =
+	{
+		55,
+		58,
+		//6.x
+		66,
+		66,
+		67,
+		69,
+		//7.x
+		70,
+		71,
+		72,
+		73,
+		73,
+		74,
+		//8.x
+		80,
+		81,
+		82,
+		//82,
+		//EU KotR versions
+		//10,
+		13,
+		13,
+	};
 
-	//This code does rough check of the year in the "C:\Nek\VRAPPLVS\TRUCK\aeffects.cpp  Dec  4 2007" string:
-	//in 8.0 - 8.1 there is 2003, and in 8.2 there is 2007.
-	if (CPatch::GetInt(0x6724FF) == 925904946) {
-		versionIdx = 82;
-	}
+	const HMODULE gameModule = GetModuleHandle(nullptr);
 
-	//EU KotR releases (1.0 - 1.3)
-	//This is done because the patterns for 8.0 - 8.2 and 1.3 are the same.
-	if (versionIdx <= 14 && versionIdx >= 10) {
-		versionIdx = 80;
-	}
+	PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(gameModule);
+	PIMAGE_NT_HEADERS ntHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<char*>(dosHeader) + dosHeader->e_lfanew);
 
-	return versionIdx;
-}
-catch (const hook::txn_exception&)
-{
+	for (size_t i = 0; i < ARRAYSIZE(c_adwTimestamps); i++)
+		if (c_adwTimestamps[i] == ntHeader->FileHeader.TimeDateStamp)
+			return c_gameVersions[i];
+
 	return 0;
 }
 
@@ -291,7 +323,7 @@ float* m_fCabinCameraRotation;
 void __fastcall ProcessMirrors(int* _this, int* EDX) {
 	bool temp = *m_bIsMirrorsProcessed;
 
-	float camRotMin = 0.2;
+	float camRotMin = 0.2f;
 	float cameraRot = *m_fCabinCameraRotation;
 	
 	// If the interior camera has a small rotation angle,
@@ -313,13 +345,13 @@ int* __fastcall OnCameraInstanceReset(int* _this, int edx) {
 	float* cabineMtx = (float*)((char*)*m_pViewerPtr + 0x208);
 	float* mirrorsMtx = (float*)((char*)*m_pViewerPtr + 0x238);
 
-	float addVal_y = 0.2;
-	float addVal_z = -0.15;
+	float addVal_y =  0.2f;
+	float addVal_z = -0.15f;
 
 	//cabineMtx->pos.z
 	if (cabineMtx[11] < 1.0) {
-		addVal_y = 0.27;
-		addVal_z = -0.28;
+		addVal_y =  0.27f;
+		addVal_z = -0.28f;
 	}
 
 	//mirrorsMtx->pos.y, pos.z
@@ -331,15 +363,15 @@ int* __fastcall OnCameraInstanceReset(int* _this, int edx) {
 }
 
 //Used to convert uint32 value into pattern for ModUtils
-char* UInt32toPattern(uint32_t value) {
-	char result[24];
-	sprintf(result, "%02X %02X %02X %02X", (value & 0xFF), ((value >> 8) & 0xFF), ((value >> 16) & 0xFF), ((value >> 24) & 0xFF));
-	return result;
+char* UInt32toPattern(uint32_t value, char* buf) {
+	sprintf(buf, "%02X %02X %02X %02X", (value & 0xFF), ((value >> 8) & 0xFF), ((value >> 16) & 0xFF), ((value >> 24) & 0xFF));
+	return buf;
 }
 
 void D2GIHookInjector::InjectMirrorsPatch() try {
 	using namespace Memory::VP;
 	using namespace hook::txn;
+
 
 	m_callAddr_CameraInstanceReset = get_pattern_uintptr("E8 ? ? ? ? 89 1D ? ? ? ? 8B 8D ? ? ? ? 51 8B CD ");
 	m_funcAddr_CameraInstanceReset = (int)ReadCallFrom(m_callAddr_CameraInstanceReset);
@@ -347,7 +379,9 @@ void D2GIHookInjector::InjectMirrorsPatch() try {
 	m_funcAddr_ProcessMirrors = get_pattern_uintptr("55 8B EC 83 E4 F8 81 EC ? ? ? ? A1 ? ? ? ? 53 55 56 33 F6 57 3B C6 8B");
 	// It won't be possible to create a pattern before finding function - the only call to this function occurs when
 	// rendering viewport elements, i.e. there is a cycle with a call to obj[i]->Draw(...)
-	m_callAddr_ProcessMirrors = get_pattern_uintptr(UInt32toPattern((int)m_funcAddr_ProcessMirrors));
+
+	char temp_buf[24];
+	m_callAddr_ProcessMirrors = get_pattern_uintptr(UInt32toPattern((int)m_funcAddr_ProcessMirrors, temp_buf));
 
 	m_bIsMirrorsProcessed = *(bool**)pattern("DC 1D ? ? ? ? DF E0 F6 C4 01 0F 84 ? ? ? ? A1 ? ? ? ?").get_first(18);
 	m_fCabinCameraRotation = *(float**)pattern("D8 05 ? ? ? ? D9 44 24 00").get_first(2);
@@ -392,18 +426,22 @@ signed int __fastcall D2GIHookInjector::OnInitDrawForGame(int* CWinApp, int EDX,
 	D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
 
 	if (pD2GI == NULL) {
-		// In this case, the output to the log is disabled, because InitDrawForGame is called both
-		// when the game window starts and when the game world is loaded, even when pD2GI = NULL
-		
-		//Logger::Log(TEXT("OnInitDrawForGame->pD2GI==NULL"));
-
 		return orgOnInitDrawForGame(CWinApp, width, height, depth, a5);
 	}
 
 	std::vector<D3D9::D3DDISPLAYMODE> modes = pD2GI->GetDisplayModes();
 
-	//Check resolutions from largest to smallest
-	for (auto mode = modes.rbegin(); mode != modes.rend(); mode++)
+	signed int result = 0;
+
+	//Sort resolutions from the largest to smallest
+	std::sort(modes.begin(), modes.end(),
+		[](const D3D9::D3DDISPLAYMODE& a, const D3D9::D3DDISPLAYMODE& b) {
+			//Compare by resolution square
+			return (a.Width * a.Height) > (b.Width * b.Height);
+		}
+	);
+
+	for (auto mode = modes.begin(); mode != modes.end(); mode++)
 	{
 		int modeX = mode->Width;
 		int modeY = mode->Height;
@@ -434,8 +472,11 @@ signed int __fastcall D2GIHookInjector::OnInitDrawForGame(int* CWinApp, int EDX,
 		CPatch::SetInt(InterfaceOffsets.addr_panelX, m_dwUIResX - 1600);
 		CPatch::SetInt(InterfaceOffsets.addr_textX,  m_dwUIResX - 1131);
 
-		return orgOnInitDrawForGame(CWinApp, width, height, depth, a5);
+		result = orgOnInitDrawForGame(CWinApp, width, height, depth, a5);
+		break;
 	}
+
+	return result;
 }
 
 static int* MenuBackInfoX;
@@ -499,6 +540,18 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	m_dwWinResX = D2GIConfig::GetVideoWidth();
 	m_dwWinResY = D2GIConfig::GetVideoHeight();
 
+	m_dwUIResX = m_dwWinResX;
+	m_dwUIResY = m_dwWinResY;
+
+	float real_aspect = (float)m_dwUIResX / (float)m_dwUIResY;
+	float aspect_rev = (float)m_dwUIResY / (float)m_dwUIResX;
+
+	//Check format first
+	if (aspect_rev > 0.7) {
+		Logger::Log(TEXT("Interface hooks injection aborted: the game is not running in widescreen format"));
+		return;
+	}
+
 	if (m_dwWinResX < 1280 || m_dwWinResY < 720) {
 		Logger::Log(TEXT("Interface hooks injection aborted: screen resolution is too low (at least 1280x720 required)"));
 		return;
@@ -512,12 +565,6 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	auto sidebar_positions = pattern("C7 05 ? ? ? ? ? ? ? ? 8B C8 C7 05 ? ? ? ? ? ? ? ? 8B D0 E9").get_one();
 	MainSideBarX = *sidebar_positions.get<int*>(2);
 	MenuBackInfoX = *sidebar_positions.get<int*>(0xC + 2);
-
-	m_dwUIResX = m_dwWinResX;
-	m_dwUIResY = m_dwWinResY;
-
-	float real_aspect = (float)m_dwUIResX / (float)m_dwUIResY;
-	float aspect_rev = (float)m_dwUIResY / (float)m_dwUIResX;
 
 
 	//1) Clamp resolution to 1600; max in-game GUI textures size is 1600x1200, in other cases
@@ -544,6 +591,23 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	InterfaceOffsets.addr_resY = (int)pattern("E8 ? ? ? ? 0B ? 80 CC 40 50 ? 68 00 03 00 00 68 00 04 00 00").get_first(13);
 	InterfaceOffsets.addr_resX = InterfaceOffsets.addr_resY + 5;
 
+	//Side minimap offset
+	try {
+		//7.3 - 8.2
+		if (m_dwGameVersion >= 73){
+			InterfaceOffsets.addr_mapOffsetX = (int)pattern("DD 54 24 ? D9 C0 DC 4E 08 DC 2D ? ? ? ? DD 5C 24 ? DC 4E 18 DC 2D").get_first(11);
+		//6.6 - 7.2
+		} else {
+			InterfaceOffsets.addr_mapOffsetX = (int)pattern("DD 54 24 ? D9 C0 DC 4E 08 85 D2 DC 2D ? ? ? ? DD 5C 24 2C D9 C0 DC 4E 18 DC 2D ? ? ? ?").get_first(13);
+		}
+
+		InterfaceOffsets.m_dMapSideOffset = 80.0; //default 40.0
+		CPatch::SetPointer(InterfaceOffsets.addr_mapOffsetX, &InterfaceOffsets.m_dMapSideOffset);
+	} catch (const hook::txn_exception&) {
+		Logger::Log(TEXT("InterfacePatch: failed to get minimap offset"));
+	}
+
+
 	//Functions call offsets
 	int callAddr_prepareGame, callAddr_initClusters, callAddr_initDraw;
 
@@ -552,20 +616,14 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	callAddr_initDraw     = (int)pattern("8B 7C 24 1C 55 52 53 57 8B CE E8 ? ? ? ? 85 C0").get_first(10); //0x5DD8D8 in 8.2
 
 	//2) Set resolution from aspect
-	if (aspect_rev > 0.7) {
-		Logger::Log(TEXT("Interface hooks injection aborted: the game is not running in widescreen format"));
-		return;
-	} else {
-		//Called from InjectInterfacePatch because it works correct only if UI patched
-		if (use_mirrors_fix && m_pViewerPtr) {
-			D2GIHookInjector::InjectMirrorsPatch();
-		}
-
-		//This is done to force the game to take panel offsets from only one address
-		CPatch::SetInt(InterfaceOffsets.addr_cmp1204, INT_MAX);
-		CPatch::SetInt(InterfaceOffsets.addr_cmp800,  INT_MAX);
+	//Called from InjectInterfacePatch because it works correct only if UI patched
+	if (use_mirrors_fix && m_pViewerPtr) {
+		D2GIHookInjector::InjectMirrorsPatch();
 	}
 
+	//This is done to force the game to take panel offsets from only one address
+	CPatch::SetInt(InterfaceOffsets.addr_cmp1204, INT_MAX);
+	CPatch::SetInt(InterfaceOffsets.addr_cmp800,  INT_MAX);
 
 	//Select 1024x768 in the game settings.
 	//Possible values:
@@ -576,7 +634,6 @@ void D2GIHookInjector::InjectInterfacePatch(bool use_mirrors_fix) try {
 	//0x140 (322) 1600x1200
 
 	m_dwMenuSettingsValue = 306;
-
 
 	using namespace Memory::VP;
 
@@ -971,12 +1028,18 @@ namespace BridgeLightingFix
 
 void D2GIHookInjector::InjectHooks(const HookOptions& options)
 {
-	m_dwGameVersion = GetGameVersion();
+	m_dwGameVersion = DetectD2Version();
 
 	if (!m_dwGameVersion) {
-		Logger::Log(TEXT("Failed to detect D2 version"));
+		Logger::Log(TEXT("Detected unknown D2 version"));
 	} else {
-		Logger::Log(TEXT("Detected D2 version: %d.%d"), (m_dwGameVersion / 10) % 10, m_dwGameVersion % 10);
+		Logger::Log(TEXT("Detected D2 version: %d.%d"), (m_dwGameVersion / 10), m_dwGameVersion % 10);
+	}
+
+	//After printing the game version, the index must be corrected for the hooks to work correctly.
+	//Patterns for 8.0 - 8.2 and 1.3 are the same.
+	if (m_dwGameVersion == 13) {
+		m_dwGameVersion = 80;
 	}
 
 	if (!options.m_bEnableHooks) {
@@ -989,6 +1052,7 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	using namespace Memory::VP;
 	using namespace hook::txn;
 
+
 	bool bHasTextureFacade = false;
 	try {
 		FACADE_SET_MEMBER_OFFSET(ResTextureFacade, m_d3dSurface, *get_pattern<uint8_t>("89 45 ? E8 ? ? ? ? 8B 45 ? 89 45", 2));
@@ -999,7 +1063,6 @@ void D2GIHookInjector::InjectHooks(const HookOptions& options)
 	} catch (const hook::txn_exception&) {
 		Logger::Log(TEXT("Failed to read texture facade offsets"));
 	}
-
 
 	bool bHasMenuGraphics = false;
 	try {

@@ -11,7 +11,7 @@ class D2GIHookInjector
 {
 	static void __fastcall SetupTransforms(void* pThis, void*, MAT3X4* pmView, MAT3X4* pmProj);
 
-	static int GetGameVersion();
+	static int DetectD2Version();
 	static void __cdecl WriteScreenshotFunc(void* a2);
 	static void InjectScreenshotsPatch();
 
