@@ -57,7 +57,7 @@ HRESULT D2GIPrimarySingleSurface::Blt(LPRECT pDestRT, D3D7::LPDIRECTDRAWSURFACE7
 	if (pSrc == NULL || pSurf->GetType() != ST_SYSMEM)
 		return DDERR_GENERIC;
 
-	m_pD2GI->OnSysMemSurfaceBltOnPrimarySingle((D2GISystemMemorySurface*)pSurf, pSrcRT, this, pDestRT);
+	m_pD2GI->OnSystemMemorySurfaceBlitOnPrimarySingle((D2GISystemMemorySurface*)pSurf, pSrcRT, this, pDestRT);
 
 	return DD_OK;
 }

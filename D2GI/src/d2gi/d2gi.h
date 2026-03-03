@@ -68,9 +68,13 @@ class D2GI
 
 	D2GIMinimapRenderer m_MinimapRenderer;
 
-	DWORD m_MaxPrimitiveCount = 0;
+	struct AnisotropyState {
+		bool is_enabled = false;
+		bool is_enabled_for_magnifying = false;
+		bool is_enabled_for_minifying = false;
+	} anisotropy_state_;
 
-	bool m_MinFilterAnisotropic = false, m_MagFilterAnisotropic = false;
+	uint32_t max_primitive_count_ = 0;
 
 	VOID ResetD3D9Device();
 	void ReleaseResources(bool bResettingDevice);
@@ -88,6 +92,8 @@ class D2GI
 	VOID DetachWndProc();
 	VOID ScaleD3D9Rect(const D3D7::D3DRECT* pSrc, D3D9::D3DRECT* pOut);
 	VOID SetupWindow();
+	void SynchronizeWithDeviceCaps();
+	void BlitToBackbufferAndPresent(FRECT* backbuffer_rect, D3D9::IDirect3DTexture9* texture, FRECT* texture_rect);
 
 	// Scoped Begin/EndScene for internal use (+ minimap)
 	class SceneScope
@@ -123,7 +129,7 @@ public:
 
 	SceneScope BeginSceneScope() { return SceneScope(this); }
 
-	DWORD GetMaxPrimitiveCount() const { return m_MaxPrimitiveCount; }
+	uint32_t GetMaxPrimitiveCount() const { return max_primitive_count_; }
 
 	D3D9::IDirect3DSurface9* GetBackBufferCopySurface() const { return m_pBackBufferCopySurf; }
 	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> GetScreenshotSource() const;
@@ -142,9 +148,9 @@ public:
 	VOID OnCooperativeLevelSet(HWND, DWORD);
 	VOID OnDisplayModeSet(DWORD, DWORD, DWORD, DWORD dwFlags);
 	VOID OnViewportSet(D3D7::LPD3DVIEWPORT7);
-	VOID OnFlip();
+	void OnFlip();
 	VOID OnBackBufferLock(BOOL bRead);
-	VOID OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface*, RECT*, D2GIPrimarySingleSurface*, RECT*);
+	void OnSystemMemorySurfaceBlitOnPrimarySingle(D2GISystemMemorySurface*, RECT*, D2GIPrimarySingleSurface*, RECT*);
 	VOID OnClear(DWORD dwCount, D3D7::LPD3DRECT lpRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil);
 	VOID OnLightEnable(DWORD, BOOL);
 	VOID OnSysMemSurfaceBltOnBackBuffer(D2GISystemMemorySurface*, RECT*, D2GIBackBufferSurface*, RECT*);
@@ -164,7 +170,6 @@ public:
 	VOID OnPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, DWORD);
 	VOID OnIndexedPrimitiveDraw(D3D7::D3DPRIMITIVETYPE, DWORD, LPVOID, DWORD, LPWORD, DWORD, DWORD);
 	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
-	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
 	VOID OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
 	std::vector<D3D9::D3DDISPLAYMODE> GetDisplayModes();
 	VOID OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback);
