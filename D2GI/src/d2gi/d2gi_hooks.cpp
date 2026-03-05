@@ -451,13 +451,15 @@ signed int __fastcall D2GIHookInjector::OnInitDrawForGame(int* CWinApp, int EDX,
 			continue;
 
 		//Check if the resolution[i] exceeds the maximum allowed interface size
-		if (modeX > 1600 || modeY > 1200)
+		if (modeX > 1600 || modeY > 900)
 			continue;
 
+		//And check if the resolution[i] is not widescreen
+		if ((float)modeY / (float)modeX > 0.7)
+			continue;
 
 		m_dwUIResX = modeX;
 		m_dwUIResY = modeY;
-
 
 		//Replace default 1024x768 resolution to new
 		CPatch::SetShort(InterfaceOffsets.addr_resX, m_dwUIResX);
