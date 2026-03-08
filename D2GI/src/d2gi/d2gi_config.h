@@ -22,6 +22,7 @@ struct HookOptions
 {
 	bool m_bEnableHooks = true;
 	bool m_bEnableUIHooks = false;
+	bool m_bEnableMirrorsHooks = true;
 	bool m_bEnableAffinityHooks = true;
 };
 

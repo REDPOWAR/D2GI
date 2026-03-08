@@ -166,6 +166,7 @@ public:
 	BOOL OnRenderStateGet(D3D7::D3DRENDERSTATETYPE, DWORD*);
 	VOID OnColorFillOnBackBuffer(DWORD, RECT*);
 	VOID OnTransformsSetup(VOID* pThis, MAT3X4* pmView, MAT3X4* pmProj);
+	std::vector<D3D9::D3DDISPLAYMODE> GetDisplayModes();
 	VOID OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback);
 
 public:

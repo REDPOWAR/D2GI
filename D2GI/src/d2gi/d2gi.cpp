@@ -1154,7 +1154,25 @@ VOID D2GI::SetupWindow()
 	m_dwForcedHeight = nWinHeight;
 }
 
+std::vector<D3D9::D3DDISPLAYMODE> D2GI::GetDisplayModes() {
+	std::vector<D3D9::D3DDISPLAYMODE> displayModes;
+	INT								  i, nNum;
+	D3D9::IDirect3D9*				  pD3D9 = GetD3D9();
 
+	nNum = pD3D9->GetAdapterModeCount(D3DADAPTER_DEFAULT, D3D9::D3DFMT_X8R8G8B8);
+
+	for (i = 0; i < nNum; i++)
+	{
+		D3D9::D3DDISPLAYMODE sDMode;
+
+		if (SUCCEEDED(pD3D9->EnumAdapterModes(D3DADAPTER_DEFAULT, D3D9::D3DFMT_X8R8G8B8, i, &sDMode)))
+		{
+			displayModes.push_back(sDMode);
+		}
+	}
+
+	return displayModes;
+}
 
 VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback)
 {
@@ -1199,3 +1217,5 @@ VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback
 			break;
 	}
 }
+
+

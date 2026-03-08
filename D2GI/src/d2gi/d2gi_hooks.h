@@ -9,30 +9,17 @@ struct HookOptions;
 
 class D2GIHookInjector
 {
-	enum D2VERSION
-	{
-		D2V_5_5 = 0,
-		D2V_7_3_LT,
-		D2V_1_3,
-		D2V_8_1,
-		D2V_8_2,
-
-		D2V_UNKNOWN,
-		NUM_D2VERSIONS = D2V_UNKNOWN,
-	};
-	
-	static D2VERSION s_eCurrentD2Version;
-
 	static void __fastcall SetupTransforms(void* pThis, void*, MAT3X4* pmView, MAT3X4* pmProj);
 
-	static D2VERSION DetectD2Version();
+	static int DetectD2Version();
+	static void __cdecl WriteScreenshotFunc(void* a2);
+	static void InjectScreenshotsPatch();
 
-	static void __cdecl D2GIHookInjector::WriteScreenshotFunc(void* a2);
-	static void D2GIHookInjector::InjectScreenshotsPatch();
-
-	static void D2GIHookInjector::OnPrepareStartGame(void* a1, void* a2);
-	static void D2GIHookInjector::OnInitClusters();
-	static void D2GIHookInjector::InjectInterfacePatch();
+	static void OnPrepareStartGame(void* a1, void* a2);
+	static void OnInitClusters();
+	static void InjectMirrorsPatch();
+	static void InjectInterfacePatch(bool use_mirrors_fix);
+	static signed int __fastcall OnInitDrawForGame(int* CWinApp, int EDX, int width, int height, int depth, int a5);
 
 public:
 	static D2GI* ObtainD2GI();

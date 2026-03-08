@@ -109,3 +109,19 @@ public:
 	FACADE_MEMBER(float, m_fovX); // 0x58
 	FACADE_MEMBER(float, m_fovY); // 0x54
 };
+
+class InterfaceHookOffsets
+{
+public:
+	int addr_panelDrawStart, //panel offsets setup code address
+		addr_cmp1204,        //only for 6.6 - 8.2
+		addr_cmp800,
+		addr_pagerX,         //pager position X
+		addr_pagerY,         //pager position Y
+		addr_panelX,         //panel texture X offset
+		addr_textX,          //panel labels X offset
+		addr_resX,           //default resolution 1024x768 offsets
+		addr_resY,
+		addr_mapOffsetX;     //side minimap offset X
+	double m_dMapSideOffset;
+};
