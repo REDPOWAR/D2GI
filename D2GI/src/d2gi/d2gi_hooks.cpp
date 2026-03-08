@@ -423,62 +423,58 @@ static InterfaceHookOffsets InterfaceOffsets;
 
 static int (__thiscall *orgOnInitDrawForGame)(int* CWinApp, int width, int height, int depth, int a5);
 signed int __fastcall D2GIHookInjector::OnInitDrawForGame(int* CWinApp, int EDX, int width, int height, int depth, int a5) {
-	D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
-
-	if (pD2GI == NULL) {
-		return orgOnInitDrawForGame(CWinApp, width, height, depth, a5);
-	}
-
-	std::vector<D3D9::D3DDISPLAYMODE> modes = pD2GI->GetDisplayModes();
-
 	signed int result = 0;
 
-	//Sort resolutions from the largest to smallest
-	std::sort(modes.begin(), modes.end(),
-		[](const D3D9::D3DDISPLAYMODE& a, const D3D9::D3DDISPLAYMODE& b) {
-			//Compare by resolution square
-			return (a.Width * a.Height) > (b.Width * b.Height);
+	D2GI* pD2GI = D2GIHookInjector::ObtainD2GI();
+	if (pD2GI != NULL) {
+		std::vector<D3D9::D3DDISPLAYMODE> modes = pD2GI->GetDisplayModes();
+
+		//Sort resolutions from the largest to smallest
+		std::sort(modes.begin(), modes.end(),
+			[](const D3D9::D3DDISPLAYMODE& a, const D3D9::D3DDISPLAYMODE& b) {
+				//Compare by resolution square
+				return (a.Width * a.Height) > (b.Width * b.Height);
+			}
+		);
+
+		for (auto mode = modes.begin(); mode != modes.end(); mode++)
+		{
+			int modeX = mode->Width;
+			int modeY = mode->Height;
+
+			//Check if the resolution[i] is greater than the size of the game window
+			if (modeX > m_dwWinResX || modeY > m_dwWinResY)
+				continue;
+
+			//Check if the resolution[i] exceeds the maximum allowed interface size
+			if (modeX > 1600 || modeY > 900)
+				continue;
+
+			//And check if format is not widescreen
+			if ((float)modeY / (float)modeX > 0.7)
+				continue;
+
+			m_dwUIResX = modeX;
+			m_dwUIResY = modeY;
+
+			//Replace default 1024x768 resolution to new
+			CPatch::SetShort(InterfaceOffsets.addr_resX, m_dwUIResX);
+			CPatch::SetShort(InterfaceOffsets.addr_resY, m_dwUIResY);
+
+			m_fUIAspect = (float)m_dwUIResX / (m_dwUIResY);
+			Logger::Log(TEXT("Set interface resolution to %dx%d"), m_dwUIResX, m_dwUIResY);
+
+			//Set panel offsets (align the panel to the right edge of the game window)
+			CPatch::SetInt(InterfaceOffsets.addr_pagerX, m_dwUIResX - 439);
+			CPatch::SetInt(InterfaceOffsets.addr_pagerY, 11);
+			CPatch::SetInt(InterfaceOffsets.addr_panelX, m_dwUIResX - 1600);
+			CPatch::SetInt(InterfaceOffsets.addr_textX, m_dwUIResX - 1131);
+
+			break;
 		}
-	);
-
-	for (auto mode = modes.begin(); mode != modes.end(); mode++)
-	{
-		int modeX = mode->Width;
-		int modeY = mode->Height;
-
-		//Check if the resolution[i] is greater than the size of the game window
-		if (modeX > m_dwWinResX || modeY > m_dwWinResY)
-			continue;
-
-		//Check if the resolution[i] exceeds the maximum allowed interface size
-		if (modeX > 1600 || modeY > 900)
-			continue;
-
-		//And check if the resolution[i] is not widescreen
-		if ((float)modeY / (float)modeX > 0.7)
-			continue;
-
-		m_dwUIResX = modeX;
-		m_dwUIResY = modeY;
-
-		//Replace default 1024x768 resolution to new
-		CPatch::SetShort(InterfaceOffsets.addr_resX, m_dwUIResX);
-		CPatch::SetShort(InterfaceOffsets.addr_resY, m_dwUIResY);
-
-		m_fUIAspect = (float)m_dwUIResX / (m_dwUIResY);
-		Logger::Log(TEXT("Set interface resolution to %dx%d"), m_dwUIResX, m_dwUIResY);
-
-		//Set panel offsets (align the panel to the right edge of the game window)
-		CPatch::SetInt(InterfaceOffsets.addr_pagerX, m_dwUIResX -  439);
-		CPatch::SetInt(InterfaceOffsets.addr_pagerY,                11);
-		CPatch::SetInt(InterfaceOffsets.addr_panelX, m_dwUIResX - 1600);
-		CPatch::SetInt(InterfaceOffsets.addr_textX,  m_dwUIResX - 1131);
-
-		result = orgOnInitDrawForGame(CWinApp, width, height, depth, a5);
-		break;
 	}
 
-	return result;
+	return orgOnInitDrawForGame(CWinApp, width, height, depth, a5);
 }
 
 static int* MenuBackInfoX;
