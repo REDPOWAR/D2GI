@@ -7,10 +7,12 @@
 
 class D2GIBackBufferSurface : public D2GISurface
 {
-	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pStreamingSurface;
-	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pReadingSurface;
-	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> m_pOffSurface;
-	bool m_bLastLockReadOnly = false;
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DTexture9> writing_texture_;
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> writing_surface_;
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> reading_surface_;
+	Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> intermediate_surface_;
+	D3D9::IDirect3DSurface9* locked_surface_ = nullptr;
+	bool is_in_multipart_writing_ = false;
 
 public:
 	D2GIBackBufferSurface(D2GI*, DWORD dwW, DWORD dwH, D2GIPIXELFORMAT);
@@ -25,6 +27,8 @@ public:
 	STDMETHOD(AddAttachedSurface)(D3D7::LPDIRECTDRAWSURFACE7) override;
 	STDMETHOD(Blt)(LPRECT, D3D7::LPDIRECTDRAWSURFACE7, LPRECT, DWORD, D3D7::LPDDBLTFX) override;
 
-	D3D9::IDirect3DSurface9* GetD3D9StreamingSurface() const { return m_pStreamingSurface.Get(); }
-	D3D9::IDirect3DSurface9* GetD3D9ReadingSurface() const  { return m_pReadingSurface.Get(); }
+	D3D9::IDirect3DTexture9* GetD3D9WritingTexture() const { return writing_texture_.Get(); }
+	D3D9::IDirect3DSurface9* GetD3D9WritingSurface() const { return writing_surface_.Get(); }
+	D3D9::IDirect3DSurface9* GetD3D9ReadingSurface() const { return reading_surface_.Get(); }
+	void OnFlip();
 };

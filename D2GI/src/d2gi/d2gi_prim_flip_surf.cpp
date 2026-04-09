@@ -65,6 +65,7 @@ HRESULT D2GIPrimaryFlippableSurface::GetSurfaceDesc(D3D7::LPDDSURFACEDESC2 pDesc
 
 HRESULT D2GIPrimaryFlippableSurface::Flip(D3D7::LPDIRECTDRAWSURFACE7 pSurf, DWORD dwFlags)
 {
+	m_pBackBuffer->OnFlip();
 	m_pD2GI->OnFlip();
 	return DD_OK;
 }

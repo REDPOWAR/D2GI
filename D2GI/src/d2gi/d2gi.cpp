@@ -64,7 +64,7 @@ Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> D2GI::GetScreenshotSource() cons
 	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
 	{
 		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
-		result = pPrimSurf->GetBackBufferSurface()->GetD3D9StreamingSurface();
+		result = pPrimSurf->GetBackBufferSurface()->GetD3D9WritingSurface();
 	}
 	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
 	{
@@ -218,23 +218,21 @@ VOID D2GI::ResetD3D9Device()
 	}
 
 
-	if (m_pDev == nullptr)
-	{
+	if (m_pDev == nullptr) {
 		if (FAILED(m_pD3D9->CreateDevice(D3DADAPTER_DEFAULT, D3D9::D3DDEVTYPE_HAL, m_hWnd,
-			D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
-			&sParams, &m_pDev)))
-			Logger::Error(TEXT("Failed to create D3D9 device"));
-	}
-	else
-	{
+		                                 D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED | D3DCREATE_FPU_PRESERVE,
+		                                 &sParams, &m_pDev))) {
+			Logger::Error(T("Failed to create D3D9 device"));
+		}
+	} else {
 		if (FAILED(m_pDev->Reset(&sParams)))
-			Logger::Error(TEXT("Failed to reset D3D9 device"));
+			Logger::Error(T("Failed to reset D3D9 device"));
 	}
 
-	Logger::Log(
-		TEXT("Working on %ux%u mode (fullscreen: %s)"),
-		sParams.BackBufferWidth, sParams.BackBufferHeight,
-		sParams.Windowed ? TEXT("off") : TEXT("on"));
+	Logger::Log(T("Setting %ux%u mode (fullscreen: %s)"), sParams.BackBufferWidth, sParams.BackBufferHeight,
+	            sParams.Windowed ? T("off") : T("on"));
+
+	SynchronizeWithDeviceCaps();
 
 	// If MSAA is requested, find the max supported value
 	D3D9::D3DMULTISAMPLE_TYPE MSAAToUse = D3D9::D3DMULTISAMPLE_NONE;
@@ -283,28 +281,6 @@ VOID D2GI::ResetD3D9Device()
 	{
 		Logger::Error(TEXT("Failed to create the depth/stencil surface"));
 	}
-
-	bool MinFilterAnisotropic = false, MagFilterAnisotropic = false;
-	D3D9::D3DCAPS9 DeviceCaps;
-	if (SUCCEEDED(m_pDev->GetDeviceCaps(&DeviceCaps)))
-	{
-		if ((DeviceCaps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY) != 0)
-		{
-			const uint32_t MaxAnisotropy = std::clamp(D2GIConfig::AnisotropyLevel(), 1u, static_cast<uint32_t>(DeviceCaps.MaxAnisotropy));
-			if (MaxAnisotropy > 1)
-			{
-				MinFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
-				MagFilterAnisotropic = (DeviceCaps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
-				for (DWORD Stage = 0; Stage < 8; Stage++)
-				{
-					m_pDev->SetSamplerState(Stage, D3D9::D3DSAMP_MAXANISOTROPY, MaxAnisotropy);
-				}
-			}
-		}
-		m_MaxPrimitiveCount = DeviceCaps.MaxPrimitiveCount;
-	}
-	m_MinFilterAnisotropic = MinFilterAnisotropic;
-	m_MagFilterAnisotropic = MagFilterAnisotropic;
 
 	LoadResources(/*bResettingDevice=*/ true);
 }
@@ -355,22 +331,15 @@ VOID D2GI::OnBackBufferLock(BOOL bRead)
 		m_eRenderState = RS_BACKBUFFER_STREAMING;
 }
 
-
-VOID D2GI::OnFlip()
+void D2GI::OnFlip()
 {
-	if (m_eRenderState == RS_BACKBUFFER_STREAMING)
-	{
-		D2GIPrimaryFlippableSurface* pPrimSurf = m_pDirectDrawProxy->GetPrimaryFlippableSurface();
-		D3D9::IDirect3DSurface9* pSurf = pPrimSurf->GetBackBufferSurface()->GetD3D9StreamingSurface();
+	if (m_eRenderState == RS_BACKBUFFER_STREAMING) {
+		D3D9::IDirect3DTexture9* backbuffer_texture = m_pDirectDrawProxy->GetPrimaryFlippableSurface()
+			->GetBackBufferSurface()
+			->GetD3D9WritingTexture();
 
-		Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
-		m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, pRT.GetAddressOf());
-		m_pDev->StretchRect(pSurf, NULL, pRT.Get(), NULL, D3D9::D3DTEXF_LINEAR);
-
-		Present();
-	}
-	else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING)
-	{
+		BlitToBackbufferAndPresent(nullptr, backbuffer_texture, nullptr);
+	} else if (m_eRenderState == RS_BACKBUFFER_BLITTING || m_eRenderState == RS_3D_RENDERING) {
 		if (m_pMSAASurf)
 		{
 			Microsoft::WRL::ComPtr<D3D9::IDirect3DSurface9> pRT;
@@ -381,28 +350,30 @@ VOID D2GI::OnFlip()
 	}
 }
 
-
-VOID D2GI::OnSysMemSurfaceBltOnPrimarySingle(D2GISystemMemorySurface* pSrc, RECT* pSrcRT, D2GIPrimarySingleSurface* pDst, RECT* pDstRT)
+void D2GI::OnSystemMemorySurfaceBlitOnPrimarySingle(D2GISystemMemorySurface* source, RECT* source_rect,
+                                                    D2GIPrimarySingleSurface* destination, RECT* destination_rect)
 {
-	D3D9::IDirect3DSurface9* pRT;
-
 	m_eRenderState = RS_PRIMARY_SURFACE_BLITTING;
 
-	if (pDst->GetBPP() == 8)
-	{
-		RECT sScaledRect;
+	if (destination->GetBPP() != 8)
+		return;
 
-		ScaleRect(pDstRT, &sScaledRect);
+	source->UpdateWithPalette(destination->GetPalette());
 
-		pSrc->UpdateWithPalette(pDst->GetPalette());
-		m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, &pRT);
-		m_pDev->StretchRect(pSrc->RequestGPUSurface(), pSrcRT, pRT, &sScaledRect, D3D9::D3DTEXF_LINEAR);
-		pRT->Release();
+	FRECT float_source_rect = source_rect == nullptr
+		? FRECT(0, 0, (float)source->GetWidth(), (float)source->GetHeight())
+		: FRECT(*source_rect);
 
-		Present();
+	FRECT float_destination_rect;
+	if (destination_rect == nullptr) {
+		ScaleFRect(nullptr, &float_destination_rect);
+	} else {
+		float_destination_rect = FRECT(*destination_rect);
+		ScaleFRect(&float_destination_rect, &float_destination_rect);
 	}
-}
 
+	BlitToBackbufferAndPresent(&float_destination_rect, source->RequestGPUTexture(), &float_source_rect);
+}
 
 VOID D2GI::OnClear(DWORD dwCount, D3D7::LPD3DRECT pRects, DWORD dwFlags, D3D7::D3DCOLOR col, D3D7::D3DVALUE z, DWORD dwStencil)
 {
@@ -702,7 +673,7 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 				{
 					D3D9::D3DTEXF_NONE,
 					D3D9::D3DTEXF_POINT,
-					m_MagFilterAnisotropic ? D3D9::D3DTEXF_ANISOTROPIC : D3D9::D3DTEXF_LINEAR,
+					anisotropy_state_.is_enabled_for_magnifying ? D3D9::D3DTEXF_ANISOTROPIC : D3D9::D3DTEXF_LINEAR,
 					D3D9::D3DTEXF_PYRAMIDALQUAD,
 					D3D9::D3DTEXF_GAUSSIANQUAD,
 					D3D9::D3DTEXF_ANISOTROPIC,
@@ -716,7 +687,7 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 				{
 					D3D9::D3DTEXF_NONE,
 					D3D9::D3DTEXF_POINT,
-					m_MinFilterAnisotropic ? D3D9::D3DTEXF_ANISOTROPIC : D3D9::D3DTEXF_LINEAR,
+					anisotropy_state_.is_enabled_for_minifying ? D3D9::D3DTEXF_ANISOTROPIC : D3D9::D3DTEXF_LINEAR,
 					D3D9::D3DTEXF_ANISOTROPIC,
 				};
 				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MINFILTER, aeMinTexFMap[dwValue]);
@@ -742,10 +713,8 @@ VOID D2GI::OnTextureStageSet(DWORD i, D3D7::D3DTEXTURESTAGESTATETYPE eState, DWO
 			break;
 		case D3D7::D3DTSS_MAXANISOTROPY:
 			// If we force anisotropy, don't let the game change it
-			if (!m_MinFilterAnisotropic && !m_MagFilterAnisotropic)
-			{
+			if (!anisotropy_state_.is_enabled)
 				m_pDev->SetSamplerState(i, D3D9::D3DSAMP_MAXANISOTROPY, dwValue);
-			}
 			break;
 	}
 
@@ -822,10 +791,11 @@ VOID D2GI::Present()
 		bRestartScene = true;
 	}
 
-	const HRESULT hr = m_pDev->Present(NULL, NULL, NULL, NULL);
-
-	if (hr == D3DERR_DEVICELOST)
+	const HRESULT present_result = m_pDev->Present(NULL, NULL, NULL, NULL);
+	if (present_result == D3DERR_DEVICELOST) {
+		Logger::Log(T("D3D9 device is lost, resetting it..."));
 		ResetD3D9Device();
+	}
 
 	if (bRestartScene)
 	{
@@ -912,24 +882,6 @@ BOOL D2GI::OnRenderStateGet(D3D7::D3DRENDERSTATETYPE eState, DWORD* pValue)
 	}
 
 	return FALSE;
-}
-
-
-VOID D2GI::OnColorFillOnBackBuffer(DWORD dwColor, RECT* pRect)
-{
-	D3D9::D3DVIEWPORT9 sOriginalViewport, sFillingViewport;
-
-	m_pDev->GetViewport(&sOriginalViewport);
-	sFillingViewport.X = pRect->left;
-	sFillingViewport.Y = pRect->top;
-	sFillingViewport.Width = pRect->right - pRect->left;
-	sFillingViewport.Height = pRect->bottom - pRect->top;
-	sFillingViewport.MinZ = 0.0;
-	sFillingViewport.MaxZ = 1.0f;
-
-	m_pDev->SetViewport(&sFillingViewport);
-	m_pDev->Clear(0, NULL, D3DCLEAR_TARGET, dwColor, 1.0f, 0);
-	m_pDev->SetViewport(&sOriginalViewport);
 }
 
 
@@ -1218,4 +1170,75 @@ VOID D2GI::OnDisplayModeEnum(LPVOID pArg, D3D7::LPDDENUMMODESCALLBACK2 pCallback
 	}
 }
 
+void D2GI::SynchronizeWithDeviceCaps()
+{
+	D3D9::D3DCAPS9 caps;
 
+#ifdef DEVICE_CAPS_DUMP
+	TCHAR caps_hex_dump[sizeof(caps) * 2 + 1] = T(""); // place dump from remote GPU here
+	TCHAR hex_byte[3] = T("\0\0");
+
+	for (size_t i = 0; i < sizeof(caps); i++) {
+		_tcsncpy(hex_byte, caps_hex_dump + i * 2, 2);
+		*((uint8_t*)&caps + i) = (uint8_t)_tcstol(hex_byte, nullptr, 16);
+	}
+	// set breakpoint on the next line to see remote GPU caps
+#endif
+
+	if (SUCCEEDED(m_pDev->GetDeviceCaps(&caps))) {
+#ifdef DEVICE_CAPS_DUMP
+		static bool are_caps_dumped = false;
+		if (!are_caps_dumped) {
+			for (size_t i = 0; i < sizeof(caps); i++)
+				_stprintf(caps_hex_dump + i * 2, T("%02X"), (int)*((uint8_t*)&caps + i));
+
+			Logger::Log(T("Device caps: %s"), caps_hex_dump);
+			are_caps_dumped = true;
+		}
+#endif
+	} else {
+		Logger::Warning(T("Failed to get device caps, some features won't work."));
+		ZeroMemory(&caps, sizeof(caps));
+	}
+
+	max_primitive_count_ = caps.MaxPrimitiveCount;
+
+	uint32_t anisotropy_level = std::min(std::max(D2GIConfig::AnisotropyLevel(), 1u), static_cast<uint32_t>(caps.MaxAnisotropy));
+	bool is_minifying_anisotropy_supported = !!(caps.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC);
+	bool is_magnifying_anisotropy_supported = !!(caps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC);
+
+	anisotropy_state_.is_enabled = (anisotropy_level > 1
+	                                && !!(caps.RasterCaps & D3DPRASTERCAPS_ANISOTROPY)
+	                                && (is_minifying_anisotropy_supported || is_magnifying_anisotropy_supported));
+
+	anisotropy_state_.is_enabled_for_minifying = anisotropy_state_.is_enabled && is_minifying_anisotropy_supported;
+	anisotropy_state_.is_enabled_for_magnifying = anisotropy_state_.is_enabled && is_magnifying_anisotropy_supported;
+
+	if (anisotropy_state_.is_enabled) {
+		Logger::Log(T("Anisotropy: using %ux"), anisotropy_level);
+		for (DWORD stage = 0; stage < 8; stage++)
+			m_pDev->SetSamplerState(stage, D3D9::D3DSAMP_MAXANISOTROPY, anisotropy_level);
+	} else {
+		Logger::Log(T("Anisotropy: disabled"));
+	}
+}
+
+void D2GI::BlitToBackbufferAndPresent(FRECT* backbuffer_rect, D3D9::IDirect3DTexture9* texture, FRECT* texture_rect)
+{
+	// It's better not to use ComPtr here: we must release backbuffer before Present()
+	// call as Reset() call may happen inside.
+	D3D9::IDirect3DSurface9* backbuffer;
+	m_pDev->GetBackBuffer(0, 0, D3D9::D3DBACKBUFFER_TYPE_MONO, &backbuffer);
+
+	// Instead of using StretchRect() we should implement it via blitter.
+	// StretchRect() may not support magnifying operation on some GPUs,
+	// and it seems that it can be bugged in some device drivers.
+	// Shader-based blitter is more stable solution.
+	TryBeginScene();
+	m_Blitter.Blit(backbuffer, backbuffer_rect, texture, texture_rect, false);
+	TryEndScene();
+
+	backbuffer->Release();
+
+	Present();
+}

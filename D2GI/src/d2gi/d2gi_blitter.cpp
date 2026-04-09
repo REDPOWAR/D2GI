@@ -11,6 +11,8 @@
 
 
 using namespace D3D9;
+using Microsoft::WRL::ComPtr;
+
 
 void D2GIBlitter::ReleaseResource(bool bResettingDevice)
 {
@@ -84,9 +86,6 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 	D3DSURFACE_DESC sDstDesc, sSrcDesc;
 	FRECT rtSrc, rtDst;
 
-	Microsoft::WRL::ComPtr<IDirect3DSurface9> pOriginalRT;
-	Microsoft::WRL::ComPtr<IDirect3DBaseTexture9> pCurrentTexture;
-
 	DWORD dwMinFilter, dwMagFilter, dwCullMode, dwAlphaTestEnable;
 	DWORD dwAlphaBlending, dwAlphaOp, dwAlphaSrc, dwAlphaDst;
 	DWORD dwZEnable, dwZWriteEnable;
@@ -106,11 +105,18 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 	else
 		rtDst = FRECT(0.0, 0.0, (FLOAT)sDstDesc.Width, (FLOAT)sDstDesc.Height);
 
-	pDev->GetRenderTarget(0, pOriginalRT.GetAddressOf());
+	ComPtr<IDirect3DSurface9> original_render_target;
+	pDev->GetRenderTarget(0, &original_render_target);
+
+	ComPtr<IDirect3DSurface9> original_depth_surface;
+	pDev->GetDepthStencilSurface(&original_depth_surface);
+
+	ComPtr<IDirect3DBaseTexture9> original_texture;
+	pDev->GetTexture(0, &original_texture);
+
 	pDev->GetViewport(&sOriginalVP);
 	pDev->GetRenderState(D3DRS_ZENABLE, &dwZEnable);
 	pDev->GetRenderState(D3DRS_ZWRITEENABLE, &dwZWriteEnable);
-	pDev->GetTexture(0, pCurrentTexture.GetAddressOf());
 	pDev->GetSamplerState(0, D3DSAMP_MINFILTER, &dwMinFilter);
 	pDev->GetSamplerState(0, D3DSAMP_MAGFILTER, &dwMagFilter);
 	pDev->GetRenderState(D3DRS_CULLMODE, &dwCullMode);
@@ -144,6 +150,7 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 	vScreenPosRect.w = -(-1.0f + rtDst.fTop + rtDst.fBottom) / (FLOAT)sDstDesc.Height + 1.0f;
 
 	pDev->SetRenderTarget(0, pDst);
+	pDev->SetDepthStencilSurface(nullptr);
 
 	pDev->SetVertexDeclaration(m_pVDecl.Get());
 	pDev->SetStreamSource(0, m_pVB.Get(), 0, sizeof(FLOAT) * 4);
@@ -177,7 +184,7 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 
 	pDev->SetPixelShader(NULL);
 	pDev->SetVertexShader(NULL);
-	pDev->SetTexture(0, pCurrentTexture.Get());
+	pDev->SetTexture(0, original_texture.Get());
 	pDev->SetSamplerState(0, D3DSAMP_MINFILTER, dwMinFilter);
 	pDev->SetSamplerState(0, D3DSAMP_MAGFILTER, dwMagFilter);
 	pDev->SetRenderState(D3DRS_ZENABLE, dwZEnable);
@@ -192,6 +199,7 @@ void D2GIBlitter::Blit(IDirect3DSurface9* pDst, const FRECT* pDstRT,
 		pDev->SetRenderState(D3DRS_SRCBLEND, dwAlphaSrc);
 		pDev->SetRenderState(D3DRS_DESTBLEND, dwAlphaDst);
 	}
-	pDev->SetRenderTarget(0, pOriginalRT.Get());
+	pDev->SetRenderTarget(0, original_render_target.Get());
+	pDev->SetDepthStencilSurface(original_depth_surface.Get());
 	pDev->SetViewport(&sOriginalVP);
 }
