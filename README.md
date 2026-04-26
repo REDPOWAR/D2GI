@@ -24,12 +24,14 @@
 * Works stable, without freezes or crashes
 * High FPS on low-end hardware (even on integrated GPU like Intel HD Graphics 4000)
 
+If you are looking for some game logic fixes (e.g. fix for extremely annoying bug when vehicles freeze on side collision), you may be interested in [KoTR Modern Patch](https://github.com/aleko2144/KoTR_Modern_Patch)
+
 ### Requirements
 
 * GPU with shaders 2.0 or higher
 * Any game version of:
   * King of the Road 1.3 (international release)
-  * 8.1 - 8.2 (Russian releases)
+  * 6.6 - 8.2 (Russian releases)
   * Kelyje 2 (Lithuanian release)
   * some other versions (other game versions may be compatible too, but some D2GI features probably won't work and there may be some stability issues)
 * Windows XP or higher (note that there is problem on Windows 11 - game movies don't play, and it's not resolved by D2GI yet, but you can try to fix it manually as described in [corresponding issue](https://github.com/REDPOWAR/D2GI/issues/18))
@@ -57,7 +59,8 @@ The `d2gi.ini` file has the following settings.
 
 `HOOKS` section:
 * `EnableHooks` - Enable game functions hooking (projection matrix correction with any aspect ratio)
-* `EnableUIFix` - Enable GUI functions hooking (improves the appearance of game menus when using wide screen resolutions). **Currently unstable, may lead to game crash on some GPUs, so use it carefully**.
+* `EnableUIFix` - Enable GUI functions hooking (improves the appearance of game menus when using wide screen resolutions).
+* `EnableMirrorsFix` - Enable side mirrors position adjustment for wide screens (it may work better or worse depending on vehicle you are using)
 
 `SCREENSHOTS` section:
 * `SavePath` - Path to the folder where screenshots will be saved

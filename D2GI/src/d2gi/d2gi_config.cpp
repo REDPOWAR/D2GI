@@ -68,7 +68,7 @@ HookOptions D2GIConfig::ReadFromFile()
 	s_bEnableVSync   = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("EnableVSync"), FALSE, configFilePath.c_str());
 	result.m_bEnableHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableHooks"), result.m_bEnableHooks, configFilePath.c_str());
 	result.m_bEnableUIHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableUIFix"), result.m_bEnableUIHooks, configFilePath.c_str());
-	result.m_bEnableMirrorsHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableMirrorsFix"), !result.m_bEnableMirrorsHooks, configFilePath.c_str());
+	result.m_bEnableMirrorsHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("EnableMirrorsFix"), result.m_bEnableMirrorsHooks, configFilePath.c_str());
 	result.m_bEnableAffinityHooks = !!GetPrivateProfileInt(TEXT("HOOKS"), TEXT("AllCoresAffinity"), !result.m_bEnableAffinityHooks, configFilePath.c_str());
 	s_bFixAlpha      = !!GetPrivateProfileInt(TEXT("VIDEO"), TEXT("FixAlpha"), TRUE, configFilePath.c_str());
 
